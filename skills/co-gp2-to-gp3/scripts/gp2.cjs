@@ -55,7 +55,7 @@ var __decorateParam = (index, decorator) => (target, key) => decorator(target, k
 var define_CLOUDFIX_BUILD_default;
 var init_define_CLOUDFIX_BUILD = __esm({
   "<define:__CLOUDFIX_BUILD__>"() {
-    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "169748a80424ebbf20dd0602e0e56a37cb021942cebcbcbddf8519ad1e873f6e" };
+    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "50dfa5ba5847b9caf6ac06fe0cd6db67f137bb9da1c725371aeda8e64cc8c330" };
   }
 });
 
@@ -212760,7 +212760,7 @@ async function cli(argv = process.argv.slice(2), transport) {
   }
   let directory;
   let evidence = null;
-  let context = {};
+  let context = { pricing_lookups: [] };
   let rawResult;
   try {
     requireInput(Number(process.versions.node.split(".")[0]) >= 22, "Node 22 or later is required");
@@ -212995,7 +212995,9 @@ function customerSummary(result2, evidence, context, artifacts) {
       period: context.cost_input?.period ?? null,
       pricing_verification: lookups.length ? context.mode === "live_collection" ? "AWS reads recorded" : context.mode === "replay" ? "recorded responses; no AWS reads performed during replay" : "recorded test responses" : "Price lookup provenance was not supplied or no price lookup was completed.",
       fallback_used: lookups.length ? lookups.some((lookup) => lookup.fallback_used) : null,
-      lookups
+      lookup_count: lookups.length,
+      fallback_count: lookups.filter((lookup) => lookup.fallback_used).length,
+      lookup_evidence: { artifact: "context", json_pointer: "/pricing_lookups" }
     },
     configuration: context.configuration ?? null,
     no_candidates: context.no_candidates === true,
