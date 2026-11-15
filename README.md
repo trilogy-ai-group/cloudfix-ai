@@ -25,7 +25,23 @@ skills/co-gp2-to-gp3/
    gh repo clone trilogy-ai-group/cloudfix-ai
    ```
 
-3. Install `skills/co-gp2-to-gp3` through your harness's local-skill mechanism, preserving the two-file layout. Common locations are `.claude/skills/co-gp2-to-gp3` and `.agents/skills/co-gp2-to-gp3` inside your project. For an upgrade, replace the previous managed skill directory so old development files cannot survive an overlay. If you installed the earlier `co-gp2-to-gp3-tool` package, remove that old installed directory when installing `co-gp2-to-gp3` so your harness discovers only one copy. No product profile file is required.
+3. From the cloned `cloudfix-ai` directory, choose one of these personal installations:
+
+   **Claude Code:**
+
+   ```sh
+   mkdir -p "$HOME/.claude/skills"
+   test ! -e "$HOME/.claude/skills/co-gp2-to-gp3" && cp -R skills/co-gp2-to-gp3 "$HOME/.claude/skills/"
+   ```
+
+   **Codex:**
+
+   ```sh
+   mkdir -p "$HOME/.agents/skills"
+   test ! -e "$HOME/.agents/skills/co-gp2-to-gp3" && cp -R skills/co-gp2-to-gp3 "$HOME/.agents/skills/"
+   ```
+
+   These commands stop if the destination already exists. For an upgrade, remove the previous managed `co-gp2-to-gp3` skill directory and rerun the chosen commands, so old development files cannot survive an overlay. If you installed the earlier `co-gp2-to-gp3-tool` package, also remove that old installed directory so your harness discovers only one copy. No product profile file is required.
 4. Start a fresh conversation with your agent, for example:
 
    > Use co-gp2-to-gp3 to assess GP2 volumes in my approved dev/test account ACCOUNT_ID, region REGION, using my existing AWS access. Report the recommendations and supporting evidence. This request is assessment only; do not change resources.
@@ -43,6 +59,10 @@ Specify a volume ID if you want a single-resource assessment. Follow the skill's
 
 Each run saves `summary.json`, the unchanged native `result.json`, `evidence.json` and `context.json`. Keep the complete files together. The summary separates the assessment decision, estimated saving, execution status and observed saving; missing evidence and rejected candidates are valid outcomes.
 
+The summary includes code-calculated totals for approved candidates with calculated savings, with included, excluded and unknown resource counts. The code sums unrounded amounts before formatting the total; the agent does no savings arithmetic. Public-price and supplied-cost totals remain separate. Partial or unverified results are explicitly labelled. Recorded volume, attachment and instance states are included when available; missing state stays unknown.
+
+The native report is retained verbatim for traceability. Its claims about actual costs, downtime, performance and rollback are unverified; use the summary's pricing basis and limitations. A stopped instance does not establish that its EBS volume is unused, and the volume remains billable.
+
 An approved assessment is a recommendation. The executable does not modify a volume. Public-price estimates can differ from billed costs. The finder does not check instance-type support or application performance, and its sizing must not be treated as a universal equivalent-or-better performance guarantee. Execution requires a separately approved procedure and verification.
 
 For the private pilot, record installation friction and any human help needed. Use a dev/test scope approved by its owner, and retain the complete transcript and result files privately. A patch or PR does not establish that a disk changed or that savings were realized.
@@ -52,7 +72,7 @@ For the private pilot, record installation friction and any human help needed. U
 The tested executable's SHA-256 is:
 
 ```text
-3482581de661d2ba9fc810cf223cfc952ec8a16ae4a8753067e262d10199f013
+5907a99b0dfac5fa9ecb242044a827d34a7d197710327f19dcac5d17d0d526be
 ```
 
-Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for build provenance. The package runs directly; it needs no source checkout, dependency installation or rebuild.
+Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for its package name and public build identifier. That identifier links to the complete private maintainer build record. The package runs directly; it needs no source checkout, dependency installation or rebuild.

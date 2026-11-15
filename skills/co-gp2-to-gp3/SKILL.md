@@ -7,7 +7,7 @@ description: Assess AWS EBS gp2-to-gp3 opportunities with a local read-only tool
 
 ## 1. Confirm the scope and access
 
-Use the requested AWS account, region and optional volume IDs. If present, read `.claude/skills/_profile.json` for an existing profile and region; the user's scope takes precedence. Use existing AWS authentication. Do not ask for credentials in chat or save them in evidence.
+Use the requested AWS account, region and optional volume IDs. Use existing AWS authentication and the customer's chosen AWS profile, if any. No skill profile file is required. Do not ask for credentials in chat or save them in evidence.
 
 The supplied executable is `scripts/gp2.cjs` relative to this skill directory. It requires **Node 22+**. Run it directly; do not rebuild it or write replacement collectors, checks or calculations.
 
@@ -46,7 +46,7 @@ For recorded evidence or a simulation:
 node <skill-dir>/scripts/gp2.cjs replay --evidence <evidence-file.json> --out <new-output-directory>
 ```
 
-Replay accepts raw evidence or an `{evidence, run_context}` packet. Preserve supplied configuration and the original input. Use `--help` for command details and `--version` for build provenance.
+Replay accepts raw evidence or an `{evidence, run_context}` packet. Preserve supplied configuration and the original input. Use `--help`, `assess --help` or `replay --help` for command details and `--version` for the package's public build identifier.
 
 ## 3. Read the result
 
@@ -56,6 +56,8 @@ The command returns paths to `summary.json`, `result.json`, `evidence.json` and 
 - `result.json` preserves the complete native assessment unchanged.
 - `evidence.json` and `context.json` retain inputs, read results, configuration and provenance. Read the complete relevant records when checking a finding or preparing a change; the summary's artifact references must remain retrievable.
 
+The native report is retained for traceability. Its wording about actual costs, downtime, performance and rollback is unverified; use the summary's cost basis and limitations when explaining the result.
+
 Exit **0** means assessment completed, including rejected candidates. Exit **2** means evidence is missing. Exit **1** means the run failed. Read saved artifacts on every outcome. Return the exact requested operation/parameters or full relevant error; do not turn an access failure into an empty response.
 
 The live tool retrieves required follow-up evidence itself. For replay, obtain the missing evidence and rerun with the complete amended packet into a new directory. Do not repair an earlier output.
@@ -63,6 +65,10 @@ The live tool retrieves required follow-up evidence itself. For replay, obtain t
 ## 4. Explain the assessment
 
 Report each resource's decision, failed checks, proposed GP3 settings when approved, estimated annual savings and pricing basis. Use `estimate.display` for dollar amounts shown to the customer; exact numeric amounts remain available for comparisons. Use GiB for size, IOPS and MiB/s for throughput. Preserve negative savings. A saving marked `not_calculated` is unknown, not zero potential.
+
+Use the code-calculated `totals` for aggregate costs and savings. Report its status and included, excluded and unknown resource counts, and use `totals.display` for money. Do not recompute totals or sum rounded per-resource amounts. Totals cover approved candidates with calculated savings; public-price and supplied-cost figures remain separate. A partial or unverified result must not be described as a complete account total.
+
+Use each resource's `evidence_context` for recorded volume, attachment and instance states; absent state is unknown. A stopped instance does not prove that its volume is unused, and EBS storage remains billable while the instance is stopped.
 
 Public prices and supplied costs are estimates unless independently verified. Identify any pricing fallback. Online modification depends on instance support; this assessment does not check instance-type compatibility or measure application performance. Do not promise equivalent-or-better performance, zero impact or immediate rollback.
 

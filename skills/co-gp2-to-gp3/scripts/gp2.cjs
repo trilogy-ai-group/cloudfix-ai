@@ -55,7 +55,7 @@ var __decorateParam = (index, decorator) => (target, key) => decorator(target, k
 var define_CLOUDFIX_BUILD_default;
 var init_define_CLOUDFIX_BUILD = __esm({
   "<define:__CLOUDFIX_BUILD__>"() {
-    define_CLOUDFIX_BUILD_default = { finderRevision: "ec91221d80c59f7c46ea7aa02445e85be3ad3392", baselineRevision: "772885c459da80478c62aaeca84bd30a77e0e4ca", toolSourceSha256: "657457052941eeffe6825c0acbbd4db3360408c170cbc5e7098d8a315dc74ba2", builderSourceSha256: "2aaa794b32f1f6126c514f9077ea5f933e456243562efe1d55e4589b2606f1db", sourceHashes: { "cloudfix-base/src/ApplicationConstants.ts": "6cab6d3053c7921089fa02d842549ce87244c1e0ad3ea74e7591323cc35d0621", "cloudfix-base/src/util/number.ts": "da7fdba702cf1e042fddb0258dffda301a34deb1e53b48847a59d99ddbf3cafa", "cloudfix-core/src/common/FinderConfigResolver.ts": "3906f24a0251734359595638052396c18bb393e4e4c384f690168e52e17d0af3", "cloudfix-core/src/common/FindersConfigMap.ts": "37c66d0209f8bc495ca868b86b21263abf54a35299f4056d455aec1465d2a327", "cloudfix-core/src/common/model/FinderConfigBase.ts": "b48f0745141183fb6246c5e13d0f026218095f7b8390a19c423601af4b3f5161", "cloudfix-core/src/common/model/FinderFixerBase.ts": "790de04d6a631b95dd41769d63ac5bc392db311e1a42b3fa8a05af76690a4c10", "cloudfix-core/src/common/model/FinderModel.ts": "c63ab5244bf29dc39dc0ebafdfaa2af53959bf7946e236c2944053c6ceab8d39", "cloudfix-core/src/common/services/aws/AwsEc2Service.ts": "c887c33b2c8bd1047509edf058c0460d740beb209cacecee5a3d8de11e6b9300", "cloudfix-core/src/common/services/aws/FilterBatches.ts": "c9d278c17b657a52123329231e1b69ac0b15239937c57873f07599fb03d1deec", "cloudfix-core/src/common/services/aws/RetryBudget.ts": "be6b2f3aee6bd079f7e6a6bccaa6dbee1bb2ef8963a355f100c147f2887e7f33", "cloudfix-core/src/common/utils/HandlebarsHelpers.ts": "93a467b3faf52738c81fe0b4a22c6302dfd1453598b6c1859431ba8e87a845b6", "cloudfix-core/src/common/utils/LoggerProvider.ts": "baae3334a16fd6f828b76a42b3d3e40a7e5f88ff58506933f298cd9377dd83ae", "cloudfix-core/src/common/utils/RecommendationUtils.ts": "a07d04b4a05842023010d428da8381c933654ee71e1ca9067ef9f7a094b8bae5", "cloudfix-core/src/common/utils/collections.ts": "99b1f2d42c8cf3ca2b1169522d8c26029fad0d213fdb9c860b4891edaff1e119", "cloudfix-core/src/common/utils/decorators/InjectLogger.ts": "24200291373c2d1f4dea5b9a46be14012ab80bdb95d56b49503c3524f0f878dc", "cloudfix-core/src/common/utils/logLevel.ts": "8fece76201de4ca7add9871ae68ce910deb04bdb939d4d83430534c79ac5cefc", "cloudfix-core/src/common/utils/moduleLogger.ts": "77502f864127735700a897e200ed4169298caa76a3413a9871c56eff8388ca65", "cloudfix-core/src/common/utils/types.ts": "dd2a732fdb208f961ca19325bc2b8fd8a9cfe475db6576882b4ee87859bc5415", "cloudfix-core/src/finders/common/Tracer.ts": "b1d1a39afb7a4d3ff033cab74e2a5f5c2fa9be72dfedd50dedbe44acf5d82bde", "cloudfix-core/src/finders/common/VirtualTags.ts": "347cf59a5f7f62a786da2ce511564014bfbc871be797f4a7bcd2b68713d29e57", "cloudfix-core/src/finders/service/Conditions.ts": "eb4011d350c789d7eccaff157555ac081ca2672f7b98955c83770ff019009df4", "cloudfix-core/src/finders/service/FaultValidations.ts": "8ca7b5669acdfe122c8e692bf97e5e5074c5c5289beff4ecd80b8a8f72dd6483", "cloudfix-core/src/finders/service/FinderService.ts": "4770faa74586210ca3cab650eb6974002568c8175a342caa3d5bfdeb7e4a3bc4", "cloudfix-core/src/finders/service/ValidationValueSerializer.ts": "1d4266ab5f7cfd0a990438c7d58fb13c444c39001add6db9c958098c1213c1e7", "cloudfix-core/src/finders/service/Validations.ts": "4dbe3c0775d856d3488cac13007bfa05ab7909e38a106185bdf2a3a97a1c5508", "cloudfix-core/src/finders/service/validations/ResourceExistsValidation.ts": "18e08e7b4ee44703c204bf4d11af32a3ae5247d053cc5678696fee87ed82933b", "cloudfix-core/src/fixers/services/RunbookInputComparator.ts": "6eec87f8dfceb2edf34d6d14a8ffc255ee66d2dc313587344706f6512b3f4de0", "cloudfix-core/src/recommendation/services/RecommendationReportService.ts": "ecf48b1f302153593372157f795a7206904805cdf63093155a2b19e770860ebb", "cloudfix-data/rds/src/entity/Recommendation.model.ts": "8a624fb3dbd550b79fb651dab442d8b30fecbbe3732f4f38b8f96f343aa182bd", "cloudfix-ff/src/common/finders/FinderPredicates.ts": "dae452d93d57f09db0c1b4bf29b95944142acfe53047ce837640a467b6e586c2", "cloudfix-ff/src/common/finders/UtilFunctions.ts": "d5434698c9e30d766f4dbd6fd4b1775962eb8baa2255c34f9080c3aa712beb42", "cloudfix-ff/src/ff/Ebs/EbsVolumesValidatorService.ts": "098559229f04eb85119f481a115ffb328d9bd6bc46d1b249571643f00d4882f6", "cloudfix-ff/src/ff/Ebs/Retype/Gp2Volumes/Main.ts": "41afc387ea9ebf3122814e6519f7069535058315f70cc3596b838d75265cf300", "cloudfix-ff/src/ff/Ebs/Retype/Gp2Volumes/finder/ValidatorService.ts": "c8f3495be5ea23590d9ef263e0edd3212ebb6afc4ae2a626d3eb390de387f790", "cloudfix-ff/src/ff/Ebs/Retype/Schema.ts": "26b8403a134151cb942e4e3ac90ff2eaaf8d45f26f0647e13fe1c868be293484", "cloudfix-ff/src/ff/Ebs/common/EbsVolumesMain.ts": "95fd4f917d88b670b8db9dd9285a6182458ee7e89d084c02beb60bf9db1aee4d", "cloudfix-ff/src/services/aws/AwsEbsService.ts": "b42ddfde5d0d427b5981ae47af0275f401280431726cd1f8faabb9227f19808b", "cloudfix-ff/src/services/aws/AwsPricingService.ts": "cc8e2dd2dc2cd0d8c22dad89eb94dc0a78920e3a79ec85edbb40e77a33062b6b", "cloudfix-ff/src/services/aws/AwsRegionsService.ts": "eb4d0356b72783cfea1fc34d1c8246fe62ce437ddf8756549cac084c9f7ac953", "cloudfix-ff/src/services/aws/BaseAwsService.ts": "3848fdca397b851801a21ff908b474c5d2be6bb7e28fd580c522586936b05a09" } };
+    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "169748a80424ebbf20dd0602e0e56a37cb021942cebcbcbddf8519ad1e873f6e" };
   }
 });
 
@@ -212323,7 +212323,7 @@ async function nativeMain() {
     { get: () => ebs }
   );
   const result2 = await finder.process({
-    tenantId: "supplied-evidence-simulation",
+    tenantId: "local-evidence",
     accountId: evidence.accountId,
     region: evidence.region,
     finderFixerId: FinderType3.Gp2Gp3,
@@ -212694,6 +212694,12 @@ function replayInput(original) {
     evidence.configuration = structuredClone(configuration);
   }
   const context = contextFor("replay", original);
+  if (packet && object2(original.run_context)) {
+    for (const key of ["scope", "reads", "pricing_lookups", "cost_input"]) {
+      if (original.run_context[key] !== void 0) context[key] = structuredClone(original.run_context[key]);
+    }
+    context.reads_origin = "supplied_run_context";
+  }
   if (evidence.asOf === void 0) evidence.asOf = context.started_at;
   context.assessment_clock_basis = (packet ? original.evidence.asOf : original.asOf) === void 0 ? "recorded_at_invocation" : "caller_supplied";
   context.cost_basis = packet && object2(original.run_context) ? original.run_context.cost_basis ?? "supplied_evidence" : "supplied_evidence";
@@ -212742,7 +212748,8 @@ function argumentsFor(argv) {
   return options;
 }
 async function cli(argv = process.argv.slice(2), transport) {
-  if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h") {
+  const commandHelp = ["assess", "replay"].includes(argv[0]) && argv.slice(1).some((argument) => argument === "--help" || argument === "-h");
+  if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h" || commandHelp) {
     process.stdout.write(HELP);
     return 0;
   }
@@ -212814,8 +212821,80 @@ function displayMoney(amounts) {
     value === null ? null : value !== 0 && Math.abs(value) < 0.01 ? value < 0 ? "Negative, less than $0.01" : "Positive, less than $0.01" : usdDisplay.format(value)
   ]));
 }
+function summaryTotals(resources, complete) {
+  const included = resources.filter((row) => row.decision === "approved" && row.estimate.status === "calculated");
+  const excluded = resources.filter((row) => row.decision === "rejected").length;
+  const unknown = resources.length - included.length - excluded;
+  const status = !complete ? "unverified" : unknown > 0 ? "partial" : resources.length === 0 ? "empty" : included.length === 0 ? "no_approved_candidates" : "calculated";
+  const canSum = complete && (unknown === 0 || included.length > 0);
+  const fields2 = [
+    "current_annual_cost",
+    "proposed_annual_cost",
+    "annual_saving",
+    "public_current_annual_cost",
+    "public_proposed_annual_cost",
+    "public_annual_saving"
+  ];
+  const amounts = Object.fromEntries(fields2.map((field) => [
+    field,
+    canSum ? included.reduce((total, row) => total + row.estimate[field], 0) : null
+  ]));
+  return {
+    scope: "approved_calculated_candidates",
+    status,
+    currency: "USD",
+    included_resource_count: included.length,
+    excluded_resource_count: excluded,
+    unknown_resource_count: unknown,
+    ...amounts,
+    display: displayMoney(amounts)
+  };
+}
+function recordedVolumeContext(input, context) {
+  const volumes = /* @__PURE__ */ new Map();
+  const instances = /* @__PURE__ */ new Map();
+  const reads = [
+    ...Array.isArray(context.reads) ? context.reads : [],
+    ...Array.isArray(input.responses) ? input.responses : []
+  ];
+  for (const read of reads) {
+    if (!object2(read) || read.error !== void 0 || !object2(read.output)) continue;
+    if (read.operation === "DescribeVolumes" && Array.isArray(read.output.Volumes)) {
+      for (const volume of read.output.Volumes) {
+        if (object2(volume) && typeof volume.VolumeId === "string") volumes.set(volume.VolumeId, volume);
+      }
+    }
+    if (read.operation === "DescribeInstances" && Array.isArray(read.output.Reservations)) {
+      for (const reservation of read.output.Reservations) {
+        if (!object2(reservation) || !Array.isArray(reservation.Instances)) continue;
+        for (const instance of reservation.Instances) {
+          if (object2(instance) && typeof instance.InstanceId === "string") instances.set(instance.InstanceId, instance);
+        }
+      }
+    }
+  }
+  return (resourceId) => {
+    const volume = typeof resourceId === "string" ? volumes.get(resourceId) : void 0;
+    return {
+      status: volume ? "recorded" : "unknown",
+      volume_id: typeof resourceId === "string" ? resourceId : null,
+      volume_state: typeof volume?.State === "string" ? volume.State : null,
+      attachments: Array.isArray(volume?.Attachments) ? volume.Attachments.map((value) => {
+        const attachment = object2(value) ? value : {};
+        const instanceId = typeof attachment.InstanceId === "string" ? attachment.InstanceId : null;
+        const instance = instanceId === null ? void 0 : instances.get(instanceId);
+        return {
+          instance_id: instanceId,
+          attachment_state: typeof attachment.State === "string" ? attachment.State : null,
+          instance_state: object2(instance?.State) && typeof instance.State.Name === "string" ? instance.State.Name : null
+        };
+      }) : null
+    };
+  };
+}
 function customerSummary(result2, evidence, context, artifacts) {
   const input = object2(evidence) ? evidence : {};
+  const volumeContext = recordedVolumeContext(input, context);
   const complete = context.status === "complete";
   const nativeRows = Array.isArray(result2) ? result2 : [];
   const inputs = Array.isArray(input.resources) ? input.resources : [];
@@ -212853,6 +212932,7 @@ function customerSummary(result2, evidence, context, artifacts) {
       resource_name: resource.resourceName ?? null,
       account: resource.awsAccount ?? input.accountId ?? null,
       region: resource.awsRegion ?? input.region ?? null,
+      evidence_context: volumeContext(resource.resourceId),
       tags: object2(row.resourceTags) ? row.resourceTags : {},
       other_impacted_resource_ids: row.otherImpactedNodeIds ?? [],
       decision: complete ? row.approved === true ? "approved" : "rejected" : "unverified",
@@ -212889,6 +212969,7 @@ function customerSummary(result2, evidence, context, artifacts) {
       decision: "not_assessed",
       checks: [],
       proposed_settings: null,
+      evidence_context: volumeContext(id),
       estimate: { status: "not_calculated", currency: "USD", ...unknownAmounts, display: displayMoney(unknownAmounts) },
       resource_name: null,
       tags: {},
@@ -212912,12 +212993,13 @@ function customerSummary(result2, evidence, context, artifacts) {
       currency: "USD",
       source: context.cost_input?.source ?? null,
       period: context.cost_input?.period ?? null,
-      pricing_verification: lookups.length ? context.mode === "live_collection" ? "AWS reads recorded" : "recorded test responses" : "Price lookup provenance was not supplied or no price lookup was completed.",
+      pricing_verification: lookups.length ? context.mode === "live_collection" ? "AWS reads recorded" : context.mode === "replay" ? "recorded responses; no AWS reads performed during replay" : "recorded test responses" : "Price lookup provenance was not supplied or no price lookup was completed.",
       fallback_used: lookups.length ? lookups.some((lookup) => lookup.fallback_used) : null,
       lookups
     },
     configuration: context.configuration ?? null,
     no_candidates: context.no_candidates === true,
+    totals: summaryTotals(resources, complete),
     resources,
     ...context.status === "needs_evidence" ? { missing_evidence: nativeFailure } : {},
     ...context.status === "error" ? {
@@ -212926,8 +213008,10 @@ function customerSummary(result2, evidence, context, artifacts) {
     } : {},
     limitations: [
       "Proposed costs and savings are estimates; the current-cost basis is stated above.",
+      "Native report text is retained verbatim and is unverified: it does not establish actual billed costs, downtime, performance equivalence or rollback safety.",
       "Instance-type support for online modification is not checked.",
       "Application performance and equivalent peak throughput are not verified.",
+      "Instance state is a recorded snapshot; a stopped instance does not establish that its volume is unused or safe to modify.",
       "An approved assessment does not authorize execution."
     ],
     execution_outcome: "not_executed",
