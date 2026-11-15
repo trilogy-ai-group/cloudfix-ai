@@ -6,12 +6,12 @@ This repository holds the packages testers install. Implementation source, build
 
 ## Available skill
 
-[`co-gp2-to-gp3-tool`](skills/co-gp2-to-gp3-tool/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. When requested, the skill can also guide your harness through preparing an infrastructure patch or draft PR.
+[`co-gp2-to-gp3`](skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. When requested, the skill can also guide your harness through preparing an infrastructure patch or draft PR.
 
 The installable folder contains exactly two files:
 
 ```text
-skills/co-gp2-to-gp3-tool/
+skills/co-gp2-to-gp3/
   SKILL.md
   scripts/gp2.cjs
 ```
@@ -25,10 +25,10 @@ skills/co-gp2-to-gp3-tool/
    gh repo clone trilogy-ai-group/cloudfix-ai
    ```
 
-3. Install `skills/co-gp2-to-gp3-tool` through your harness's local-skill mechanism, preserving the two-file layout. Common locations are `.claude/skills/co-gp2-to-gp3-tool` and `.agents/skills/co-gp2-to-gp3-tool` inside your project. For an upgrade, replace the previous managed skill directory so old development files cannot survive an overlay. No product profile file is required.
+3. Install `skills/co-gp2-to-gp3` through your harness's local-skill mechanism, preserving the two-file layout. Common locations are `.claude/skills/co-gp2-to-gp3` and `.agents/skills/co-gp2-to-gp3` inside your project. For an upgrade, replace the previous managed skill directory so old development files cannot survive an overlay. If you installed the earlier `co-gp2-to-gp3-tool` package, remove that old installed directory when installing `co-gp2-to-gp3` so your harness discovers only one copy. No product profile file is required.
 4. Start a fresh conversation with your agent, for example:
 
-   > Use co-gp2-to-gp3-tool to assess GP2 volumes in my approved dev/test account ACCOUNT_ID, region REGION, using my existing AWS access. Report the recommendations and supporting evidence. This request is assessment only; do not change resources.
+   > Use co-gp2-to-gp3 to assess GP2 volumes in my approved dev/test account ACCOUNT_ID, region REGION, using my existing AWS access. Report the recommendations and supporting evidence. This request is assessment only; do not change resources.
 
 Specify a volume ID if you want a single-resource assessment. Follow the skill's instructions for running the executable and reading all saved artifacts. Keep run output outside this checkout.
 
@@ -55,4 +55,4 @@ The tested executable's SHA-256 is:
 3482581de661d2ba9fc810cf223cfc952ec8a16ae4a8753067e262d10199f013
 ```
 
-Run `node skills/co-gp2-to-gp3-tool/scripts/gp2.cjs --version` for build provenance. The package runs directly; it needs no source checkout, dependency installation or rebuild.
+Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for build provenance. The package runs directly; it needs no source checkout, dependency installation or rebuild.

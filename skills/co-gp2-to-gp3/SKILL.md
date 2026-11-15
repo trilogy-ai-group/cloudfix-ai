@@ -1,5 +1,5 @@
 ---
-name: co-gp2-to-gp3-tool
+name: co-gp2-to-gp3
 description: Assess AWS EBS gp2-to-gp3 opportunities with a local read-only tool, or replay recorded evidence. When requested, take an approved finding through to a draft infrastructure PR.
 ---
 
