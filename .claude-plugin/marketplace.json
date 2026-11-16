@@ -1,0 +1,12 @@
+{
+  "name": "cloudfix-ai",
+  "owner": {"name": "CloudFix"},
+  "metadata": {"description": "CloudFix AI skills for assessing and fixing AWS cost optimization opportunities."},
+  "plugins": [
+    {
+      "name": "cloudfix",
+      "source": "./plugins/cloudfix",
+      "description": "Assess and fix AWS cost optimization opportunities from your agent."
+    }
+  ]
+}

@@ -35,6 +35,17 @@ skills/co-gp2-to-gp3/
   scripts/gp2.cjs
 ```
 
+## Plugin preview
+
+The guided skill is also packaged as [`cloudfix`](plugins/cloudfix/README.md), an installable plugin. In Claude Code:
+
+```text
+/plugin marketplace add trilogy-ai-group/cloudfix-ai
+/plugin install cloudfix@cloudfix-ai
+```
+
+The plugin carries an exact copy of `co-gp2-to-gp3-guided`. Fetching the skill directly, as described above, works the same and needs no installation.
+
 ## Try it with your agent
 
 Start a fresh conversation with an agent that can read web pages, download files and run local commands. Give it this instruction, replacing the account and region:
