@@ -11,7 +11,7 @@ from cloudfix.common.pricing import EbsPrices, annual_price
 
 UTC = timezone.utc
 ELASTIC_SUPPORT_DATE = datetime(2016, 12, 3, 23, 40, tzinfo=UTC)
-_EMR_TAG_PREFIX = "aws:elasticmapreduce:"
+_EMR_TAG = "aws:elasticmapreduce:instance-group-role"
 
 
 @dataclass(frozen=True)
@@ -124,7 +124,7 @@ def _instance_check(attachments: list, instances: Mapping[str, dict]) -> Check:
     inst = instances.get(instance_id)
     if inst is None:
         return Check("Ec2InstanceDescribable", False, {"instance_id": instance_id})
-    emr = any(str(k).startswith(_EMR_TAG_PREFIX) for k in _tag_map(inst))
+    emr = _EMR_TAG in _tag_map(inst)
     return Check("EMRClusterAssociation", not emr, {"instance_id": instance_id})
 
 

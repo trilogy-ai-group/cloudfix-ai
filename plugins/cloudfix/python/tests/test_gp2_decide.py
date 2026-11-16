@@ -56,6 +56,11 @@ def test_emr_and_undescribable_instance():
     r = assess_volume("v", v, {}, 120.0, 120.0, PRICES, CFG, NOW)
     assert _check(r, "Ec2InstanceDescribable").passed is False and not r.approved
 
+def test_other_emr_tag_does_not_count_as_emr():
+    v = volume("v", attachments=[attachment("i-1")])
+    other = instance("i-1", tags={"aws:elasticmapreduce:job-flow-id": "j-1"})
+    assert _check(assess_volume("v", v, {"i-1": other}, 120.0, 120.0, PRICES, CFG, NOW), "EMRClusterAssociation").passed is True
+
 def test_elastic_support_dates():
     v = volume("v", create_time="2016-01-01T00:00:00Z", attachments=[attachment("i-1", attach_time="2016-06-01T00:00:00Z")])
     assert _check(assess_volume("v", v, {"i-1": instance("i-1", launch_time="2015-01-01T00:00:00Z")}, 120.0, 120.0, PRICES, CFG, NOW), "ElasticVolumeEnabled").passed is False
