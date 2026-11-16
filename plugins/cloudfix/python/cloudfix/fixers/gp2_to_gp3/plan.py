@@ -12,7 +12,7 @@ import cloudfix
 from cloudfix.common.aws import Caller
 from cloudfix.common.errors import AwsCallError, InputError
 from cloudfix.common.iac import iac_signals
-from cloudfix.common.money import display_amounts, display_usd
+from cloudfix.common.money import AMOUNT_FIELDS, display_amounts, display_usd
 from cloudfix.common.output import new_run_dir, write_json
 from cloudfix.common.pricing import EbsPrices, PricingLookups
 from cloudfix.finders.gp2_to_gp3.decide import estimate_savings
@@ -61,7 +61,38 @@ def load_assessment(assessment_dir: Path) -> dict:
         basis = {k: (summary.get("cost_basis") or {}).get(k) for k in ("kind", "source", "period")}
     profile = config.get("profile") or (context.get("config") or {}).get("profile")
     return {"path": str(root), "result": result, "config": config, "context": context, "tags": tags,
-            "profile": profile, "cost_basis": basis}
+            "profile": profile, "cost_basis": basis, "attachments": _recorded_attachments(root / "evidence.json")}
+
+
+def _objects(value: Any) -> list[dict]:
+    return [v for v in value if isinstance(v, dict)] if isinstance(value, list) else []
+
+
+def _recorded_attachments(path: Path) -> dict[str, dict | None]:
+    """Per volume, its first attachment as the assessment recorded it (DescribeVolumes), with the instance's
+    Name tag from the recorded DescribeInstances responses; None when unattached."""
+    if not path.is_file():
+        return {}
+    volumes, instances = {}, {}
+    for r in _objects(_read_json(path).get("responses")):
+        out = r.get("output") if isinstance(r.get("output"), dict) else {}
+        if r.get("operation") == "DescribeVolumes":
+            volumes.update({v.get("VolumeId"): v for v in _objects(out.get("Volumes"))})
+        elif r.get("operation") == "DescribeInstances":
+            for reservation in _objects(out.get("Reservations")):
+                instances.update({i.get("InstanceId"): i for i in _objects(reservation.get("Instances"))})
+    found: dict[str, dict | None] = {}
+    for vid, v in volumes.items():
+        first = (_objects(v.get("Attachments")) or [None])[0]
+        found[vid] = None if first is None else {
+            "instance_id": first.get("InstanceId"), "device": first.get("Device"),
+            "instance_name": _tags(instances.get(first.get("InstanceId")) or {}).get("Name")}
+    return found
+
+
+def _unique(ids: list[str] | None) -> list[str] | None:
+    """The ids in first-seen order, each once; None or empty stays None."""
+    return list(dict.fromkeys(ids)) if ids else None
 
 
 def _when(value: Any) -> datetime:
@@ -155,9 +186,12 @@ def _target(resource: dict, vid: str, iops: dict[str, int], throughput: dict[str
 
 def make_plan(assessment: dict, aws: Caller, *, volume_ids: list[str] | None,
               management: Literal["not-managed", "unknown"], iops_overrides: dict[str, int],
-              throughput_overrides: dict[str, int], now: datetime) -> dict:
+              throughput_overrides: dict[str, int], now: datetime, profile: str | None = None) -> dict:
+    """`profile`, when given, is the AWS profile the change acts as instead of the assessment's; it is
+    recorded in the plan, so the plan's hash and approval cover it."""
     result = assessment["result"]
-    chosen = list(volume_ids) if volume_ids else [r["resource_id"] for r in result["resources"] if r["approved"]]
+    volume_ids = _unique(volume_ids)
+    chosen = volume_ids or [r["resource_id"] for r in result["resources"] if r["approved"]]
     _overrides(chosen, iops_overrides, throughput_overrides)
     candidates, refused = _select(assessment, volume_ids)
     identity = aws.call("sts", "GetCallerIdentity", {})
@@ -202,10 +236,18 @@ def make_plan(assessment: dict, aws: Caller, *, volume_ids: list[str] | None,
     return {
         "plan_id": plan_id, "created_at": now.isoformat(), "expires_at": (now + PLAN_LIFETIME).isoformat(),
         "assessment": assessment["path"], "account": result["account"], "region": result["region"],
-        "profile": assessment.get("profile"), "caller_identity": identity,
-        "cost_basis": assessment.get("cost_basis"), "volumes": volumes, "refused": refused,
-        "pricing_lookups": lookups.records, "reads": list(aws.reads),
+        "profile": profile or assessment.get("profile"), "caller_identity": identity,
+        "cost_basis": assessment.get("cost_basis"), "volumes": volumes, "totals": _totals(volumes),
+        "refused": refused, "pricing_lookups": lookups.records, "reads": list(aws.reads),
     }
+
+
+def _totals(volumes: list[dict]) -> dict:
+    """Sums over the planned volumes of the unrounded amounts, formatted only after summing."""
+    amounts = {f: sum((v["estimate"][f] for v in volumes), 0.0) for f in AMOUNT_FIELDS}
+    bound = sum((v["snapshot_cost_upper_bound_monthly"] for v in volumes), 0.0)
+    return {"volume_count": len(volumes), "currency": "USD", **amounts, "display": display_amounts(amounts),
+            "snapshot_cost_upper_bound_monthly": bound, "snapshot_cost_display": display_usd(bound)}
 
 
 def write_plan(out_dir: Path, plan: dict) -> tuple[Path, str]:
@@ -217,7 +259,7 @@ def write_plan(out_dir: Path, plan: dict) -> tuple[Path, str]:
 def make_change(assessment: dict, *, volume_ids: list[str] | None, iops_overrides: dict[str, int],
                 throughput_overrides: dict[str, int], repo_hint: str | None,
                 delivery: Literal["draft_pr", "local_patch"]) -> dict:
-    candidates, refused = _select(assessment, volume_ids)
+    candidates, refused = _select(assessment, _unique(volume_ids))
     if refused:
         raise InputError("not approved in the assessment: " + ", ".join(r["volume_id"] for r in refused))
     _overrides([r["resource_id"] for r in candidates], iops_overrides, throughput_overrides)
@@ -225,11 +267,13 @@ def make_change(assessment: dict, *, volume_ids: list[str] | None, iops_override
     for r in candidates:
         vid, s = r["resource_id"], r["sizing"]
         target, assessed, deviates = _target(r, vid, iops_overrides, throughput_overrides)
+        tags = assessment["tags"].get(vid) or {}
         resources.append({
-            "id": vid,
+            "id": vid, "name": tags.get("Name"), "tags": tags,
+            "attachment": (assessment.get("attachments") or {}).get(vid),
             "current": {"type": "gp2", "size_gib": s["size_gib"], "iops": s["gp2_iops"]},
             "target": target, "assessed_target": assessed, "deviates_from_assessment": deviates,
-            "iac_evidence": iac_signals(assessment["tags"].get(vid) or {}),
+            "iac_evidence": iac_signals(tags),
         })
     note = Path(cloudfix.__file__).resolve().parents[2] / "skills/co-gp2-to-gp3-fix/iac.md"
     return {

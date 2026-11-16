@@ -1,15 +1,18 @@
 import hashlib
 import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
 from cloudfix import cli
 from cloudfix.common.aws import RecordingAws
 from cloudfix.common.errors import InputError
+from cloudfix.common.money import AMOUNT_FIELDS, display_usd
 from cloudfix.fixers.gp2_to_gp3 import plan as fixer
 from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, FIXER_READS, load_assessment, make_change, make_plan, write_plan
-from tests.factories import price_row, stubbed_client, volume
+from cloudfix.finders.gp2_to_gp3.run import run_assess
+from tests.factories import attachment, instance, price_row, stubbed_client, volume
 from tests.test_gp2_run import ACCOUNT, NOW, REGION, Stubs, _config
 
 SNAPSHOT_QUERY = {"ServiceCode": "AmazonEC2", "FormatVersion": "aws_v1", "MaxResults": 100, "Filters": [
@@ -25,27 +28,48 @@ def _assess(tmp_path, tags=None):
     stubs.volumes([volume("vol-1", size=100, state="available", tags=tags)], FILTER["Filters"])
     stubs.prices()
     run_dir = tmp_path / "assessment"
-    from cloudfix.finders.gp2_to_gp3.run import run_assess
     assert run_assess(_config(tmp_path, account=ACCOUNT, volume_ids=["vol-1"]), run_dir, aws=stubs.aws, now=NOW) == 0
     return run_dir
 
 
+def _assess_two(tmp_path):
+    """vol-1: 100 GiB, named, attached as /dev/xvdf to the named instance i-1. vol-2: 101 GiB, unattached,
+    unnamed. Both are approved."""
+    ids = ["vol-1", "vol-2"]
+    stubs = Stubs()
+    stubs.identity()
+    stubs.volumes([volume("vol-1", size=100, tags={"Name": "data-1", "Team": "core"},
+                          attachments=[attachment("i-1", volume_id="vol-1")]),
+                   volume("vol-2", size=101, state="available")], [{"Name": "volume-id", "Values": ids}])
+    stubs.instances([instance("i-1", tags={"Name": "web-1"})], ["i-1"])
+    stubs.prices()
+    run_dir = tmp_path / "assessment"
+    assert run_assess(_config(tmp_path, account=ACCOUNT, volume_ids=ids), run_dir, aws=stubs.aws, now=NOW) == 0
+    stubs.assert_all_used()
+    return run_dir
+
+
 class Fixer:
-    def __init__(self, live=None, mods=None, mods_error=None, snapshot="0.05", account=ACCOUNT):
+    """Stubs for one plan: identity, then per live volume (vol-1 first, then `more`) its DescribeVolumes and
+    DescribeVolumesModifications, and one snapshot price lookup."""
+
+    def __init__(self, live=None, mods=None, mods_error=None, snapshot="0.05", account=ACCOUNT, more=()):
         self.sts, self.sts_stub = stubbed_client("sts", REGION)
         self.sts_stub.add_response("get_caller_identity", {"Account": account, "Arn": "arn:aws:iam::1:user/t",
                                                            "UserId": "t"}, {})
         self.ec2, self.ec2_stub = stubbed_client("ec2", REGION)
         self.pricing, self.pricing_stub = stubbed_client("pricing", "us-east-1")
         self.aws = RecordingAws(REGION, FIXER_OPS, clients={"sts": self.sts, "ec2": self.ec2, "pricing": self.pricing})
-        self.ec2_stub.add_response("describe_volumes", {"Volumes": [live or volume("vol-1", size=100, state="available")]},
-                                   FILTER)
-        if mods_error:
-            self.ec2_stub.add_client_error("describe_volumes_modifications", service_error_code=mods_error,
-                                           expected_params={"VolumeIds": ["vol-1"]})
-        else:
-            self.ec2_stub.add_response("describe_volumes_modifications", {"VolumesModifications": mods or []},
-                                       {"VolumeIds": ["vol-1"]})
+        for v in [live or volume("vol-1", size=100, state="available"), *more]:
+            vid = v["VolumeId"]
+            self.ec2_stub.add_response("describe_volumes", {"Volumes": [v]},
+                                       {"Filters": [{"Name": "volume-id", "Values": [vid]}]})
+            if mods_error:
+                self.ec2_stub.add_client_error("describe_volumes_modifications", service_error_code=mods_error,
+                                               expected_params={"VolumeIds": [vid]})
+            else:
+                self.ec2_stub.add_response("describe_volumes_modifications", {"VolumesModifications": mods or []},
+                                           {"VolumeIds": [vid]})
         self.pricing_stub.add_response("get_products", {"PriceList": [price_row("GB-Mo", snapshot)],
                                                         "FormatVersion": "aws_v1"}, SNAPSHOT_QUERY)
 
@@ -86,6 +110,24 @@ def test_plan_refusals(tmp_path, tags, live, mods, cause):
     fx = Fixer(live=volume("vol-1", **{"size": 100, "state": "available", "tags": tags, **live}), mods=mods)
     plan = _plan(_assess(tmp_path), fx)
     assert plan["volumes"] == [] and cause in plan["refused"][0]["reason"]
+
+
+@pytest.mark.parametrize("tags", [
+    {"aws:cloudformation:stack-name": "data-stack"},
+    {"pulumi:project": "storage"},
+    {"ManagedBy": "Terraform"},
+    {"managed-by": "pulumi"},
+    {"managed_by": "cdk"},
+    {"terraform": "true"},
+    {"kubernetes.io/created-for/pvc/name": "data-pvc"},
+    {"ebs.csi.aws.com/cluster": "true"},
+])
+def test_plan_refuses_every_iac_signal(tmp_path, tags):
+    plan = _plan(_assess(tmp_path), Fixer(live=volume("vol-1", size=100, state="available", tags=tags)))
+    [key] = tags
+    assert plan["volumes"] == [] and len(plan["refused"]) == 1
+    reason = plan["refused"][0]["reason"]
+    assert reason.startswith("managed by code: ") and f"tag {key}=" in reason and "PR worker" in reason
 
 
 def test_latest_modification_decides(tmp_path):
@@ -164,6 +206,7 @@ def test_change_json_has_change_note_and_iac_evidence(tmp_path, capsys):
     change = make_change(load_assessment(run_dir), volume_ids=None, iops_overrides={}, throughput_overrides={},
                          repo_hint="/repo", delivery="draft_pr")
     assert change["change_note"].endswith("skills/co-gp2-to-gp3-fix/iac.md")
+    assert Path(change["change_note"]).is_file()
     r = change["resources"][0]
     assert r["id"] == "vol-1" and r["iac_evidence"] and r["deviates_from_assessment"] is False
     assert r["target"]["iops"] == 3000 and change["delivery"] == "draft_pr" and change["repo_hint"] == "/repo"
@@ -223,3 +266,57 @@ def test_cli_plan_requires_volume_id(tmp_path, capsys):
     err = json.loads(capsys.readouterr().out)["error"]
     assert err["code"] == "usage" and "--volume-id" in err["message"]
     assert not (tmp_path / "p").exists()
+
+
+def test_change_json_carries_what_finds_the_resource_in_code(tmp_path):
+    change = make_change(load_assessment(_assess_two(tmp_path)), volume_ids=["vol-1", "vol-2", "vol-1"],
+                         iops_overrides={}, throughput_overrides={}, repo_hint=None, delivery="draft_pr")
+    assert [r["id"] for r in change["resources"]] == ["vol-1", "vol-2"]  # a repeated id is listed once
+    first, second = change["resources"]
+    assert first["tags"] == {"Name": "data-1", "Team": "core"} and first["name"] == "data-1"
+    assert first["attachment"] == {"instance_id": "i-1", "device": "/dev/xvdf", "instance_name": "web-1"}
+    assert second["tags"] == {} and second["name"] is None and second["attachment"] is None
+
+
+def test_repeated_volume_id_is_planned_once(tmp_path):
+    plan = _plan(_assess(tmp_path), Fixer(mods_error="InvalidVolumeModification.NotFound"),
+                 volume_ids=["vol-1", "vol-1"])
+    assert [v["volume_id"] for v in plan["volumes"]] == ["vol-1"] and plan["refused"] == []
+
+
+def test_plan_totals_are_code_computed_from_unrounded_amounts(tmp_path):
+    fx = Fixer(mods_error="InvalidVolumeModification.NotFound", more=[volume("vol-2", size=101, state="available")])
+    plan = _plan(_assess_two(tmp_path), fx)
+    volumes, totals = plan["volumes"], plan["totals"]
+    assert [v["volume_id"] for v in volumes] == ["vol-1", "vol-2"] and totals["volume_count"] == 2
+    for field in AMOUNT_FIELDS:
+        assert totals[field] == sum(v["estimate"][field] for v in volumes)
+        assert totals["display"][field] == display_usd(totals[field])
+    assert totals["annual_saving"] == pytest.approx(24.0 + 24.24) and totals["display"]["annual_saving"] == "$48.24"
+    bound = sum(v["snapshot_cost_upper_bound_monthly"] for v in volumes)
+    assert totals["snapshot_cost_upper_bound_monthly"] == bound == pytest.approx(0.05 * 201)
+    assert totals["snapshot_cost_display"] == display_usd(bound) == "$10.05"
+
+
+def test_plan_profile_overrides_the_assessment_profile(tmp_path, monkeypatch, capsys):
+    assessment = _assess(tmp_path)
+    fx = Fixer(mods_error="InvalidVolumeModification.NotFound")
+    made = []
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: made.append((a, k)) or fx.aws)
+    out = tmp_path / "plan"
+    capsys.readouterr()
+    assert cli.main(["gp2-to-gp3-fix", "plan", "--assessment", str(assessment), "--management", "not-managed",
+                     "--volume-id", "vol-1", "--profile", "fixer-write", "--out", str(out)]) == 0
+    assert made == [((REGION, FIXER_READS), {"profile": "fixer-write"})]
+    plan_file = out / "plan.json"
+    assert json.loads(plan_file.read_text())["profile"] == "fixer-write"  # recorded, so the hash covers it
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: made.append((a, k)) or _Denied())
+    for action in (["apply", "--approve", "0" * 64, "--approval-kind", "after_plan", "--approval-text", "yes"],
+                   ["status"]):
+        cli.main(["gp2-to-gp3-fix", action[0], "--plan", str(plan_file), *action[1:]])
+        assert made[-1][1]["profile"] == "fixer-write"  # apply and status act as the plan's profile
+    capsys.readouterr()
+    assert cli.main(["gp2-to-gp3-fix", "plan", "--assessment", str(assessment), "--management", "not-managed",
+                     "--volume-id", "vol-1", "--profile", " ", "--out", str(tmp_path / "p2")]) == 1
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "invalid_input"
+    assert not (tmp_path / "p2").exists()

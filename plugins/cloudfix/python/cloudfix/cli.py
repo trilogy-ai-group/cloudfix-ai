@@ -56,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--throughput", action="append", default=[], metavar="VOL=N",
                        help="throughput override in MiB/s (repeatable)")
     plan.add_argument("--management", required=True, choices=("not-managed", "unknown"))
+    plan.add_argument("--profile", metavar="NAME",
+                      help="AWS profile the change acts as (default: the assessment's); recorded in plan.json")
     plan.add_argument("--out", required=True, type=Path, help="new directory to hold plan.json")
     change.add_argument("--repo-hint")
     change.add_argument("--delivery", choices=("draft_pr", "local_patch"), default="draft_pr")
@@ -122,11 +124,13 @@ def _fix(args: argparse.Namespace, aws=None, now=None) -> int:
         _emit({"status": "written", "change_file": str(args.out.resolve()),
                "volumes": [r["id"] for r in change["resources"]]})
         return 0
-    aws = aws or RecordingAws(assessment["result"]["region"], fixer_plan.FIXER_READS,
-                              profile=assessment["profile"])
+    if args.profile is not None and not args.profile.strip():
+        raise InputError("--profile is empty; name an AWS profile or leave the option out")
+    profile = args.profile or assessment["profile"]
+    aws = aws or RecordingAws(assessment["result"]["region"], fixer_plan.FIXER_READS, profile=profile)
     plan = fixer_plan.make_plan(assessment, aws, volume_ids=ids, management=args.management,
                                 iops_overrides=iops, throughput_overrides=throughput,
-                                now=now or datetime.now(timezone.utc))
+                                now=now or datetime.now(timezone.utc), profile=profile)
     if not plan["volumes"]:
         _emit({"status": "refused", "volumes": [], "refused": plan["refused"]})
         return 1
