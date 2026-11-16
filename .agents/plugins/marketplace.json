@@ -1,0 +1,12 @@
+{
+  "name": "cloudfix-ai",
+  "interface": {"displayName": "CloudFix AI"},
+  "plugins": [
+    {
+      "name": "cloudfix",
+      "source": {"source": "local", "path": "./plugins/cloudfix"},
+      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "category": "Productivity"
+    }
+  ]
+}
