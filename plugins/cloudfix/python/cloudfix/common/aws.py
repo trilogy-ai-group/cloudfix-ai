@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Protocol
 
 from botocore import xform_name
+from botocore.config import Config
 from botocore.exceptions import ClientError
 
 from cloudfix.common.errors import AwsCallError, InputError, MissingEvidence
@@ -31,11 +32,16 @@ def _now() -> str:
 
 
 class RecordingAws:
+    """Calls AWS and records each request. With `retries=False` every request is sent exactly once: botocore
+    would otherwise re-send a write (CreateSnapshot, ModifyVolume) whose response was lost, so callers that
+    write turn retries off and reconcile a lost response themselves."""
+
     def __init__(self, region: str, allowed: frozenset[str], *, profile: str | None = None,
-                 clients: Mapping[str, Any] | None = None):
+                 clients: Mapping[str, Any] | None = None, retries: bool = True):
         self.region = region
         self.allowed = allowed
         self.profile = profile
+        self.retries = retries
         self._clients: dict[str, Any] = dict(clients) if clients is not None else {}
         self._session = None
         self.reads: list[dict] = []
@@ -47,7 +53,8 @@ class RecordingAws:
 
                 self._session = boto3.Session(profile_name=self.profile)
             region = "us-east-1" if service == "pricing" else self.region
-            self._clients[service] = self._session.client(service, region_name=region)
+            config = None if self.retries else Config(retries={"total_max_attempts": 1})
+            self._clients[service] = self._session.client(service, region_name=region, config=config)
         return self._clients[service]
 
     def call(self, service: str, operation: str, params: dict) -> dict:

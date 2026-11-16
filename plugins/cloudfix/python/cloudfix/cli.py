@@ -134,7 +134,7 @@ def _apply(args: argparse.Namespace) -> int:
     if not math.isfinite(args.wait) or args.wait < 0:
         raise InputError(f"--wait must be a non-negative number of minutes, got {args.wait}")
     plan = fixer_apply.read_plan(args.plan)
-    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"))
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"), retries=False)
     result = fixer_apply.apply_plan(args.plan, args.approve,
                                     fixer_apply.Approval(args.approval_kind, args.approval_text), aws,
                                     confirm_direct=args.confirm_direct_management, wait_minutes=args.wait,

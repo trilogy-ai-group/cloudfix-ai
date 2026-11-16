@@ -68,3 +68,15 @@ def stubbed_client(service: str, region: str = "us-east-1"):
     stubber = Stubber(client)
     stubber.activate()
     return client, stubber
+
+
+def offline_aws_env(monkeypatch, tmp_path) -> None:
+    """Fake credentials and no config files, profile, retry overrides or instance metadata, so real
+    boto3 clients can be built (and requests signed) without touching the network or the user's setup."""
+    for key, value in {"AWS_ACCESS_KEY_ID": "testing", "AWS_SECRET_ACCESS_KEY": "testing",
+                       "AWS_SESSION_TOKEN": "testing", "AWS_EC2_METADATA_DISABLED": "true",
+                       "AWS_CONFIG_FILE": str(tmp_path / "no-config"),
+                       "AWS_SHARED_CREDENTIALS_FILE": str(tmp_path / "no-credentials")}.items():
+        monkeypatch.setenv(key, value)
+    for key in ("AWS_PROFILE", "AWS_DEFAULT_PROFILE", "AWS_RETRY_MODE", "AWS_MAX_ATTEMPTS"):
+        monkeypatch.delenv(key, raising=False)

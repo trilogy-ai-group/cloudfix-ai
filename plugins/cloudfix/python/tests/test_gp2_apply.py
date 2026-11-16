@@ -9,7 +9,7 @@ from cloudfix.common.aws import RecordingAws
 from cloudfix.common.errors import InputError
 from cloudfix.fixers.gp2_to_gp3.apply import POLL_SECONDS, STATES, Approval, apply_plan
 from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, load_assessment, make_plan, write_plan
-from tests.factories import stubbed_client, volume
+from tests.factories import offline_aws_env, stubbed_client, volume
 from tests.test_gp2_plan import PLAN_NOW, Fixer, _assess
 from tests.test_gp2_run import ACCOUNT, REGION
 
@@ -271,7 +271,7 @@ def test_in_progress_then_resume(tmp_path, monkeypatch, capsys):
     assert line["status"] == "in_progress"
     assert line["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
     assert line["execution_file"] == str(path.parent / "execution.json")
-    assert made == [((REGION, FIXER_OPS), {"profile": None})]
+    assert made == [((REGION, FIXER_OPS), {"profile": None, "retries": False})]
     second = Aws(path)
     second.snapshot("snap-1", "vol-1", "completed")
     second.submit("vol-1")
@@ -299,6 +299,39 @@ def test_lost_create_snapshot_response_found_by_tag(tmp_path):
     assert result["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
     assert aws.operations().count("CreateSnapshot") == 1
     assert [c["operation"] for c in _execution(path)["calls"]].count("CreateSnapshot") == 1
+
+
+@pytest.mark.parametrize("seeded", [True, False])
+def test_snapshot_created_before_a_crash_is_found_by_tag(tmp_path, seeded):
+    """The process died after CreateSnapshot succeeded, before execution.json recorded it."""
+    path, digest = _make_plan(tmp_path)
+    if seeded:
+        _seed(path, digest, {"vol-1": "planned"})
+    aws = Aws(path)
+    aws.volume("vol-1")
+    aws.mods("vol-1")
+    aws.tagged("vol-1", _snap("snap-1", "vol-1", "pending"))
+    result = _apply(path, digest, aws, wait=0)
+    aws.assert_all_used()
+    assert "CreateSnapshot" not in aws.operations()
+    assert result["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
+
+
+def test_apply_caller_is_built_without_retries(tmp_path, monkeypatch):
+    offline_aws_env(monkeypatch, tmp_path)
+    path, _ = _make_plan(tmp_path)
+    built = []
+
+    def build(*args, **kwargs):
+        built.append(RecordingAws(*args, **kwargs))
+        return built[-1]
+
+    monkeypatch.setattr(cli, "RecordingAws", build)
+    code = cli.main(["gp2-to-gp3-fix", "apply", "--plan", str(path), "--approve", "0" * 64,
+                     "--approval-kind", "after_plan", "--approval-text", "yes"])
+    assert code == 1 and built[0].reads == []  # refused on the hash, before any request
+    for service in ("ec2", "sts"):
+        assert built[0]._client(service).meta.config.retries["total_max_attempts"] == 1
 
 
 def test_create_snapshot_error_without_tagged_snapshot_fails_volume(tmp_path):
