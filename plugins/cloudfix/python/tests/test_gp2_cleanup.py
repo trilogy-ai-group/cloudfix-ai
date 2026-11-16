@@ -71,8 +71,10 @@ def test_cleanup_deletes_only_verified_tagged_snapshots(tmp_path):
     execution = _execution(path)
     assert execution["volumes"]["vol-1"]["snapshot_deleted"] is True
     assert "snapshot_deleted" not in execution["volumes"]["vol-3"]
-    assert execution["cleanup"]["approval"] == {"kind": "after_plan", "wording": APPROVAL.wording,
-                                                "recorded_at": APPLY_NOW.isoformat()}
+    assert len(execution["cleanup"]) == 1
+    assert execution["cleanup"][0]["approval"] == {"kind": "after_plan", "wording": APPROVAL.wording,
+                                                   "recorded_at": APPLY_NOW.isoformat()}
+    assert execution["cleanup"][0]["deleted"] == ["vol-1"]
     assert any(c["operation"] == "DeleteSnapshot" for c in execution["calls"])
     assert execution["volumes"]["vol-1"]["state"] == "verified"
 
@@ -145,3 +147,26 @@ def test_cli_status_and_cleanup(tmp_path, monkeypatch, capsys):
     assert cli.main(args + ["--approve", digest]) == 0
     assert json.loads(capsys.readouterr().out)["deleted"] == ["vol-1"]
     assert seen[-1]["retries"] is False
+
+
+def test_cleanup_rerun_keeps_each_runs_record(tmp_path):
+    path, digest = _make_plan(tmp_path, extra=("vol-2",))
+    _seed(path, digest, {"vol-1": "verified", "vol-2": "optimizing"})
+    first = Aws(path)
+    _read_snapshot(first, "snap-1", "vol-1", first.plan_id)
+    _delete(first, "snap-1")
+    cleanup(path, digest, APPROVAL, first.aws, now=Clock().now)
+    execution = _execution(path)
+    execution["volumes"]["vol-2"]["state"] = "verified"
+    (path.parent / "execution.json").write_text(json.dumps(execution))
+    second = Aws(path)
+    _read_snapshot(second, "snap-2", "vol-2", second.plan_id)
+    _delete(second, "snap-2")
+    later = Approval("prior", "delete the snapshots once verified")
+    out = cleanup(path, digest, later, second.aws, now=Clock(APPLY_NOW.replace(hour=23)).now)
+    assert out["deleted"] == ["vol-2"] and "already deleted" in out["skipped"]["vol-1"]
+    runs = _execution(path)["cleanup"]
+    assert [r["deleted"] for r in runs] == [["vol-1"], ["vol-2"]]
+    assert [r["approval"]["kind"] for r in runs] == ["after_plan", "prior"]
+    assert runs[0]["approval"]["wording"] == APPROVAL.wording
+    assert runs[1]["approval"]["recorded_at"] != runs[0]["approval"]["recorded_at"]

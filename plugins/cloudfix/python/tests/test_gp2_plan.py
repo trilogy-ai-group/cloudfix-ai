@@ -100,7 +100,7 @@ def test_all_refused_exits_1_and_writes_no_plan(tmp_path, monkeypatch, capsys):
     out = tmp_path / "plan"
     capsys.readouterr()
     code = cli.main(["gp2-to-gp3-fix", "plan", "--assessment", str(assessment), "--management", "not-managed",
-                     "--out", str(out)])
+                     "--volume-id", "vol-1", "--out", str(out)])
     assert code == 1 and not out.exists()
     assert json.loads(capsys.readouterr().out)["refused"][0]["volume_id"] == "vol-1"
 
@@ -112,7 +112,7 @@ def test_cli_plan_writes_plan(tmp_path, monkeypatch, capsys):
     out = tmp_path / "plan"
     capsys.readouterr()
     assert cli.main(["gp2-to-gp3-fix", "plan", "--assessment", str(assessment), "--management", "unknown",
-                     "--out", str(out), "--throughput", "vol-1=128"]) == 0
+                     "--volume-id", "vol-1", "--out", str(out), "--throughput", "vol-1=128"]) == 0
     line = json.loads(capsys.readouterr().out)
     assert line["status"] == "planned" and line["volumes"] == ["vol-1"]
     assert line["sha256"] == hashlib.sha256((out / "plan.json").read_bytes()).hexdigest()
@@ -196,7 +196,7 @@ def test_cli_error_codes(tmp_path, monkeypatch, capsys):
     run_dir = _assess(tmp_path)
     capsys.readouterr()
     args = ["gp2-to-gp3-fix", "plan", "--assessment", str(run_dir), "--management", "unknown",
-            "--out", str(tmp_path / "p")]
+            "--volume-id", "vol-1", "--out", str(tmp_path / "p")]
     assert cli.main(args + ["--iops", "bad"]) == 1
     assert json.loads(capsys.readouterr().out)["error"]["code"] == "invalid_input"
     monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: _Denied())
@@ -211,3 +211,13 @@ class _Denied:
     def call(self, service, operation, params):
         from cloudfix.common.errors import AwsCallError
         raise AwsCallError(service, operation, "UnauthorizedOperation", "denied")
+
+
+def test_cli_plan_requires_volume_id(tmp_path, capsys):
+    run_dir = _assess(tmp_path)
+    capsys.readouterr()
+    assert cli.main(["gp2-to-gp3-fix", "plan", "--assessment", str(run_dir), "--management", "not-managed",
+                     "--out", str(tmp_path / "p")]) == 1
+    err = json.loads(capsys.readouterr().out)["error"]
+    assert err["code"] == "usage" and "--volume-id" in err["message"]
+    assert not (tmp_path / "p").exists()

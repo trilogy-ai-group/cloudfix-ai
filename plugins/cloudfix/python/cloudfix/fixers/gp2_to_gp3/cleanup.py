@@ -109,8 +109,13 @@ def cleanup(plan_path: Path, approve_sha256: str, approval: Approval, aws: Calle
 
     deleted: list[str] = []
     skipped: dict[str, str] = {}
-    execution.setdefault("cleanup", {"approval": {"kind": approval.kind, "wording": approval.wording,
-                                                  "recorded_at": now().isoformat()}})
+    # One record per cleanup run, so a rerun keeps the earlier run's approval, deletions and skips.
+    record = {"approval": {"kind": approval.kind, "wording": approval.wording, "recorded_at": now().isoformat()},
+              "deleted": deleted, "skipped": skipped}
+    runs = execution.setdefault("cleanup", [])
+    if not isinstance(runs, list):
+        raise InputError(f"{path} holds a cleanup record in an unknown format")
+    runs.append(record)
     for vid in _volume_ids(plan):
         rec = execution["volumes"].get(vid)
         if rec is None:
@@ -141,6 +146,5 @@ def cleanup(plan_path: Path, approve_sha256: str, approval: Approval, aws: Calle
         rec["snapshot_deleted"] = True
         deleted.append(vid)
         save()  # recorded right after each delete
-    execution["cleanup"].update(deleted=deleted, skipped=skipped)
     save()
     return {"status": "completed", "deleted": deleted, "skipped": skipped, "execution_file": str(path)}

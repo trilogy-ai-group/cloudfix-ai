@@ -59,7 +59,7 @@ Show the user which tag matched. `plan` states it in the refusal reason, and `ch
 
 Ask about every volume that has no signal, in one question that lists them, before planning.
 
-One case is not IaC management of the volume itself: code that only controls future launches (a launch template or Auto Scaling group whose instances were launched from it) and does not track the existing volume. There the PR worker updates the template for future launches, and you may offer a direct change for the existing volume, because nothing in the code will revert it. Only the PR worker's report can establish this case. A volume the code tracks directly (an `aws_ebs_volume`, an `aws_instance` `root_block_device`, an `AWS::EC2::Volume`, a Kubernetes StorageClass-provisioned PVC) is IaC-managed and the exception does not apply. If the report does not clearly establish it, treat the volume as IaC-managed.
+One case is not IaC management of the volume itself: code that only controls future launches (a launch template or Auto Scaling group whose instances were launched from it) and does not track the existing volume. There the PR worker updates the template for future launches, and you may offer a direct change for the existing volume, because nothing in the code will revert it. Only the PR worker's report can establish this case, and the report must also show that nothing replaces running instances when the template changes: no Auto Scaling `instance_refresh` (Terraform), no `AutoScalingRollingUpdate` or `AutoScalingReplacingUpdate` update policy (CloudFormation), and no managed node group pinned to the template version. If the worker reports that a template change replaces running instances, the change is not future-launches-only. A volume the code tracks directly (an `aws_ebs_volume`, an `aws_instance` `root_block_device`, an `AWS::EC2::Volume`, a Kubernetes StorageClass-provisioned PVC) is IaC-managed and the exception does not apply. If the report does not clearly establish it, treat the volume as IaC-managed.
 
 Volumes in one assessment can take different paths. Handle each group on its own path and report each volume separately.
 
@@ -86,10 +86,10 @@ State the permissions before planning. Planning and applying need `ec2:CreateSna
 Write the plan:
 
 ```sh
-cloudfix gp2-to-gp3-fix plan --assessment <run-dir> --management not-managed --out <new-fix-dir>
+cloudfix gp2-to-gp3-fix plan --assessment <run-dir> --management not-managed --volume-id <id> --out <new-fix-dir>
 ```
 
-Use `--management unknown` when the user does not know. Add `--volume-id <id>` (repeatable) to limit the volumes. `--iops <vol=N>` and `--throughput <vol=N>` override a volume's target (for example 128 MiB/s to match GP2 burst on a volume of 170 GiB or less); code validates them against GP3 limits and recomputes the estimate. `--out` must be a new directory. The plan carries an expiry, 24 hours after it was made.
+`--volume-id <id>` is required and repeatable: name exactly the volumes on the direct path. `--management` stamps one management basis on every volume in the plan, so make one plan per answer: `--management not-managed` only for volumes the user said code does not manage, and `--management unknown` (a separate plan) for volumes the user does not know about. Never include a volume the user or the PR worker tied to code, even if it carries no IaC tag, and never put "unknown" volumes in a `not-managed` plan: that would skip the confirmation `apply` requires for them. Each plan has its own hash, approval and `apply`. `--iops <vol=N>` and `--throughput <vol=N>` override a volume's target (for example 128 MiB/s to match GP2 burst on a volume of 170 GiB or less); code validates them against GP3 limits and recomputes the estimate. `--out` must be a new directory. The plan carries an expiry, 24 hours after it was made.
 
 `plan` exits 0 with `{"status":"planned","plan_file":...,"sha256":...,"volumes":[...],"refused":[...]}` when at least one volume is planned, and 1 with `"status":"refused"` when none is. A volume can be refused because it carries `cloudfix:dontFixIt`, is IaC-managed, is no longer GP2, changed size since the assessment, has a modification in progress, or was last modified less than 6 hours ago. Report every refusal with its reason; a refused volume is not planned and not a failure.
 
@@ -129,7 +129,7 @@ Exit codes:
 
 - **0**: every volume is `verified`.
 - **3**: in progress. At least one volume is not finished. Report each volume's state, then run the same command again later (the `--approve`, kind and text unchanged); it reconciles with AWS and continues without repeating a write. Do not make a new plan.
-- **1**: a volume failed, or the command reported an error. Report the `reason` of each failed volume and the error line verbatim.
+- **1**: a volume failed, or the command reported an error. Report the `reason` of each failed volume and the error line verbatim. A failed volume is terminal: a rerun does not retry it. Exit 1 does not mean the other volumes stopped: if the output shows volumes still in progress, rerun the same `apply` command to continue them (it is safe: nothing is written twice) until none is in progress, and only then report the outcome. A command error with no `volumes` (hash mismatch, expired plan, wrong account) changed nothing.
 
 Volume states, in order: `planned`, `snapshot_requested`, `snapshot_completed`, `modification_submitted`, `optimizing`, `completed`, `verified`; `failed` is the other end. `optimizing` is in progress, not done: the new settings are set but AWS is still optimizing the volume. Only `verified` means the actual type, IOPS and throughput were read back and match the target, and the `cloudfix-ai:*` tags were written.
 
@@ -149,13 +149,13 @@ A plan that has expired cannot start a new run, but an `execution.json` that alr
 
 ## 7. Cleanup
 
-The recovery snapshot is kept until the user decides otherwise; the tool never deletes it on its own. Offer cleanup only after a volume is `verified`, and tell the user that deleting the snapshot removes the recovery point. Cleanup needs its own approval, separate from the apply approval. Run `status` first and show the user which snapshots would be deleted: for each `verified` volume, its snapshot ID (a volume that was already at the target has none).
+The recovery snapshot is kept until the user decides otherwise; the tool never deletes it on its own. Offer cleanup only after a volume is `verified`, and tell the user that deleting the snapshot removes the recovery point. Cleanup needs its own approval, separate from the apply approval. `cleanup` has no way to pick volumes: it deletes the snapshot of every volume that is `verified` (and was not already at the target) at the moment it runs, so the approval must cover all of them. Run `status` immediately before showing the deletion list and again immediately before `cleanup`, with no `apply` in between, and show the snapshot ID of each `verified` volume (a volume that was already at the target has none). If the set changed between the two, show the list again and ask again. If the user wants to delete only some of the snapshots, this command cannot do that: say so, and leave the snapshots for the user to delete themselves.
 
 ```sh
 cloudfix gp2-to-gp3-fix cleanup --plan <plan.json> --approve <sha256> --approval-kind after_plan --approval-text "<the user's exact words>"
 ```
 
-The approval is either `after_plan` (the user said yes after you showed what will be deleted) or `prior` (the user earlier authorized this cleanup by name, for example "delete the snapshots once they are verified"). An approval to apply is not an approval to clean up. The command deletes only the snapshot of a volume whose state is `verified`, which was actually taken, and which carries this plan's `cloudfix-ai:planId` tag, re-read from AWS before deleting. The output lists `deleted` volumes and `skipped` volumes with reasons; report both. The results are recorded in `execution.json`.
+The approval is either `after_plan` (the user said yes after you showed what will be deleted) or `prior` (the user earlier authorized this cleanup by name, for example "delete the snapshots once they are verified"). An approval to apply is not an approval to clean up. The command deletes only the snapshot of a volume whose state is `verified`, which was actually taken, and which carries this plan's `cloudfix-ai:planId` tag, re-read from AWS before deleting. The output lists `deleted` volumes and `skipped` volumes with reasons; report both. Each run is recorded in `execution.json` under `cleanup` with its approval, deleted and skipped lists; a rerun adds a record and keeps the earlier ones.
 
 ## 8. Report
 

@@ -50,7 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
     change = fix_actions.add_parser("change", allow_abbrev=False, help="write change.json for the PR worker")
     for p in (plan, change):
         p.add_argument("--assessment", required=True, type=Path, help="run directory of a complete assessment")
-        p.add_argument("--volume-id", action="append", default=[], help="volume to include (repeatable)")
+        p.add_argument("--volume-id", action="append", default=[], required=p is plan,
+                       help="volume to include (repeatable; required for plan, which must name each volume)")
         p.add_argument("--iops", action="append", default=[], metavar="VOL=N", help="IOPS override (repeatable)")
         p.add_argument("--throughput", action="append", default=[], metavar="VOL=N",
                        help="throughput override in MiB/s (repeatable)")
