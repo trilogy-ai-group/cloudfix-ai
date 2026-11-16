@@ -1,14 +1,14 @@
 # CloudFix AI
 
-AWS cost optimization skills and tools for your agent. **Private pilot.**
+AWS cost optimization skills and tools for your agent. **Public preview: EBS GP2 to GP3.**
 
-This repository holds the packages testers install. Implementation source, build tooling, tests and customer run data are maintained separately.
+Give your agent this repository URL. It can read the skill and fetch the executable without a GitHub login or permanent skill installation. Implementation source, build tooling, tests and customer run data are maintained separately.
 
 ## Available skill
 
 [`co-gp2-to-gp3`](skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
 
-The installable folder contains exactly two files:
+The skill has two runtime files:
 
 ```text
 skills/co-gp2-to-gp3/
@@ -16,37 +16,50 @@ skills/co-gp2-to-gp3/
   scripts/gp2.cjs
 ```
 
-## Try it
+## Try it with your agent
 
-1. Install **Node.js 22 or later** and authenticate to your AWS account using your normal local credentials.
-2. Obtain this private repository with your existing GitHub access:
+Start a fresh conversation with an agent that can read web pages, download files and run local commands. Give it this instruction, replacing the account and region:
+
+> Read https://github.com/trilogy-ai-group/cloudfix-ai and follow its GP2-to-GP3 skill for AWS account ACCOUNT_ID, region REGION, using my existing AWS access. Assess the opportunities and explain the estimated savings and any limitations. Prepare the appropriate proposed change for review. Do not apply changes or merge a PR.
+
+The agent needs **Node.js 22 or later** and your existing AWS credentials in its execution environment. If it cannot execute code or access AWS, it should explain what is missing. Never paste credentials into a conversation.
+
+For agents:
+
+1. Read [`SKILL.md`](https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/main/skills/co-gp2-to-gp3/SKILL.md), this README, the [preview licence](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.txt).
+2. Fetch this public repository into a new local working directory. No GitHub credentials are needed:
 
    ```sh
-   gh repo clone trilogy-ai-group/cloudfix-ai
+   git clone https://github.com/trilogy-ai-group/cloudfix-ai.git
    ```
 
-3. From the cloned `cloudfix-ai` directory, choose one of these personal installations:
+   Alternatively, download `SKILL.md` and `scripts/gp2.cjs` with their relative layout, keeping the licence and notices alongside the copy. Fetch all files from the same commit. The executable is [available directly](https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/main/skills/co-gp2-to-gp3/scripts/gp2.cjs).
+3. Verify the executable against the SHA-256 under [Package identity](#package-identity) before running it. Then follow the skill using the authorized account, region and pricing basis. Do not rebuild it or write replacement collectors or calculations.
+4. Keep run output outside the checkout. Report the complete relevant findings and qualifications, with links to private evidence. Assessment and proposal preparation do not authorize AWS writes, deployment or merging.
+
+Specify a volume ID for a single-resource assessment. For assessment only, say so; the skill stops after reporting the result. Missing billing access is reported as an error, with collected resource evidence retained. A public-price run requires a separate explicit choice.
+
+### Optional permanent installation
+
+Your agent can use the fetched files directly. Permanent installation is useful only if you want the harness to discover the skill automatically in later conversations.
+
+From the cloned `cloudfix-ai` directory, choose the appropriate personal location:
 
    **Claude Code:**
 
    ```sh
    mkdir -p "$HOME/.claude/skills"
-   test ! -e "$HOME/.claude/skills/co-gp2-to-gp3" && cp -R skills/co-gp2-to-gp3 "$HOME/.claude/skills/"
+   test ! -e "$HOME/.claude/skills/co-gp2-to-gp3" && cp -R skills/co-gp2-to-gp3 "$HOME/.claude/skills/" && cp LICENSE THIRD_PARTY_NOTICES.txt "$HOME/.claude/skills/co-gp2-to-gp3/"
    ```
 
    **Codex:**
 
    ```sh
    mkdir -p "$HOME/.agents/skills"
-   test ! -e "$HOME/.agents/skills/co-gp2-to-gp3" && cp -R skills/co-gp2-to-gp3 "$HOME/.agents/skills/"
+   test ! -e "$HOME/.agents/skills/co-gp2-to-gp3" && cp -R skills/co-gp2-to-gp3 "$HOME/.agents/skills/" && cp LICENSE THIRD_PARTY_NOTICES.txt "$HOME/.agents/skills/co-gp2-to-gp3/"
    ```
 
-   These commands stop if the destination already exists. For an upgrade, remove the previous managed `co-gp2-to-gp3` skill directory and rerun the chosen commands, so old development files cannot survive an overlay. If you installed the earlier `co-gp2-to-gp3-tool` package, also remove that old installed directory so your harness discovers only one copy. No product profile file is required.
-4. Start a fresh conversation with your agent, for example:
-
-   > Use co-gp2-to-gp3 to assess GP2 volumes in my approved dev/test account ACCOUNT_ID, region REGION, using my existing AWS access. Report the recommendations and supporting evidence. This request is assessment only; do not change resources.
-
-Specify a volume ID if you want a single-resource assessment. Follow the skill's instructions for running the executable and reading all saved artifacts. Keep run output outside this checkout.
+These commands stop if the destination already exists and include the licence and third-party notices in a new copy. For an upgrade, replace only the previous managed skill directory after checking for local changes, so old development files cannot survive an overlay. If you installed the earlier `co-gp2-to-gp3-tool` package, remove that old managed copy after the same check. No product profile file is required.
 
 ## Access and data
 
@@ -54,7 +67,7 @@ Specify a volume ID if you want a single-resource assessment. Follow the skill's
 - The executable does not modify workload resources. CloudWatch metrics and GitHub access are not needed for assessment. Repository access is needed only for the optional patch/PR workflow. Direct changes use your harness's normal AWS tools and require the relevant write permissions and execution authorization; the bundled executable never modifies volumes.
 - Optional billing-rate collection uses existing Cost Explorer access (`GetDimensionValues` and `GetCostAndUsage`) and STS identity verification. Your billing profile may belong to a different payer account. CE API requests incur AWS charges; the tool does not enable billing settings, provision infrastructure or require CUR.
 - No CloudFix account, CloudFix API token or hosted service is required. There is no CloudFix fee or model call from the bundled executable. Your own harness may use a model under your existing plan.
-- Evidence and results remain in the local output directory. Nothing is sent to CloudFix. Recorded-evidence replay makes no AWS calls. Never put credentials or customer run artifacts in this repository or its issues.
+- The executable stores evidence and results in the local output directory and sends nothing to CloudFix. Live collection calls AWS; downloading this package contacts GitHub. Your chosen harness may send the data it reads to its own model provider under your settings. Recorded-evidence replay makes no AWS calls. Never put credentials or customer run artifacts in this repository or its issues.
 
 ## Billing-based estimates without CUR
 
@@ -127,7 +140,11 @@ The native report is retained verbatim for traceability. Its claims about actual
 
 An approved assessment is a recommendation. The executable does not modify a volume. Public-price estimates can differ from billed costs. The finder does not check instance-type support or application performance, and its sizing must not be treated as a universal equivalent-or-better performance guarantee. Execution requires an explicitly authorized procedure and verification; existing authorization for the concrete operation counts. A direct-change procedure includes current-state and recovery checks, exact settings, monitoring, and verification. Unknown ownership remains an unresolved condition rather than proof that no code manages the resource.
 
-For the private pilot, record installation friction and any human help needed. Use a dev/test scope approved by its owner, and retain the complete transcript and result files privately. A patch or PR does not establish that a disk changed or that savings were realized.
+For preview testing, use a dev/test scope approved by its owner and retain the complete transcript and result files privately. Record discovery or setup friction and any human help needed. Share a redacted description of problems in [GitHub issues](https://github.com/trilogy-ai-group/cloudfix-ai/issues), without credentials, account identifiers, resource evidence or billing data. A patch or PR does not establish that a disk changed or that savings were realized.
+
+## Licence
+
+The [CloudFix AI Public Preview License](LICENSE) permits free use to assess and optimize AWS accounts you own or are authorized to manage. Redistribution and offering the package as a hosted service are reserved to the rights holders. This is a source-available preview, not an open-source licence. Bundled third-party components retain their own licences, listed in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
 
 ## Package identity
 
@@ -138,3 +155,11 @@ The tested executable's SHA-256 is:
 ```
 
 Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for its package name and public build identifier. That identifier links to the complete private maintainer build record. The package runs directly; it needs no source checkout, dependency installation or rebuild.
+
+To check the downloaded executable on macOS:
+
+```sh
+shasum -a 256 skills/co-gp2-to-gp3/scripts/gp2.cjs
+```
+
+On Linux, use `sha256sum` with the same path. Compare with the hash above from the same repository revision; stop if it differs.
