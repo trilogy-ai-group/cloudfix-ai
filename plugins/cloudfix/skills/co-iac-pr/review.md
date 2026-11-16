@@ -13,7 +13,7 @@ You are given: the diff (and the repository checkout), `change.json`, the change
 5. **Effect claims.** For each resource, check whether the worker's claim (in place, replacement, future launches only) matches the change note's rules and the actual resource type edited. Check for consumers that turn a template change into replacement, as the change note describes. A replacement that is not reported prominently, or that was made without the user's acceptance, is a blocker.
 6. **Validators.** The commands the worker lists are the ones the change note allows for the tool, and their results are reported honestly. Run any read-only check you can to confirm (for example `git diff --stat`). A validator that needs credentials or a backend, or any plan, apply, deploy or publish command in the worker's report or in repository files the worker changed, is a blocker. A missing validator must be stated, not hidden.
 7. **Repository rules.** The branch is not the default branch, the commit follows the repository's instructions, and the change does not trigger a deploy the user did not accept.
-8. **PR body** (when there is one). Evidence summary only; no account-wide evidence, no assessment run directory path or attachment, no credentials. Each paragraph and each list item is one line (no hard wraps). No restated CI check statuses. The effect and any deviation are stated.
+8. **PR body** (the drafted body file you were given; nothing is pushed yet). Evidence summary only; no account-wide evidence, no assessment run directory path or attachment, no credentials. Each paragraph and each list item is one line (no hard wraps). No restated CI check statuses. The effect and any deviation are stated.
 
 ## Return
 
