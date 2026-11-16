@@ -7,7 +7,8 @@ from cloudfix import cli
 from cloudfix.common.aws import FINDER_READS, RecordingAws, ReplayAws
 from cloudfix.common.errors import InputError
 from cloudfix.common.output import to_jsonable
-from cloudfix.finders.gp2_to_gp3 import SETTINGS
+from cloudfix.finders.gp2_to_gp3 import SETTINGS, report
+from cloudfix.finders.gp2_to_gp3 import run as run_module
 from cloudfix.finders.gp2_to_gp3.collect import collect
 from cloudfix.finders.gp2_to_gp3.run import run_assess, run_replay
 from tests.factories import attachment, instance, price_row, stubbed_client, volume
@@ -354,3 +355,106 @@ def test_instances_are_read_once_per_distinct_first_attachment_in_sorted_order()
     assert collected.selected_ids == ["vol-a", "vol-b", "vol-c"] and collected.discovery == "gp2_inventory"
     assert collected.instances["i-1"]["LaunchTime"] == datetime(2026, 1, 1, tzinfo=timezone.utc)
     assert collected.costs["vol-a"] == pytest.approx((120.0, 120.0)) and len(lookups.records) == 4
+
+
+ASSESS_FILES = ["config.json", "context.json", "evidence.json", "result.json", "summary.json"]
+REPLAY_FILES = ["context.json", "evidence.json", "result.json", "summary.json"]  # config.json is assess-only
+
+
+def _files(run_dir):
+    return sorted(p.name for p in run_dir.iterdir())
+
+
+def _replay_edited(tmp_path, edit):
+    """Replay the live attached run's evidence after `edit(evidence)`; returns (exit code, run dir)."""
+    evidence = _load(_live_attached_run(tmp_path), "evidence")
+    edit(evidence)
+    edited = tmp_path / "edited.json"
+    edited.write_text(json.dumps(evidence), encoding="utf-8")
+    replay_dir = tmp_path / "replay"
+    return run_replay(edited, replay_dir), replay_dir
+
+
+def _output(evidence, operation):
+    return next(r["output"] for r in evidence["responses"] if r["operation"] == operation)
+
+
+def _set_identity(value):
+    def edit(evidence):
+        next(r for r in evidence["responses"] if r["operation"] == "GetCallerIdentity")["output"] = value
+    return edit
+
+
+@pytest.mark.parametrize("output", [[], ["x"]], ids=["empty-list", "list"])
+def test_replay_of_a_non_object_output_is_an_input_error_with_every_artifact(tmp_path, output):
+    code, replay_dir = _replay_edited(tmp_path, _set_identity(output))
+    assert code == 1
+    summary = _load(replay_dir, "summary")
+    assert summary["status"] == "error" and summary["error"]["code"] == "invalid_input"
+    assert "GetCallerIdentity" in summary["error"]["message"]
+    assert _files(replay_dir) == REPLAY_FILES
+    assert _operations(replay_dir) == ["GetCallerIdentity"]
+    assert _load(replay_dir, "context")["identity"] is None
+
+
+@pytest.mark.parametrize("edit,named", [
+    (lambda e: _output(e, "DescribeVolumes")["Volumes"][0].update(Tags=["oops"]), "Tags"),
+    (lambda e: _output(e, "DescribeVolumes")["Volumes"][0].update(Tags=[{"Value": "no key"}]), "Key"),
+    (lambda e: _output(e, "DescribeVolumes")["Volumes"][0].update(Attachments=["i-1"]), "Attachments"),
+    (lambda e: _output(e, "DescribeVolumes")["Volumes"][0]["Attachments"][0].update(InstanceId=["i-1"]),
+     "InstanceId"),
+    (lambda e: _output(e, "DescribeVolumes").update(Volumes=["vol-1"]), "Volumes"),
+    (lambda e: _output(e, "DescribeInstances").update(Reservations=["r-1"]), "Reservations"),
+    (lambda e: _output(e, "DescribeInstances")["Reservations"][0].update(Instances="i-1"), "Instances"),
+    (lambda e: _output(e, "DescribeInstances")["Reservations"][0]["Instances"][0].update(State="running"),
+     "State"),
+], ids=["tag-string", "tag-without-key", "attachment-string", "attachment-instance-list", "volume-string",
+        "reservation-string", "instances-string", "instance-state-string"])
+def test_replay_of_malformed_nested_evidence_still_writes_a_complete_set(tmp_path, edit, named):
+    code, replay_dir = _replay_edited(tmp_path, edit)
+    assert code == 1
+    summary = _load(replay_dir, "summary")
+    assert summary["status"] == "error" and summary["error"]["code"] == "invalid_input"
+    assert named in summary["error"]["message"]
+    assert _files(replay_dir) == REPLAY_FILES
+
+
+def test_unexpected_error_while_deciding_still_writes_every_artifact(tmp_path, monkeypatch, capsys):
+    def broken(*args, **kwargs):
+        raise RuntimeError("decide bug")
+    monkeypatch.setattr(run_module, "assess_volume", broken)
+    stubs = Stubs()
+    stubs.identity()
+    stubs.volumes([volume("vol-1")], DISCOVERY)
+    stubs.prices()
+    run_dir = tmp_path / "run"
+    assert run_assess(_config(tmp_path), run_dir, aws=stubs.aws, now=NOW) == 1
+    summary = _load(run_dir, "summary")
+    assert summary["status"] == "error"
+    assert summary["error"] == {"code": "internal", "message": "RuntimeError: decide bug"}
+    assert _files(run_dir) == ASSESS_FILES
+    assert _operations(run_dir) == ["GetCallerIdentity", "DescribeVolumes"] + ["GetProducts"] * 4
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "internal"
+
+
+def test_failure_while_building_artifacts_falls_back_to_a_complete_error_set(tmp_path, monkeypatch):
+    original, calls = report.build_result, []
+
+    def fails_once(*args):
+        calls.append(args)
+        if len(calls) == 1:
+            raise RuntimeError("report bug")
+        return original(*args)
+    monkeypatch.setattr(report, "build_result", fails_once)
+    stubs = Stubs()
+    stubs.identity()
+    stubs.volumes([volume("vol-1")], DISCOVERY)
+    stubs.prices()
+    run_dir = tmp_path / "run"
+    assert run_assess(_config(tmp_path), run_dir, aws=stubs.aws, now=NOW) == 1
+    summary = _load(run_dir, "summary")
+    assert summary["status"] == "error"
+    assert summary["error"] == {"code": "internal", "message": "RuntimeError: report bug"}
+    assert _files(run_dir) == ASSESS_FILES
+    assert _load(run_dir, "result")["resources"] == []
+    assert _load(run_dir, "context")["status"] == "error"

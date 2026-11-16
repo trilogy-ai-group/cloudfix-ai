@@ -94,13 +94,32 @@ def _execute(run: _Run, prepare: Callable[[], None]) -> None:
         run.error = {"code": e.code, "message": str(e), "service": e.service, "operation": e.operation}
     except InputError as e:
         run.status, run.error = "error", {"code": "invalid_input", "message": str(e)}
+    except Exception as e:  # noqa: BLE001 - a bug is an outcome too, and still gets its artifacts
+        run.status, run.error = "error", _internal(e)
 
 
 def _save(run_dir: Path, run: _Run) -> int:
+    """Build every artifact before writing any, so a failure cannot leave a partial run directory."""
+    try:
+        files = _artifacts(run_dir, run)
+    except Exception as e:  # noqa: BLE001 - fall back to an error set built only from the run's inputs
+        run.status, run.error, run.missing_evidence = "error", _internal(e), None
+        run.collected, run.results = None, []
+        files = _artifacts(run_dir, run)
+    for path, content in files.items():
+        write_json(path, content)
+    line = {"status": run.status, **{f"{n}_file": str(run_dir / f"{n}.json")
+                                     for n in ("summary", "result", "evidence", "context")}}
+    if run.error is not None:
+        line["error"] = run.error
+    emit(line)
+    return _EXIT[run.status]
+
+
+def _artifacts(run_dir: Path, run: _Run) -> dict[Path, Any]:
     reads = run.aws.reads if run.aws is not None else []
     names = (["config"] if run.mode == "live" else []) + ["evidence", "context", "result", "summary"]
     paths = {name: run_dir / f"{name}.json" for name in names}
-    artifacts = {name: str(path) for name, path in paths.items()}
     identity = run.collected.identity if run.collected else _recorded_identity(reads)
     context = {
         "mode": run.mode,
@@ -124,18 +143,15 @@ def _save(run_dir: Path, run: _Run) -> int:
         "asOf": run.as_of, "config": run.config, "cost_input": run.cost_input,
         "responses": evidence_responses(reads),
     }
-    if "config" in paths:
-        write_json(paths["config"], run.config)
-    write_json(paths["evidence"], evidence)
-    write_json(paths["context"], context)
-    write_json(paths["result"], report.build_result(run.collected, run.results))
-    write_json(paths["summary"], report.build_summary(
-        run.status, run.mode, context, run.collected, run.results, artifacts))
-    line = {"status": run.status, **{f"{n}_file": artifacts[n] for n in ("summary", "result", "evidence", "context")}}
-    if run.error is not None:
-        line["error"] = run.error
-    emit(line)
-    return _EXIT[run.status]
+    artifacts = {name: str(path) for name, path in paths.items()}
+    files = {
+        paths["evidence"]: evidence,
+        paths["context"]: context,
+        paths["result"]: report.build_result(run.collected, run.results),
+        paths["summary"]: report.build_summary(run.status, run.mode, context, run.collected, run.results,
+                                               artifacts),
+    }
+    return {paths["config"]: run.config, **files} if "config" in paths else files
 
 
 def _create(out: Path) -> Path | None:
@@ -183,7 +199,12 @@ def _read_json(path: Path, what: str) -> Any:
 
 
 def _recorded_identity(reads: list[dict]) -> dict | None:
-    return next((r["output"] for r in reads if r["operation"] == "GetCallerIdentity" and "output" in r), None)
+    return next((r["output"] for r in reads
+                 if r["operation"] == "GetCallerIdentity" and isinstance(r.get("output"), dict)), None)
+
+
+def _internal(e: Exception) -> dict:
+    return {"code": "internal", "message": f"{type(e).__name__}: {e}"}
 
 
 def _utcnow() -> datetime:

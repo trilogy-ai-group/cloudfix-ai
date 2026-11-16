@@ -30,6 +30,7 @@ class Collected:
 
 def collect(aws: Caller, config: Mapping[str, Any], cost_input: dict | None
             ) -> tuple[Collected, PricingLookups | None]:
+    aws = _ObjectOutputs(aws)
     region = config["region"]
     ids = list(config["volume_ids"] or [])  # a copy: load_config hands out the shared default list
     if any(not isinstance(i, str) or not i for i in ids) or len(set(ids)) != len(ids):
@@ -71,15 +72,44 @@ def collect(aws: Caller, config: Mapping[str, Any], cost_input: dict | None
     return Collected(account, identity, region, selected, discovery, volumes, instances, prices, costs), lookups
 
 
-def _pages(aws: Caller, operation: str, base: dict, key: str) -> Iterator[Any]:
-    """Yield every item under `key` across NextToken pages; a repeated token is an error."""
+class _ObjectOutputs:
+    """Delegates to a caller and refuses any output that is not a JSON object (edited evidence)."""
+
+    def __init__(self, aws: Caller):
+        self._aws = aws
+
+    @property
+    def reads(self) -> list[dict]:
+        return self._aws.reads
+
+    def call(self, service: str, operation: str, params: dict) -> dict:
+        output = self._aws.call(service, operation, params)
+        if not isinstance(output, dict):
+            raise InputError(f"{service}.{operation} output is not a JSON object")
+        return output
+
+
+def _objects(value: Any, what: str, *, required: bool = False) -> list[dict]:
+    """A list of JSON objects; an absent optional list is empty."""
+    if value is None and not required:
+        return []
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise InputError(f"{what} must be a list of objects")
+    return value
+
+
+def _check_tags(resource: dict, what: str) -> None:
+    for tag in _objects(resource.get("Tags"), f"{what} Tags"):
+        if not isinstance(tag.get("Key"), str):
+            raise InputError(f"{what} Tags has an entry without a string Key")
+
+
+def _pages(aws: Caller, operation: str, base: dict, key: str) -> Iterator[dict]:
+    """Yield every object under `key` across NextToken pages; a repeated token is an error."""
     params, seen = base, set()
     while True:
         page = aws.call("ec2", operation, params)
-        items = page.get(key)
-        if not isinstance(items, list):
-            raise InputError(f"{operation} response has no {key} list")
-        yield from items
+        yield from _objects(page.get(key), f"{operation} {key}", required=True)
         token = page.get("NextToken")
         if not token:
             return
@@ -97,7 +127,7 @@ def _describe_volumes(aws: Caller, ids: list[str]) -> dict[str, dict]:
     found: dict[str, dict] = {}
     for f in filters:
         for v in _pages(aws, "DescribeVolumes", {"Filters": [f]}, "Volumes"):
-            vid = v.get("VolumeId") if isinstance(v, dict) else None
+            vid = v.get("VolumeId")
             if not isinstance(vid, str):
                 raise InputError("DescribeVolumes returned a volume without an id")
             if vid in found:
@@ -115,10 +145,13 @@ def _describe_instances(aws: Caller, volumes: Iterable[dict | None]) -> dict[str
     for start in range(0, len(ids), BATCH):
         base = {"Filters": [{"Name": "instance-id", "Values": ids[start:start + BATCH]}]}
         for reservation in _pages(aws, "DescribeInstances", base, "Reservations"):
-            for inst in reservation.get("Instances") or []:
+            for inst in _objects(reservation.get("Instances"), "DescribeInstances Instances"):
                 iid = inst.get("InstanceId")
                 if not isinstance(iid, str):
                     raise InputError("DescribeInstances returned an instance without an id")
+                _check_tags(inst, iid)
+                if not isinstance(inst.get("State"), (dict, type(None))):
+                    raise InputError(f"{iid} State must be an object")
                 instances[iid] = {**inst, "LaunchTime": parse_time(inst.get("LaunchTime"), f"{iid} LaunchTime")}
     return instances
 
@@ -127,9 +160,12 @@ def _parse_volume(vid: str, v: dict) -> dict:
     size = v.get("Size")
     if isinstance(size, bool) or not isinstance(size, int) or size <= 0:
         raise InputError(f"DescribeVolumes returned {vid} without a positive Size")
-    attachments = [
-        {**a, "AttachTime": parse_time(a.get("AttachTime"), f"{vid} AttachTime")} for a in v.get("Attachments") or []
-    ]
+    _check_tags(v, vid)
+    attachments = []
+    for a in _objects(v.get("Attachments"), f"{vid} Attachments"):
+        if not isinstance(a.get("InstanceId"), (str, type(None))):
+            raise InputError(f"{vid} attachment InstanceId must be a string")
+        attachments.append({**a, "AttachTime": parse_time(a.get("AttachTime"), f"{vid} AttachTime")})
     return {**v, "CreateTime": parse_time(v.get("CreateTime"), f"{vid} CreateTime"), "Attachments": attachments}
 
 
