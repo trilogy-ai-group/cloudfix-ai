@@ -55,7 +55,7 @@ var __decorateParam = (index, decorator) => (target, key) => decorator(target, k
 var define_CLOUDFIX_BUILD_default;
 var init_define_CLOUDFIX_BUILD = __esm({
   "<define:__CLOUDFIX_BUILD__>"() {
-    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "50dfa5ba5847b9caf6ac06fe0cd6db67f137bb9da1c725371aeda8e64cc8c330" };
+    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "7cb44151a6f7e7913aaa1730dc2c359dbd23395109a8d644e78380718e4dc9dc" };
   }
 });
 
@@ -34152,7 +34152,7 @@ var require_dist_cjs11 = __commonJS({
     var { setCredentialFeature: setCredentialFeature2 } = (init_client3(), __toCommonJS(client_exports2));
     var { CredentialsProviderError: CredentialsProviderError2, parseKnownFiles: parseKnownFiles2, getProfileName: getProfileName2 } = (init_config2(), __toCommonJS(config_exports));
     var { HttpRequest: HttpRequest2 } = (init_protocols(), __toCommonJS(protocols_exports));
-    var { createHash: createHash6, createPrivateKey, createPublicKey, sign: sign2 } = require("node:crypto");
+    var { createHash: createHash7, createPrivateKey, createPublicKey, sign: sign2 } = require("node:crypto");
     var { promises } = require("node:fs");
     var { homedir: homedir2 } = require("node:os");
     var { dirname, join: join6 } = require("node:path");
@@ -34321,7 +34321,7 @@ var require_dist_cjs11 = __commonJS({
       getTokenFilePath() {
         const directory = process.env.AWS_LOGIN_CACHE_DIRECTORY ?? join6(homedir2(), ".aws", "login", "cache");
         const loginSessionBytes = Buffer.from(this.loginSession, "utf8");
-        const loginSessionSha256 = createHash6("sha256").update(loginSessionBytes).digest("hex");
+        const loginSessionSha256 = createHash7("sha256").update(loginSessionBytes).digest("hex");
         return join6(directory, `${loginSessionSha256}.json`);
       }
       derToRawSignature(derSignature) {
@@ -212111,11 +212111,4481 @@ var require_dist_cjs36 = __commonJS({
   }
 });
 
+// node_modules/@aws-sdk/client-cost-explorer/dist-cjs/index.js
+var require_dist_cjs37 = __commonJS({
+  "node_modules/@aws-sdk/client-cost-explorer/dist-cjs/index.js"(exports2) {
+    "use strict";
+    init_define_CLOUDFIX_BUILD();
+    var { awsEndpointFunctions: awsEndpointFunctions2, emitWarningIfUnsupportedVersion: emitWarningIfUnsupportedVersion$1, createDefaultUserAgentProvider: createDefaultUserAgentProvider2, NODE_APP_ID_CONFIG_OPTIONS: NODE_APP_ID_CONFIG_OPTIONS2, getAwsRegionExtensionConfiguration: getAwsRegionExtensionConfiguration2, resolveAwsRegionExtensionConfiguration: resolveAwsRegionExtensionConfiguration2, resolveUserAgentConfig: resolveUserAgentConfig2, resolveHostHeaderConfig: resolveHostHeaderConfig2, getUserAgentPlugin: getUserAgentPlugin2, getHostHeaderPlugin: getHostHeaderPlugin2, getLoggerPlugin: getLoggerPlugin2, getRecursionDetectionPlugin: getRecursionDetectionPlugin2 } = (init_client3(), __toCommonJS(client_exports2));
+    var { getHttpAuthSchemeEndpointRuleSetPlugin: getHttpAuthSchemeEndpointRuleSetPlugin2, DefaultIdentityProviderConfig: DefaultIdentityProviderConfig2, getHttpSigningPlugin: getHttpSigningPlugin2, createPaginator: createPaginator2 } = (init_dist_es(), __toCommonJS(dist_es_exports));
+    var { normalizeProvider: normalizeProvider3, getSmithyContext: getSmithyContext2, ServiceException: ServiceException2, NoOpLogger: NoOpLogger2, emitWarningIfUnsupportedVersion: emitWarningIfUnsupportedVersion3, loadConfigsForDefaultMode: loadConfigsForDefaultMode2, getDefaultExtensionConfiguration: getDefaultExtensionConfiguration2, resolveDefaultRuntimeConfig: resolveDefaultRuntimeConfig2, Client: Client2, makeBuilder: makeBuilder2, createAggregatedClient: createAggregatedClient2 } = (init_client2(), __toCommonJS(client_exports));
+    var { Command: $Command } = (init_client2(), __toCommonJS(client_exports));
+    exports2.$Command = $Command;
+    exports2.__Client = Client2;
+    var { resolveDefaultsModeConfig: resolveDefaultsModeConfig2, loadConfig: loadConfig2, NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS: NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS2, NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS: NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS2, NODE_REGION_CONFIG_OPTIONS: NODE_REGION_CONFIG_OPTIONS2, NODE_REGION_CONFIG_FILE_OPTIONS: NODE_REGION_CONFIG_FILE_OPTIONS2, resolveRegionConfig: resolveRegionConfig2 } = (init_config2(), __toCommonJS(config_exports));
+    var { BinaryDecisionDiagram: BinaryDecisionDiagram2, EndpointCache: EndpointCache2, decideEndpoint: decideEndpoint2, customEndpointFunctions: customEndpointFunctions2, resolveEndpointConfig: resolveEndpointConfig2, getEndpointPlugin: getEndpointPlugin2 } = (init_endpoints(), __toCommonJS(endpoints_exports));
+    var { parseUrl: parseUrl2, getHttpHandlerExtensionConfiguration: getHttpHandlerExtensionConfiguration2, resolveHttpHandlerRuntimeConfig: resolveHttpHandlerRuntimeConfig2, getContentLengthPlugin: getContentLengthPlugin2 } = (init_protocols(), __toCommonJS(protocols_exports));
+    var { DEFAULT_RETRY_MODE: DEFAULT_RETRY_MODE2, NODE_RETRY_MODE_CONFIG_OPTIONS: NODE_RETRY_MODE_CONFIG_OPTIONS2, NODE_MAX_ATTEMPT_CONFIG_OPTIONS: NODE_MAX_ATTEMPT_CONFIG_OPTIONS2, resolveRetryConfig: resolveRetryConfig2, getRetryPlugin: getRetryPlugin2 } = (init_retry2(), __toCommonJS(retry_exports));
+    var { TypeRegistry: TypeRegistry2, getSchemaSerdePlugin: getSchemaSerdePlugin2 } = (init_schema(), __toCommonJS(schema_exports));
+    var { resolveAwsSdkSigV4Config: resolveAwsSdkSigV4Config2, AwsSdkSigV4Signer: AwsSdkSigV4Signer2, NODE_AUTH_SCHEME_PREFERENCE_OPTIONS: NODE_AUTH_SCHEME_PREFERENCE_OPTIONS2 } = (init_httpAuthSchemes2(), __toCommonJS(httpAuthSchemes_exports));
+    var { defaultProvider } = require_dist_cjs15();
+    var { toUtf8: toUtf83, fromUtf8: fromUtf83, toBase64: toBase643, fromBase64: fromBase642, calculateBodyLength: calculateBodyLength2 } = (init_serde(), __toCommonJS(serde_exports));
+    var { streamCollector: streamCollector7, NodeHttpHandler } = require_dist_cjs5();
+    var { AwsJson1_1Protocol: AwsJson1_1Protocol2 } = (init_protocols2(), __toCommonJS(protocols_exports2));
+    var { Sha256 } = (init_checksum2(), __toCommonJS(checksum_exports));
+    var defaultCostExplorerHttpAuthSchemeParametersProvider = async (config, context, input) => {
+      return {
+        operation: getSmithyContext2(context).operation,
+        region: await normalizeProvider3(config.region)() || (() => {
+          throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
+        })()
+      };
+    };
+    function createAwsAuthSigv4HttpAuthOption5(authParameters) {
+      return {
+        schemeId: "aws.auth#sigv4",
+        signingProperties: {
+          name: "ce",
+          region: authParameters.region
+        },
+        propertiesExtractor: (config, context) => ({
+          signingProperties: {
+            config,
+            context
+          }
+        })
+      };
+    }
+    var defaultCostExplorerHttpAuthSchemeProvider = (authParameters) => {
+      const options = [];
+      switch (authParameters.operation) {
+        default: {
+          options.push(createAwsAuthSigv4HttpAuthOption5(authParameters));
+        }
+      }
+      return options;
+    };
+    var resolveHttpAuthSchemeConfig5 = (config) => {
+      const config_0 = resolveAwsSdkSigV4Config2(config);
+      return Object.assign(config_0, {
+        authSchemePreference: normalizeProvider3(config.authSchemePreference ?? [])
+      });
+    };
+    var resolveClientEndpointParameters5 = (options) => {
+      return Object.assign(options, {
+        useDualstackEndpoint: options.useDualstackEndpoint ?? false,
+        useFipsEndpoint: options.useFipsEndpoint ?? false,
+        defaultSigningName: "ce"
+      });
+    };
+    var commonParams5 = {
+      UseFIPS: { type: "builtInParams", name: "useFipsEndpoint" },
+      Endpoint: { type: "builtInParams", name: "endpoint" },
+      Region: { type: "builtInParams", name: "region" },
+      UseDualStack: { type: "builtInParams", name: "useDualstackEndpoint" }
+    };
+    var version2 = "3.1103.0";
+    var packageInfo = {
+      version: version2
+    };
+    var n3 = "ref";
+    var a5 = -1;
+    var b5 = true;
+    var c5 = "isSet";
+    var d5 = "PartitionResult";
+    var e5 = "booleanEquals";
+    var f5 = "getAttr";
+    var g5 = "stringEquals";
+    var h5 = "sigv4";
+    var i5 = { [n3]: "Endpoint" };
+    var j5 = { [n3]: d5 };
+    var k5 = { "fn": f5, "argv": [j5, "name"] };
+    var l3 = { "authSchemes": [{ "name": h5, "signingRegion": "{PartitionResult#implicitGlobalRegion}" }] };
+    var m3 = [{ [n3]: "Region" }];
+    var _data5 = {
+      conditions: [
+        [c5, [i5]],
+        [c5, m3],
+        ["aws.partition", m3, d5],
+        [e5, [{ [n3]: "UseFIPS" }, b5]],
+        [e5, [{ fn: f5, argv: [j5, "supportsFIPS"] }, b5]],
+        [e5, [{ [n3]: "UseDualStack" }, b5]],
+        [g5, [k5, "aws-iso"]],
+        [g5, [k5, "aws-iso-b"]],
+        [g5, [k5, "aws-iso-e"]],
+        [g5, [k5, "aws"]],
+        [g5, [k5, "aws-cn"]],
+        [g5, [k5, "aws-iso-f"]],
+        [g5, [k5, "aws-eusc"]],
+        [e5, [{ fn: f5, argv: [j5, "supportsDualStack"] }, b5]]
+      ],
+      results: [
+        [a5],
+        [a5, "Invalid Configuration: FIPS and custom endpoint are not supported"],
+        [a5, "Invalid Configuration: Dualstack and custom endpoint are not supported"],
+        [i5, {}],
+        ["https://ce.us-east-1.api.aws", { authSchemes: [{ name: h5, signingRegion: "us-east-1" }] }],
+        ["https://ce.cn-northwest-1.api.amazonwebservices.com.cn", { authSchemes: [{ name: h5, signingRegion: "cn-northwest-1" }] }],
+        ["https://ce.us-iso-east-1.c2s.ic.gov", { authSchemes: [{ name: h5, signingRegion: "us-iso-east-1" }] }],
+        ["https://ce.us-isob-east-1.sc2s.sgov.gov", { authSchemes: [{ name: h5, signingRegion: "us-isob-east-1" }] }],
+        ["https://ce.eu-isoe-west-1.cloud.adc-e.uk", { authSchemes: [{ name: h5, signingRegion: "eu-isoe-west-1" }] }],
+        ["https://ce.us-isof-south-1.csp.hci.ic.gov", { authSchemes: [{ name: h5, signingRegion: "us-isof-south-1" }] }],
+        ["https://ce.eusc-de-east-1.api.amazonwebservices.eu", { authSchemes: [{ name: h5, signingRegion: "eusc-de-east-1" }] }],
+        ["https://ce-fips.{PartitionResult#implicitGlobalRegion}.{PartitionResult#dualStackDnsSuffix}", l3],
+        [a5, "FIPS and DualStack are enabled, but this partition does not support one or both"],
+        ["https://ce-fips.{PartitionResult#implicitGlobalRegion}.{PartitionResult#dnsSuffix}", l3],
+        [a5, "FIPS is enabled but this partition does not support FIPS"],
+        ["https://ce.{PartitionResult#implicitGlobalRegion}.{PartitionResult#dualStackDnsSuffix}", l3],
+        [a5, "DualStack is enabled but this partition does not support DualStack"],
+        ["https://ce.{PartitionResult#implicitGlobalRegion}.{PartitionResult#dnsSuffix}", l3],
+        [a5, "Invalid Configuration: Missing Region"]
+      ]
+    };
+    var root6 = 2;
+    var r5 = 1e8;
+    var nodes5 = new Int32Array([
+      -1,
+      1,
+      -1,
+      0,
+      20,
+      3,
+      1,
+      4,
+      r5 + 18,
+      2,
+      5,
+      r5 + 18,
+      3,
+      16,
+      6,
+      5,
+      12,
+      7,
+      6,
+      r5 + 6,
+      8,
+      7,
+      r5 + 7,
+      9,
+      8,
+      r5 + 8,
+      10,
+      11,
+      r5 + 9,
+      11,
+      12,
+      r5 + 10,
+      r5 + 17,
+      9,
+      r5 + 4,
+      13,
+      10,
+      r5 + 5,
+      14,
+      12,
+      r5 + 10,
+      15,
+      13,
+      r5 + 15,
+      r5 + 16,
+      4,
+      18,
+      17,
+      5,
+      r5 + 12,
+      r5 + 14,
+      5,
+      19,
+      r5 + 13,
+      13,
+      r5 + 11,
+      r5 + 12,
+      3,
+      r5 + 1,
+      21,
+      5,
+      r5 + 2,
+      r5 + 3
+    ]);
+    var bdd5 = BinaryDecisionDiagram2.from(nodes5, root6, _data5.conditions, _data5.results);
+    var cache5 = new EndpointCache2({
+      size: 50,
+      params: ["Endpoint", "Region", "UseDualStack", "UseFIPS"]
+    });
+    var defaultEndpointResolver5 = (endpointParams, context = {}) => {
+      return cache5.get(endpointParams, () => decideEndpoint2(bdd5, {
+        endpointParams,
+        logger: context.logger
+      }));
+    };
+    customEndpointFunctions2.aws = awsEndpointFunctions2;
+    var CostExplorerServiceException = class _CostExplorerServiceException extends ServiceException2 {
+      constructor(options) {
+        super(options);
+        Object.setPrototypeOf(this, _CostExplorerServiceException.prototype);
+      }
+    };
+    var AnalysisNotFoundException = class _AnalysisNotFoundException extends CostExplorerServiceException {
+      name = "AnalysisNotFoundException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "AnalysisNotFoundException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _AnalysisNotFoundException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var LimitExceededException = class _LimitExceededException extends CostExplorerServiceException {
+      name = "LimitExceededException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "LimitExceededException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _LimitExceededException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var UnknownMonitorException = class _UnknownMonitorException extends CostExplorerServiceException {
+      name = "UnknownMonitorException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "UnknownMonitorException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _UnknownMonitorException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var ServiceQuotaExceededException = class _ServiceQuotaExceededException extends CostExplorerServiceException {
+      name = "ServiceQuotaExceededException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "ServiceQuotaExceededException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _ServiceQuotaExceededException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var UnknownSubscriptionException = class _UnknownSubscriptionException extends CostExplorerServiceException {
+      name = "UnknownSubscriptionException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "UnknownSubscriptionException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _UnknownSubscriptionException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var ResourceNotFoundException2 = class _ResourceNotFoundException extends CostExplorerServiceException {
+      name = "ResourceNotFoundException";
+      $fault = "client";
+      Message;
+      ResourceName;
+      constructor(opts) {
+        super({
+          name: "ResourceNotFoundException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _ResourceNotFoundException.prototype);
+        this.Message = opts.Message;
+        this.ResourceName = opts.ResourceName;
+      }
+    };
+    var InvalidNextTokenException = class _InvalidNextTokenException extends CostExplorerServiceException {
+      name = "InvalidNextTokenException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "InvalidNextTokenException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _InvalidNextTokenException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var DataUnavailableException = class _DataUnavailableException extends CostExplorerServiceException {
+      name = "DataUnavailableException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "DataUnavailableException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _DataUnavailableException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var BillExpirationException = class _BillExpirationException extends CostExplorerServiceException {
+      name = "BillExpirationException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "BillExpirationException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _BillExpirationException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var BillingViewHealthStatusException = class _BillingViewHealthStatusException extends CostExplorerServiceException {
+      name = "BillingViewHealthStatusException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "BillingViewHealthStatusException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _BillingViewHealthStatusException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var RequestChangedException = class _RequestChangedException extends CostExplorerServiceException {
+      name = "RequestChangedException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "RequestChangedException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _RequestChangedException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var UnresolvableUsageUnitException = class _UnresolvableUsageUnitException extends CostExplorerServiceException {
+      name = "UnresolvableUsageUnitException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "UnresolvableUsageUnitException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _UnresolvableUsageUnitException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var GenerationExistsException = class _GenerationExistsException extends CostExplorerServiceException {
+      name = "GenerationExistsException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "GenerationExistsException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _GenerationExistsException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var BackfillLimitExceededException = class _BackfillLimitExceededException extends CostExplorerServiceException {
+      name = "BackfillLimitExceededException";
+      $fault = "client";
+      Message;
+      constructor(opts) {
+        super({
+          name: "BackfillLimitExceededException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _BackfillLimitExceededException.prototype);
+        this.Message = opts.Message;
+      }
+    };
+    var TooManyTagsException = class _TooManyTagsException extends CostExplorerServiceException {
+      name = "TooManyTagsException";
+      $fault = "client";
+      Message;
+      ResourceName;
+      constructor(opts) {
+        super({
+          name: "TooManyTagsException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _TooManyTagsException.prototype);
+        this.Message = opts.Message;
+        this.ResourceName = opts.ResourceName;
+      }
+    };
+    var _A2 = "Anomaly";
+    var _AC = "AmortizedCommitment";
+    var _ACT = "AnalysisCompletionTime";
+    var _AD = "AnalysisDetails";
+    var _ADI = "AnomalyDateInterval";
+    var _ADp = "ApproximationDimension";
+    var _AED = "AnomalyEndDate";
+    var _AI = "AnalysisId";
+    var _AIc = "AccountId";
+    var _AIn = "AnomalyId";
+    var _AIna = "AnalysisIds";
+    var _AM = "AnomalyMonitor";
+    var _AMd = "AdditionalMetadata";
+    var _AMn = "AnomalyMonitors";
+    var _ANFE = "AnalysisNotFoundException";
+    var _ANOCUUPH = "AverageNumberOfCapacityUnitsUsedPerHour";
+    var _ANOIUPH = "AverageNumberOfInstancesUsedPerHour";
+    var _ANUUPH = "AverageNormalizedUnitsUsedPerHour";
+    var _ARC = "AmortizedRecurringCommitment";
+    var _ARF = "AmortizedRecurringFee";
+    var _AS = "AnalysisSummary";
+    var _ASD = "AnomalyStartDate";
+    var _ASL = "AnalysisSummaryList";
+    var _AST = "AnalysisStartedTime";
+    var _ASc = "AccountScope";
+    var _ASn = "AnalysisStatus";
+    var _ASno = "AnomalyScore";
+    var _ASnom = "AnomalySubscription";
+    var _ASnoma = "AnomalySubscriptions";
+    var _AT3 = "AnalysisType";
+    var _AU = "AverageUtilization";
+    var _AUC = "AmortizedUpfrontCommitment";
+    var _AUF = "AmortizedUpfrontFee";
+    var _AZ = "AvailabilityZone";
+    var _Ad = "Address";
+    var _Am = "Amount";
+    var _An = "And";
+    var _Ano = "Anomalies";
+    var _At = "Attributes";
+    var _BC = "BenefitsConsidered";
+    var _BEE = "BillExpirationException";
+    var _BF = "BackfillFrom";
+    var _BLEE = "BackfillLimitExceededException";
+    var _BR = "BackfillRequests";
+    var _BRa = "BackfillRequest";
+    var _BS = "BackfillStatus";
+    var _BTP = "BaselineTimePeriod";
+    var _BTPA = "BaselineTimePeriodAmount";
+    var _BVA = "BillingViewArn";
+    var _BVHSE = "BillingViewHealthStatusException";
+    var _C2 = "Component";
+    var _CA2 = "CompletedAt";
+    var _CAC = "CurrentAverageCoverage";
+    var _CAHODS = "CurrentAverageHourlyOnDemandSpend";
+    var _CAM = "CreateAnomalyMonitor";
+    var _CAMR = "CreateAnomalyMonitorRequest";
+    var _CAMRr = "CreateAnomalyMonitorResponse";
+    var _CAS = "CreateAnomalySubscription";
+    var _CASR = "CreateAnomalySubscriptionRequest";
+    var _CASRr = "CreateAnomalySubscriptionResponse";
+    var _CAT = "CostAllocationTag";
+    var _CATBR = "CostAllocationTagBackfillRequest";
+    var _CATBRL = "CostAllocationTagBackfillRequestList";
+    var _CATL = "CostAllocationTagList";
+    var _CATS = "CostAllocationTagsStatus";
+    var _CATSE = "CostAllocationTagStatusEntry";
+    var _CATSL = "CostAllocationTagStatusList";
+    var _CATo = "CostAllocationTags";
+    var _CAUC = "CostAndUsageComparison";
+    var _CAUCo = "CostAndUsageComparisons";
+    var _CAUS = "CostAndUsageSelector";
+    var _CBT = "CoverageByTime";
+    var _CBTo = "CoveragesByTime";
+    var _CC = "CostCategory";
+    var _CCA = "CostCategoryArn";
+    var _CCCD = "CreateCostCategoryDefinition";
+    var _CCCDR = "CreateCostCategoryDefinitionRequest";
+    var _CCCDRr = "CreateCostCategoryDefinitionResponse";
+    var _CCD = "CostComparisonDriver";
+    var _CCDo = "CostComparisonDrivers";
+    var _CCIVD = "CostCategoryInheritedValueDimension";
+    var _CCN = "CostCategoryName";
+    var _CCNo = "CostCategoryNames";
+    var _CCPS = "CostCategoryProcessingStatus";
+    var _CCPSL = "CostCategoryProcessingStatusList";
+    var _CCR = "CostCategoryReference";
+    var _CCRA = "CostCategoryResourceAssociation";
+    var _CCRAo = "CostCategoryResourceAssociations";
+    var _CCRL = "CostCategoryReferencesList";
+    var _CCRLo = "CostCategoryRulesList";
+    var _CCRo = "CostCategoryRule";
+    var _CCRos = "CostCategoryReferences";
+    var _CCSCR = "CostCategorySplitChargeRule";
+    var _CCSCRL = "CostCategorySplitChargeRulesList";
+    var _CCSCRP = "CostCategorySplitChargeRuleParameter";
+    var _CCSCRPL = "CostCategorySplitChargeRuleParametersList";
+    var _CCV = "CostCategoryValues";
+    var _CCo = "CoverageCost";
+    var _CCos = "CostCategories";
+    var _CCu = "CurrencyCode";
+    var _CCur = "CurrentCoverage";
+    var _CD = "CreationDate";
+    var _CDo = "CostDrivers";
+    var _CDos = "CostDriver";
+    var _CG = "CurrentGeneration";
+    var _CH = "CoverageHours";
+    var _CHP = "CoverageHoursPercentage";
+    var _CI = "CurrentInstance";
+    var _CM = "ComparisonMetrics";
+    var _CMHODS = "CurrentMaximumHourlyOnDemandSpend";
+    var _CMHODSu = "CurrentMinimumHourlyOnDemandSpend";
+    var _CMV = "ComparisonMetricValue";
+    var _CNU = "CoverageNormalizedUnits";
+    var _CNUP = "CoverageNormalizedUnitsPercentage";
+    var _CODS = "CurrentOnDemandSpend";
+    var _CP = "CoveragePercentage";
+    var _CPAC = "CommitmentPurchaseAnalysisConfiguration";
+    var _CS2 = "CurrentScore";
+    var _CSo = "CostSelector";
+    var _CTP = "ComparisonTimePeriod";
+    var _CTPA = "ComparisonTimePeriodAmount";
+    var _CU = "CapacityUnits";
+    var _Co = "Coverage";
+    var _Cod = "Code";
+    var _Con = "Context";
+    var _Conf = "Configuration";
+    var _Cont = "Contribution";
+    var _D = "Difference";
+    var _DAM = "DeleteAnomalyMonitor";
+    var _DAMR = "DeleteAnomalyMonitorRequest";
+    var _DAMRe = "DeleteAnomalyMonitorResponse";
+    var _DAS = "DeleteAnomalySubscription";
+    var _DASR = "DeleteAnomalySubscriptionRequest";
+    var _DASRe = "DeleteAnomalySubscriptionResponse";
+    var _DCCD = "DeleteCostCategoryDefinition";
+    var _DCCDR = "DeleteCostCategoryDefinitionRequest";
+    var _DCCDRe = "DeleteCostCategoryDefinitionResponse";
+    var _DCCDRes = "DescribeCostCategoryDefinitionRequest";
+    var _DCCDResc = "DescribeCostCategoryDefinitionResponse";
+    var _DCCDe = "DescribeCostCategoryDefinition";
+    var _DCTP = "DailyCommitmentToPurchase";
+    var _DDBCD = "DynamoDBCapacityDetails";
+    var _DE = "DatabaseEngine";
+    var _DEa = "DatabaseEdition";
+    var _DI = "DateInterval";
+    var _DK = "DimensionKey";
+    var _DM = "DeploymentModel";
+    var _DN = "DimensionName";
+    var _DO = "DeploymentOption";
+    var _DRBPS = "DiskReadBytesPerSecond";
+    var _DROPS = "DiskReadOpsPerSecond";
+    var _DRU = "DiskResourceUtilization";
+    var _DT = "DataType";
+    var _DTI = "DefaultTargetInstance";
+    var _DUE = "DataUnavailableException";
+    var _DV = "DimensionValue";
+    var _DVA = "DimensionValueAttributes";
+    var _DVC = "DimensionalValueCount";
+    var _DVWA = "DimensionValuesWithAttributes";
+    var _DVWAL = "DimensionValuesWithAttributesList";
+    var _DVe = "DefaultValue";
+    var _DVi = "DimensionValues";
+    var _DWBPS = "DiskWriteBytesPerSecond";
+    var _DWOPS = "DiskWriteOpsPerSecond";
+    var _Di = "Dimensions";
+    var _Dim = "Dimension";
+    var _E2 = "End";
+    var _EAC = "EstimatedAverageCoverage";
+    var _EAU = "EstimatedAverageUtilization";
+    var _EBEIM = "EstimatedBreakEvenInMonths";
+    var _EBSRU = "EBSResourceUtilization";
+    var _EC = "ErrorCode";
+    var _ECC = "EstimatedCommitmentCost";
+    var _ECID = "EC2InstanceDetails";
+    var _ECIDl = "ElastiCacheInstanceDetails";
+    var _ECRD = "EC2ResourceDetails";
+    var _ECRU = "EC2ResourceUtilization";
+    var _ECS = "EC2Specification";
+    var _ECT = "EstimatedCompletionTime";
+    var _ECs = "EstimatedCoverage";
+    var _ED = "EndDate";
+    var _EE = "EffectiveEnd";
+    var _EHC = "ExistingHourlyCommitment";
+    var _EMC = "EstimatedMonthlyCost";
+    var _EMODC = "EstimatedMonthlyOnDemandCost";
+    var _EMS = "EstimatedMonthlySavings";
+    var _EMSA = "EstimatedMonthlySavingsAmount";
+    var _EMSP = "EstimatedMonthlySavingsPercentage";
+    var _ENCU = "EstimatedNewCommitmentUtilization";
+    var _EO = "EffectiveOn";
+    var _EODC = "EstimatedOnDemandCost";
+    var _EODCWCC = "EstimatedOnDemandCostWithCurrentCommitment";
+    var _ERBPS = "EbsReadBytesPerSecond";
+    var _ERCFLP = "EstimatedReservationCostForLookbackPeriod";
+    var _EROI = "EstimatedROI";
+    var _EROPS = "EbsReadOpsPerSecond";
+    var _ERU = "ExpectedResourceUtilization";
+    var _ES = "EffectiveStart";
+    var _ESA = "EstimatedSavingsAmount";
+    var _ESID = "ESInstanceDetails";
+    var _ESP = "EstimatedSavingsPercentage";
+    var _ESPC = "EstimatedSPCost";
+    var _ETC = "EstimatedTotalCost";
+    var _ETMSA = "EstimatedTotalMonthlySavingsAmount";
+    var _EV = "EndValue";
+    var _EWBPS = "EbsWriteBytesPerSecond";
+    var _EWOPS = "EbsWriteOpsPerSecond";
+    var _Er = "Errors";
+    var _Es = "Estimated";
+    var _Ex = "Expression";
+    var _Exp = "Expressions";
+    var _F = "Feedback";
+    var _FR = "ForecastResult";
+    var _FRBT = "ForecastResultsByTime";
+    var _FRC = "FindingReasonCodes";
+    var _Fa = "Family";
+    var _Fi = "Filter";
+    var _Fr = "Frequency";
+    var _G = "Groups";
+    var _GA = "GetAnomalies";
+    var _GAM = "GetAnomalyMonitors";
+    var _GAMR = "GetAnomalyMonitorsRequest";
+    var _GAMRe = "GetAnomalyMonitorsResponse";
+    var _GAR = "GetAnomaliesRequest";
+    var _GARe = "GetAnomaliesResponse";
+    var _GAS = "GetAnomalySubscriptions";
+    var _GASR = "GetAnomalySubscriptionsRequest";
+    var _GASRe = "GetAnomalySubscriptionsResponse";
+    var _GAUR = "GetApproximateUsageRecords";
+    var _GAURR = "GetApproximateUsageRecordsRequest";
+    var _GAURRe = "GetApproximateUsageRecordsResponse";
+    var _GB = "GroupBy";
+    var _GCAU = "GetCostAndUsage";
+    var _GCAUC = "GetCostAndUsageComparisons";
+    var _GCAUCR = "GetCostAndUsageComparisonsRequest";
+    var _GCAUCRe = "GetCostAndUsageComparisonsResponse";
+    var _GCAUR = "GetCostAndUsageRequest";
+    var _GCAURe = "GetCostAndUsageResponse";
+    var _GCAUWR = "GetCostAndUsageWithResources";
+    var _GCAUWRR = "GetCostAndUsageWithResourcesRequest";
+    var _GCAUWRRe = "GetCostAndUsageWithResourcesResponse";
+    var _GCC = "GetCostCategories";
+    var _GCCD = "GetCostComparisonDrivers";
+    var _GCCDR = "GetCostComparisonDriversRequest";
+    var _GCCDRe = "GetCostComparisonDriversResponse";
+    var _GCCR = "GetCostCategoriesRequest";
+    var _GCCRe = "GetCostCategoriesResponse";
+    var _GCF = "GetCostForecast";
+    var _GCFR = "GetCostForecastRequest";
+    var _GCFRe = "GetCostForecastResponse";
+    var _GCPA = "GetCommitmentPurchaseAnalysis";
+    var _GCPAR = "GetCommitmentPurchaseAnalysisRequest";
+    var _GCPARe = "GetCommitmentPurchaseAnalysisResponse";
+    var _GCT = "GenerationCompletionTime";
+    var _GD = "GroupDefinitions";
+    var _GDV = "GetDimensionValues";
+    var _GDVR = "GetDimensionValuesRequest";
+    var _GDVRe = "GetDimensionValuesResponse";
+    var _GDr = "GroupDefinition";
+    var _GEE = "GenerationExistsException";
+    var _GRC2 = "GetReservationCoverage";
+    var _GRCR2 = "GetReservationCoverageRequest";
+    var _GRCRe2 = "GetReservationCoverageResponse";
+    var _GRPR = "GetReservationPurchaseRecommendation";
+    var _GRPRR = "GetReservationPurchaseRecommendationRequest";
+    var _GRPRRe = "GetReservationPurchaseRecommendationResponse";
+    var _GRR = "GetRightsizingRecommendation";
+    var _GRRR = "GetRightsizingRecommendationRequest";
+    var _GRRRe = "GetRightsizingRecommendationResponse";
+    var _GRU = "GetReservationUtilization";
+    var _GRUR = "GetReservationUtilizationRequest";
+    var _GRURe = "GetReservationUtilizationResponse";
+    var _GS = "GenerationSummary";
+    var _GSL = "GenerationSummaryList";
+    var _GSPC = "GetSavingsPlansCoverage";
+    var _GSPCR = "GetSavingsPlansCoverageRequest";
+    var _GSPCRe = "GetSavingsPlansCoverageResponse";
+    var _GSPPR = "GetSavingsPlansPurchaseRecommendation";
+    var _GSPPRD = "GetSavingsPlanPurchaseRecommendationDetails";
+    var _GSPPRDR = "GetSavingsPlanPurchaseRecommendationDetailsRequest";
+    var _GSPPRDRe = "GetSavingsPlanPurchaseRecommendationDetailsResponse";
+    var _GSPPRR = "GetSavingsPlansPurchaseRecommendationRequest";
+    var _GSPPRRe = "GetSavingsPlansPurchaseRecommendationResponse";
+    var _GSPU = "GetSavingsPlansUtilization";
+    var _GSPUD = "GetSavingsPlansUtilizationDetails";
+    var _GSPUDR = "GetSavingsPlansUtilizationDetailsRequest";
+    var _GSPUDRe = "GetSavingsPlansUtilizationDetailsResponse";
+    var _GSPUR = "GetSavingsPlansUtilizationRequest";
+    var _GSPURe = "GetSavingsPlansUtilizationResponse";
+    var _GST = "GenerationStartedTime";
+    var _GSe = "GenerationStatus";
+    var _GT = "GenerationTimestamp";
+    var _GTR = "GetTagsRequest";
+    var _GTRe = "GetTagsResponse";
+    var _GTe = "GetTags";
+    var _GUF = "GetUsageForecast";
+    var _GUFR = "GetUsageForecastRequest";
+    var _GUFRe = "GetUsageForecastResponse";
+    var _Gr = "Granularity";
+    var _Gro = "Group";
+    var _HCTP = "HourlyCommitmentToPurchase";
+    var _HODR = "HourlyOnDemandRate";
+    var _I = "Impact";
+    var _IC = "InstanceClass";
+    var _ID = "InstanceDetails";
+    var _IF = "InstanceFamily";
+    var _IN = "InstanceName";
+    var _INTE = "InvalidNextTokenException";
+    var _IS = "InstanceSize";
+    var _IT2 = "InstanceType";
+    var _IV = "InheritedValue";
+    var _K2 = "Key";
+    var _Ke = "Keys";
+    var _LA = "LinkedAccount";
+    var _LAN = "LinkedAccountName";
+    var _LBTP = "LookBackTimePeriod";
+    var _LCAT = "ListCostAllocationTags";
+    var _LCATBH = "ListCostAllocationTagBackfillHistory";
+    var _LCATBHR = "ListCostAllocationTagBackfillHistoryRequest";
+    var _LCATBHRi = "ListCostAllocationTagBackfillHistoryResponse";
+    var _LCATR = "ListCostAllocationTagsRequest";
+    var _LCATRi = "ListCostAllocationTagsResponse";
+    var _LCCD = "ListCostCategoryDefinitions";
+    var _LCCDR = "ListCostCategoryDefinitionsRequest";
+    var _LCCDRi = "ListCostCategoryDefinitionsResponse";
+    var _LCCRA = "ListCostCategoryResourceAssociations";
+    var _LCCRAR = "ListCostCategoryResourceAssociationsRequest";
+    var _LCCRARi = "ListCostCategoryResourceAssociationsResponse";
+    var _LCPA = "ListCommitmentPurchaseAnalyses";
+    var _LCPAR = "ListCommitmentPurchaseAnalysesRequest";
+    var _LCPARi = "ListCommitmentPurchaseAnalysesResponse";
+    var _LED = "LastEvaluatedDate";
+    var _LEE = "LimitExceededException";
+    var _LM = "LicenseModel";
+    var _LP = "LookbackPeriod";
+    var _LPID = "LookbackPeriodInDays";
+    var _LPIH = "LookbackPeriodInHours";
+    var _LSPPRG = "ListSavingsPlansPurchaseRecommendationGeneration";
+    var _LSPPRGR = "ListSavingsPlansPurchaseRecommendationGenerationRequest";
+    var _LSPPRGRi = "ListSavingsPlansPurchaseRecommendationGenerationResponse";
+    var _LTFR = "ListTagsForResource";
+    var _LTFRR = "ListTagsForResourceRequest";
+    var _LTFRRi = "ListTagsForResourceResponse";
+    var _LUA = "LastUpdatedAt";
+    var _LUD = "LastUpdatedDate";
+    var _LUDa = "LastUsedDate";
+    var _LUT = "LatestUsageTimestamp";
+    var _M = "Message";
+    var _MA = "MonitorArn";
+    var _MAL = "MonitorArnList";
+    var _MC = "MonthlyCost";
+    var _MCUP = "MaxCpuUtilizationPercentage";
+    var _MD = "MonitorDimension";
+    var _MDBID = "MemoryDBInstanceDetails";
+    var _MFC = "MetricForComparison";
+    var _MI = "MaxImpact";
+    var _MMUP = "MaxMemoryUtilizationPercentage";
+    var _MN = "MonitorName";
+    var _MNOCUUPH = "MinimumNumberOfCapacityUnitsUsedPerHour";
+    var _MNOCUUPHa = "MaximumNumberOfCapacityUnitsUsedPerHour";
+    var _MNOIUPH = "MinimumNumberOfInstancesUsedPerHour";
+    var _MNOIUPHa = "MaximumNumberOfInstancesUsedPerHour";
+    var _MNUUPH = "MinimumNormalizedUnitsUsedPerHour";
+    var _MNUUPHa = "MaximumNormalizedUnitsUsedPerHour";
+    var _MO = "MatchOptions";
+    var _MOLP = "MetricsOverLookbackPeriod";
+    var _MR = "MaxResults";
+    var _MRD = "ModifyRecommendationDetail";
+    var _MS = "MonitorSpecification";
+    var _MSUP = "MaxStorageUtilizationPercentage";
+    var _MSa = "MaxScore";
+    var _MT = "MonitorType";
+    var _MV = "MeanValue";
+    var _MVe = "MetricValue";
+    var _Me = "Metrics";
+    var _Mem = "Memory";
+    var _Met = "Method";
+    var _Meta = "Metadata";
+    var _Metr = "Metric";
+    var _N = "Name";
+    var _NIBPS = "NetworkInBytesPerSecond";
+    var _NO = "NumericOperator";
+    var _NOBPS = "NetworkOutBytesPerSecond";
+    var _NOR = "NumberOfRules";
+    var _NP = "NetworkPerformance";
+    var _NPIPS = "NetworkPacketsInPerSecond";
+    var _NPOPS = "NetworkPacketsOutPerSecond";
+    var _NPT = "NextPageToken";
+    var _NRIS = "NetRISavings";
+    var _NRU = "NetworkResourceUtilization";
+    var _NS = "NetSavings";
+    var _NT = "NodeType";
+    var _NTe = "NextToken";
+    var _No = "Not";
+    var _O = "Or";
+    var _OC = "OfferingClass";
+    var _ODC = "OnDemandCost";
+    var _ODCE = "OnDemandCostEquivalent";
+    var _ODCORIHU = "OnDemandCostOfRIHoursUsed";
+    var _ODH = "OnDemandHours";
+    var _ODHILP = "OnDemandHoursInLookbackPeriod";
+    var _ODNU = "OnDemandNormalizedUnits";
+    var _OI = "OfferingId";
+    var _P2 = "Parameters";
+    var _PAF = "ProvideAnomalyFeedback";
+    var _PAFR = "ProvideAnomalyFeedbackRequest";
+    var _PAFRr = "ProvideAnomalyFeedbackResponse";
+    var _PD = "ProductDescription";
+    var _PDl = "PlatformDifferences";
+    var _PH = "PurchasedHours";
+    var _PIL = "PredictionIntervalLevel";
+    var _PILB = "PredictionIntervalLowerBound";
+    var _PIUB = "PredictionIntervalUpperBound";
+    var _PO = "PaymentOption";
+    var _PS = "ProcessingStatus";
+    var _PSa = "PageSize";
+    var _PU = "PurchasedUnits";
+    var _Pl = "Platform";
+    var _R = "Rules";
+    var _RA2 = "RequestedAt";
+    var _RAe = "ResourceArn";
+    var _RAes = "ReservationAggregates";
+    var _RBT = "ResultsByTime";
+    var _RBTe = "ResultByTime";
+    var _RC2 = "RootCauses";
+    var _RCD = "ReservedCapacityDetails";
+    var _RCE = "RequestChangedException";
+    var _RCG = "ReservationCoverageGroup";
+    var _RCGe = "ReservationCoverageGroups";
+    var _RCHILP = "ReservationCoveredHoursInLookbackPeriod";
+    var _RCI = "RootCauseImpact";
+    var _RCo = "RootCause";
+    var _RD = "ResourceDetails";
+    var _RDD = "RecommendationDetailData";
+    var _RDHM = "RecommendationDetailHourlyMetrics";
+    var _RDI = "RecommendationDetailId";
+    var _RDSID = "RDSInstanceDetails";
+    var _RDe = "RecommendationDetails";
+    var _RH = "ReservedHours";
+    var _RI = "ResourceId";
+    var _RICFUH = "RICostForUnusedHours";
+    var _RID = "RedshiftInstanceDetails";
+    var _RIe = "RecommendationId";
+    var _RIec = "RecommendationIds";
+    var _RN = "ResourceName";
+    var _RNFE2 = "ResourceNotFoundException";
+    var _RNOCUTP = "RecommendedNumberOfCapacityUnitsToPurchase";
+    var _RNOITP = "RecommendedNumberOfInstancesToPurchase";
+    var _RNU = "ReservedNormalizedUnits";
+    var _RNUTP = "RecommendedNormalizedUnitsToPurchase";
+    var _RPR = "ReservationPurchaseRecommendation";
+    var _RPRD = "ReservationPurchaseRecommendationDetail";
+    var _RPRDe = "ReservationPurchaseRecommendationDetails";
+    var _RPRM = "ReservationPurchaseRecommendationMetadata";
+    var _RPRS = "ReservationPurchaseRecommendationSummary";
+    var _RPRe = "ReservationPurchaseRecommendations";
+    var _RR = "RightsizingRecommendations";
+    var _RRC = "RightsizingRecommendationConfiguration";
+    var _RRL = "RightsizingRecommendationList";
+    var _RRM = "RightsizingRecommendationMetadata";
+    var _RRS = "RightsizingRecommendationSummary";
+    var _RRi = "RightsizingRecommendation";
+    var _RS = "ReturnSize";
+    var _RSMC = "RecurringStandardMonthlyCost";
+    var _RSe = "RealizedSavings";
+    var _RSec = "RecommendationSummary";
+    var _RT3 = "ResourceTags";
+    var _RTK = "ResourceTagKeys";
+    var _RTL = "ResourceTagList";
+    var _RTe = "ResourceTag";
+    var _RTec = "RecommendationTarget";
+    var _RTi = "RightsizingType";
+    var _RU = "ResourceUtilization";
+    var _RUG = "ReservationUtilizationGroup";
+    var _RUGe = "ReservationUtilizationGroups";
+    var _RV = "RuleVersion";
+    var _Re = "Region";
+    var _Rec = "Recommendations";
+    var _Ru = "Rule";
+    var _S = "Subscribers";
+    var _SA = "SubscriptionArn";
+    var _SAL = "SubscriptionArnList";
+    var _SB = "SortBy";
+    var _SCATB = "StartCostAllocationTagBackfill";
+    var _SCATBR = "StartCostAllocationTagBackfillRequest";
+    var _SCATBRt = "StartCostAllocationTagBackfillResponse";
+    var _SCBSP = "SpendCoveredBySavingsPlans";
+    var _SCC = "SavingsCurrencyCode";
+    var _SCPA = "StartCommitmentPurchaseAnalysis";
+    var _SCPAR = "StartCommitmentPurchaseAnalysisRequest";
+    var _SCPARt = "StartCommitmentPurchaseAnalysisResponse";
+    var _SCR = "SplitChargeRules";
+    var _SD = "StartDate";
+    var _SDo = "SortDefinition";
+    var _SDor = "SortDefinitions";
+    var _SFE = "SizeFlexEligible";
+    var _SN2 = "SubscriptionName";
+    var _SO = "SortOrder";
+    var _SP = "SavingsPercentage";
+    var _SPA = "SavingsPlanArn";
+    var _SPAC = "SavingsPlansAmortizedCommitment";
+    var _SPC = "SavingsPlansCoverages";
+    var _SPCD = "SavingsPlansCoverageData";
+    var _SPCHILP = "SavingsPlansCoveredHoursInLookbackPeriod";
+    var _SPCa = "SavingsPlansCommitment";
+    var _SPCav = "SavingsPlansCoverage";
+    var _SPD = "SavingsPlansDetails";
+    var _SPPAC = "SavingsPlansPurchaseAnalysisConfiguration";
+    var _SPPAD = "SavingsPlansPurchaseAnalysisDetails";
+    var _SPPR = "SavingsPlansPurchaseRecommendation";
+    var _SPPRD = "SavingsPlansPurchaseRecommendationDetails";
+    var _SPPRDL = "SavingsPlansPurchaseRecommendationDetailList";
+    var _SPPRDa = "SavingsPlansPurchaseRecommendationDetail";
+    var _SPPRM = "SavingsPlansPurchaseRecommendationMetadata";
+    var _SPPRS = "SavingsPlansPurchaseRecommendationSummary";
+    var _SPS = "SavingsPlansSavings";
+    var _SPT = "SavingsPlansType";
+    var _SPTA = "SavingsPlansToAdd";
+    var _SPTC = "SavingsPlansTargetCoverage";
+    var _SPTE = "SavingsPlansToExclude";
+    var _SPU = "SavingsPlansUtilization";
+    var _SPUA = "SavingsPlansUtilizationAggregates";
+    var _SPUBT = "SavingsPlansUtilizationsByTime";
+    var _SPUBTa = "SavingsPlansUtilizationByTime";
+    var _SPUD = "SavingsPlansUtilizationDetails";
+    var _SPUDa = "SavingsPlansUtilizationDetail";
+    var _SPa = "SavingsPlans";
+    var _SQEE = "ServiceQuotaExceededException";
+    var _SRT = "SupportedResourceTypes";
+    var _SS = "SearchString";
+    var _SSPPRG = "StartSavingsPlansPurchaseRecommendationGeneration";
+    var _SSPPRGR = "StartSavingsPlansPurchaseRecommendationGenerationRequest";
+    var _SSPPRGRt = "StartSavingsPlansPurchaseRecommendationGenerationResponse";
+    var _SSe = "ServiceSpecification";
+    var _ST2 = "StartTime";
+    var _SV = "StartValue";
+    var _Sa = "Savings";
+    var _Se = "Services";
+    var _Ser = "Service";
+    var _Sk = "Sku";
+    var _So = "Source";
+    var _St = "Status";
+    var _Sta = "Start";
+    var _Sto = "Storage";
+    var _Su = "Summary";
+    var _Sub = "Subscriber";
+    var _T2 = "Threshold";
+    var _TAC = "TotalAmortizedCommitment";
+    var _TAF = "TotalAmortizedFee";
+    var _TAH = "TotalActualHours";
+    var _TAS = "TotalActualSpend";
+    var _TAU = "TotalActualUnits";
+    var _TC2 = "TotalCost";
+    var _TCAU = "TotalCostAndUsage";
+    var _TCo = "TotalCommitment";
+    var _TE = "ThresholdExpression";
+    var _TEMSA = "TotalEstimatedMonthlySavingsAmount";
+    var _TEMSP = "TotalEstimatedMonthlySavingsPercentage";
+    var _TES = "TotalExpectedSpend";
+    var _TI = "TotalImpact";
+    var _TIF = "TotalImpactFilter";
+    var _TIL = "TargetInstancesList";
+    var _TIP = "TotalImpactPercentage";
+    var _TIY = "TermInYears";
+    var _TIa = "TargetInstances";
+    var _TIar = "TargetInstance";
+    var _TK = "TagKey";
+    var _TKa = "TagKeys";
+    var _TMTE = "TooManyTagsException";
+    var _TP = "TimePeriod";
+    var _TPRIS = "TotalPotentialRISavings";
+    var _TR = "TotalRecords";
+    var _TRC = "TotalRecommendationCount";
+    var _TRD = "TerminateRecommendationDetail";
+    var _TRH = "TotalRunningHours";
+    var _TRHILP = "TotalRunningHoursInLookbackPeriod";
+    var _TRNU = "TotalRunningNormalizedUnits";
+    var _TRR = "TagResourceRequest";
+    var _TRRa = "TagResourceResponse";
+    var _TRa = "TagResource";
+    var _TS = "TotalSize";
+    var _TV = "TagValues";
+    var _TVL = "TagValuesList";
+    var _Ta2 = "Targets";
+    var _Tag = "Tags";
+    var _Te = "Tenancy";
+    var _To = "Total";
+    var _Ty = "Type";
+    var _U = "Unit";
+    var _UAM = "UpdateAnomalyMonitor";
+    var _UAMR = "UpdateAnomalyMonitorRequest";
+    var _UAMRp = "UpdateAnomalyMonitorResponse";
+    var _UAS = "UpdateAnomalySubscription";
+    var _UASR = "UpdateAnomalySubscriptionRequest";
+    var _UASRp = "UpdateAnomalySubscriptionResponse";
+    var _UBT = "UtilizationsByTime";
+    var _UBTt = "UtilizationByTime";
+    var _UC = "UpfrontCost";
+    var _UCATS = "UpdateCostAllocationTagsStatus";
+    var _UCATSE = "UpdateCostAllocationTagsStatusError";
+    var _UCATSEp = "UpdateCostAllocationTagsStatusErrors";
+    var _UCATSR = "UpdateCostAllocationTagsStatusRequest";
+    var _UCATSRp = "UpdateCostAllocationTagsStatusResponse";
+    var _UCCD = "UpdateCostCategoryDefinition";
+    var _UCCDR = "UpdateCostCategoryDefinitionRequest";
+    var _UCCDRp = "UpdateCostCategoryDefinitionResponse";
+    var _UCn = "UnusedCommitment";
+    var _UCs = "UsedCommitment";
+    var _UH = "UnusedHours";
+    var _UME = "UnknownMonitorException";
+    var _UP = "UtilizationPercentage";
+    var _UPIU = "UtilizationPercentageInUnits";
+    var _UR = "UntagResource";
+    var _URR = "UntagResourceRequest";
+    var _URRn = "UntagResourceResponse";
+    var _US = "UnrealizedSavings";
+    var _USE = "UnknownSubscriptionException";
+    var _UT = "UsageType";
+    var _UU = "UnusedUnits";
+    var _UUUE = "UnresolvableUsageUnitException";
+    var _Ut = "Utilization";
+    var _V2 = "Values";
+    var _Va = "Value";
+    var _Vc = "Vcpu";
+    var _c5 = "client";
+    var _e5 = "error";
+    var _hE5 = "httpError";
+    var _s5 = "smithy.ts.sdk.synthetic.com.amazonaws.costexplorer";
+    var n05 = "com.amazonaws.costexplorer";
+    var _s_registry5 = TypeRegistry2.for(_s5);
+    var CostExplorerServiceException$ = [-3, _s5, "CostExplorerServiceException", 0, [], []];
+    _s_registry5.registerError(CostExplorerServiceException$, CostExplorerServiceException);
+    var n0_registry5 = TypeRegistry2.for(n05);
+    var AnalysisNotFoundException$ = [
+      -3,
+      n05,
+      _ANFE,
+      { [_e5]: _c5, [_hE5]: 400 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(AnalysisNotFoundException$, AnalysisNotFoundException);
+    var BackfillLimitExceededException$ = [
+      -3,
+      n05,
+      _BLEE,
+      { [_e5]: _c5, [_hE5]: 400 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(BackfillLimitExceededException$, BackfillLimitExceededException);
+    var BillExpirationException$ = [
+      -3,
+      n05,
+      _BEE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(BillExpirationException$, BillExpirationException);
+    var BillingViewHealthStatusException$ = [
+      -3,
+      n05,
+      _BVHSE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(BillingViewHealthStatusException$, BillingViewHealthStatusException);
+    var DataUnavailableException$ = [
+      -3,
+      n05,
+      _DUE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(DataUnavailableException$, DataUnavailableException);
+    var GenerationExistsException$ = [
+      -3,
+      n05,
+      _GEE,
+      { [_e5]: _c5, [_hE5]: 400 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(GenerationExistsException$, GenerationExistsException);
+    var InvalidNextTokenException$ = [
+      -3,
+      n05,
+      _INTE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(InvalidNextTokenException$, InvalidNextTokenException);
+    var LimitExceededException$ = [
+      -3,
+      n05,
+      _LEE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(LimitExceededException$, LimitExceededException);
+    var RequestChangedException$ = [
+      -3,
+      n05,
+      _RCE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(RequestChangedException$, RequestChangedException);
+    var ResourceNotFoundException$2 = [
+      -3,
+      n05,
+      _RNFE2,
+      { [_e5]: _c5, [_hE5]: 404 },
+      [_M, _RN],
+      [0, 0]
+    ];
+    n0_registry5.registerError(ResourceNotFoundException$2, ResourceNotFoundException2);
+    var ServiceQuotaExceededException$ = [
+      -3,
+      n05,
+      _SQEE,
+      { [_e5]: _c5, [_hE5]: 402 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(ServiceQuotaExceededException$, ServiceQuotaExceededException);
+    var TooManyTagsException$ = [
+      -3,
+      n05,
+      _TMTE,
+      { [_e5]: _c5, [_hE5]: 400 },
+      [_M, _RN],
+      [0, 0]
+    ];
+    n0_registry5.registerError(TooManyTagsException$, TooManyTagsException);
+    var UnknownMonitorException$ = [
+      -3,
+      n05,
+      _UME,
+      { [_e5]: _c5, [_hE5]: 404 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(UnknownMonitorException$, UnknownMonitorException);
+    var UnknownSubscriptionException$ = [
+      -3,
+      n05,
+      _USE,
+      { [_e5]: _c5, [_hE5]: 404 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(UnknownSubscriptionException$, UnknownSubscriptionException);
+    var UnresolvableUsageUnitException$ = [
+      -3,
+      n05,
+      _UUUE,
+      { [_e5]: _c5 },
+      [_M],
+      [0]
+    ];
+    n0_registry5.registerError(UnresolvableUsageUnitException$, UnresolvableUsageUnitException);
+    var errorTypeRegistries5 = [
+      _s_registry5,
+      n0_registry5
+    ];
+    var AnalysisDetails$ = [
+      3,
+      n05,
+      _AD,
+      0,
+      [_SPPAD],
+      [() => SavingsPlansPurchaseAnalysisDetails$]
+    ];
+    var AnalysisSummary$ = [
+      3,
+      n05,
+      _AS,
+      0,
+      [_ECT, _ACT, _AST, _ASn, _EC, _AI, _CPAC],
+      [0, 0, 0, 0, 0, 0, () => CommitmentPurchaseAnalysisConfiguration$]
+    ];
+    var Anomaly$ = [
+      3,
+      n05,
+      _A2,
+      0,
+      [_AIn, _ASno, _I, _MA, _ASD, _AED, _DV, _RC2, _F],
+      [0, () => AnomalyScore$, () => Impact$, 0, 0, 0, 0, () => RootCauses, 0],
+      4
+    ];
+    var AnomalyDateInterval$ = [
+      3,
+      n05,
+      _ADI,
+      0,
+      [_SD, _ED],
+      [0, 0],
+      1
+    ];
+    var AnomalyMonitor$ = [
+      3,
+      n05,
+      _AM,
+      0,
+      [_MN, _MT, _MA, _CD, _LUD, _LED, _MD, _MS, _DVC],
+      [0, 0, 0, 0, 0, 0, 0, () => Expression$, 1],
+      2
+    ];
+    var AnomalyScore$ = [
+      3,
+      n05,
+      _ASno,
+      0,
+      [_MSa, _CS2],
+      [1, 1],
+      2
+    ];
+    var AnomalySubscription$ = [
+      3,
+      n05,
+      _ASnom,
+      0,
+      [_MAL, _S, _Fr, _SN2, _SA, _AIc, _T2, _TE],
+      [64 | 0, () => Subscribers, 0, 0, 0, 0, 1, () => Expression$],
+      4
+    ];
+    var CommitmentPurchaseAnalysisConfiguration$ = [
+      3,
+      n05,
+      _CPAC,
+      0,
+      [_SPPAC],
+      [() => SavingsPlansPurchaseAnalysisConfiguration$]
+    ];
+    var ComparisonMetricValue$ = [
+      3,
+      n05,
+      _CMV,
+      0,
+      [_BTPA, _CTPA, _D, _U],
+      [0, 0, 0, 0]
+    ];
+    var CostAllocationTag$ = [
+      3,
+      n05,
+      _CAT,
+      0,
+      [_TK, _Ty, _St, _LUD, _LUDa],
+      [0, 0, 0, 0, 0],
+      3
+    ];
+    var CostAllocationTagBackfillRequest$ = [
+      3,
+      n05,
+      _CATBR,
+      0,
+      [_BF, _RA2, _CA2, _BS, _LUA],
+      [0, 0, 0, 0, 0]
+    ];
+    var CostAllocationTagStatusEntry$ = [
+      3,
+      n05,
+      _CATSE,
+      0,
+      [_TK, _St],
+      [0, 0],
+      2
+    ];
+    var CostAndUsageComparison$ = [
+      3,
+      n05,
+      _CAUC,
+      0,
+      [_CAUS, _Me],
+      [() => Expression$, () => ComparisonMetrics]
+    ];
+    var CostCategory$ = [
+      3,
+      n05,
+      _CC,
+      0,
+      [_CCA, _ES, _N, _RV, _R, _EE, _SCR, _PS, _DVe],
+      [0, 0, 0, 0, () => CostCategoryRulesList, 0, () => CostCategorySplitChargeRulesList, () => CostCategoryProcessingStatusList, 0],
+      5
+    ];
+    var CostCategoryInheritedValueDimension$ = [
+      3,
+      n05,
+      _CCIVD,
+      0,
+      [_DN, _DK],
+      [0, 0]
+    ];
+    var CostCategoryProcessingStatus$ = [
+      3,
+      n05,
+      _CCPS,
+      0,
+      [_C2, _St],
+      [0, 0]
+    ];
+    var CostCategoryReference$ = [
+      3,
+      n05,
+      _CCR,
+      0,
+      [_CCA, _N, _ES, _EE, _NOR, _PS, _V2, _DVe, _SRT],
+      [0, 0, 0, 0, 1, () => CostCategoryProcessingStatusList, 64 | 0, 0, 64 | 0]
+    ];
+    var CostCategoryResourceAssociation$ = [
+      3,
+      n05,
+      _CCRA,
+      0,
+      [_RAe, _CCN, _CCA],
+      [0, 0, 0]
+    ];
+    var CostCategoryRule$ = [
+      3,
+      n05,
+      _CCRo,
+      0,
+      [_Va, _Ru, _IV, _Ty],
+      [0, () => Expression$, () => CostCategoryInheritedValueDimension$, 0]
+    ];
+    var CostCategorySplitChargeRule$ = [
+      3,
+      n05,
+      _CCSCR,
+      0,
+      [_So, _Ta2, _Met, _P2],
+      [0, 64 | 0, 0, () => CostCategorySplitChargeRuleParametersList],
+      3
+    ];
+    var CostCategorySplitChargeRuleParameter$ = [
+      3,
+      n05,
+      _CCSCRP,
+      0,
+      [_Ty, _V2],
+      [0, 64 | 0],
+      2
+    ];
+    var CostCategoryValues$ = [
+      3,
+      n05,
+      _CCV,
+      0,
+      [_K2, _V2, _MO],
+      [0, 64 | 0, 64 | 0]
+    ];
+    var CostComparisonDriver$ = [
+      3,
+      n05,
+      _CCD,
+      0,
+      [_CSo, _Me, _CDo],
+      [() => Expression$, () => ComparisonMetrics, () => CostDrivers]
+    ];
+    var CostDriver$ = [
+      3,
+      n05,
+      _CDos,
+      0,
+      [_Ty, _N, _Me],
+      [0, 0, () => ComparisonMetrics]
+    ];
+    var Coverage$ = [
+      3,
+      n05,
+      _Co,
+      0,
+      [_CH, _CNU, _CCo],
+      [() => CoverageHours$, () => CoverageNormalizedUnits$, () => CoverageCost$]
+    ];
+    var CoverageByTime$ = [
+      3,
+      n05,
+      _CBT,
+      0,
+      [_TP, _G, _To],
+      [() => DateInterval$, () => ReservationCoverageGroups, () => Coverage$]
+    ];
+    var CoverageCost$ = [
+      3,
+      n05,
+      _CCo,
+      0,
+      [_ODC],
+      [0]
+    ];
+    var CoverageHours$ = [
+      3,
+      n05,
+      _CH,
+      0,
+      [_ODH, _RH, _TRH, _CHP],
+      [0, 0, 0, 0]
+    ];
+    var CoverageNormalizedUnits$ = [
+      3,
+      n05,
+      _CNU,
+      0,
+      [_ODNU, _RNU, _TRNU, _CNUP],
+      [0, 0, 0, 0]
+    ];
+    var CreateAnomalyMonitorRequest$ = [
+      3,
+      n05,
+      _CAMR,
+      0,
+      [_AM, _RT3],
+      [() => AnomalyMonitor$, () => ResourceTagList],
+      1
+    ];
+    var CreateAnomalyMonitorResponse$ = [
+      3,
+      n05,
+      _CAMRr,
+      0,
+      [_MA],
+      [0],
+      1
+    ];
+    var CreateAnomalySubscriptionRequest$ = [
+      3,
+      n05,
+      _CASR,
+      0,
+      [_ASnom, _RT3],
+      [() => AnomalySubscription$, () => ResourceTagList],
+      1
+    ];
+    var CreateAnomalySubscriptionResponse$ = [
+      3,
+      n05,
+      _CASRr,
+      0,
+      [_SA],
+      [0],
+      1
+    ];
+    var CreateCostCategoryDefinitionRequest$ = [
+      3,
+      n05,
+      _CCCDR,
+      0,
+      [_N, _RV, _R, _ES, _DVe, _SCR, _RT3],
+      [0, 0, () => CostCategoryRulesList, 0, 0, () => CostCategorySplitChargeRulesList, () => ResourceTagList],
+      3
+    ];
+    var CreateCostCategoryDefinitionResponse$ = [
+      3,
+      n05,
+      _CCCDRr,
+      0,
+      [_CCA, _ES],
+      [0, 0]
+    ];
+    var CurrentInstance$ = [
+      3,
+      n05,
+      _CI,
+      0,
+      [_RI, _IN, _Tag, _RD, _RU, _RCHILP, _SPCHILP, _ODHILP, _TRHILP, _MC, _CCu],
+      [0, 0, () => TagValuesList, () => ResourceDetails$, () => ResourceUtilization$, 0, 0, 0, 0, 0, 0]
+    ];
+    var DateInterval$ = [
+      3,
+      n05,
+      _DI,
+      0,
+      [_Sta, _E2],
+      [0, 0],
+      2
+    ];
+    var DeleteAnomalyMonitorRequest$ = [
+      3,
+      n05,
+      _DAMR,
+      0,
+      [_MA],
+      [0],
+      1
+    ];
+    var DeleteAnomalyMonitorResponse$ = [
+      3,
+      n05,
+      _DAMRe,
+      0,
+      [],
+      []
+    ];
+    var DeleteAnomalySubscriptionRequest$ = [
+      3,
+      n05,
+      _DASR,
+      0,
+      [_SA],
+      [0],
+      1
+    ];
+    var DeleteAnomalySubscriptionResponse$ = [
+      3,
+      n05,
+      _DASRe,
+      0,
+      [],
+      []
+    ];
+    var DeleteCostCategoryDefinitionRequest$ = [
+      3,
+      n05,
+      _DCCDR,
+      0,
+      [_CCA],
+      [0],
+      1
+    ];
+    var DeleteCostCategoryDefinitionResponse$ = [
+      3,
+      n05,
+      _DCCDRe,
+      0,
+      [_CCA, _EE],
+      [0, 0]
+    ];
+    var DescribeCostCategoryDefinitionRequest$ = [
+      3,
+      n05,
+      _DCCDRes,
+      0,
+      [_CCA, _EO],
+      [0, 0],
+      1
+    ];
+    var DescribeCostCategoryDefinitionResponse$ = [
+      3,
+      n05,
+      _DCCDResc,
+      0,
+      [_CC],
+      [() => CostCategory$]
+    ];
+    var DimensionValues$ = [
+      3,
+      n05,
+      _DVi,
+      0,
+      [_K2, _V2, _MO],
+      [0, 64 | 0, 64 | 0]
+    ];
+    var DimensionValuesWithAttributes$ = [
+      3,
+      n05,
+      _DVWA,
+      0,
+      [_Va, _At],
+      [0, 128 | 0]
+    ];
+    var DiskResourceUtilization$ = [
+      3,
+      n05,
+      _DRU,
+      0,
+      [_DROPS, _DWOPS, _DRBPS, _DWBPS],
+      [0, 0, 0, 0]
+    ];
+    var DynamoDBCapacityDetails$ = [
+      3,
+      n05,
+      _DDBCD,
+      0,
+      [_CU, _Re],
+      [0, 0]
+    ];
+    var EBSResourceUtilization$ = [
+      3,
+      n05,
+      _EBSRU,
+      0,
+      [_EROPS, _EWOPS, _ERBPS, _EWBPS],
+      [0, 0, 0, 0]
+    ];
+    var EC2InstanceDetails$ = [
+      3,
+      n05,
+      _ECID,
+      0,
+      [_Fa, _IT2, _Re, _AZ, _Pl, _Te, _CG, _SFE],
+      [0, 0, 0, 0, 0, 0, 2, 2]
+    ];
+    var EC2ResourceDetails$ = [
+      3,
+      n05,
+      _ECRD,
+      0,
+      [_HODR, _IT2, _Pl, _Re, _Sk, _Mem, _NP, _Sto, _Vc],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    var EC2ResourceUtilization$ = [
+      3,
+      n05,
+      _ECRU,
+      0,
+      [_MCUP, _MMUP, _MSUP, _EBSRU, _DRU, _NRU],
+      [0, 0, 0, () => EBSResourceUtilization$, () => DiskResourceUtilization$, () => NetworkResourceUtilization$]
+    ];
+    var EC2Specification$ = [
+      3,
+      n05,
+      _ECS,
+      0,
+      [_OC],
+      [0]
+    ];
+    var ElastiCacheInstanceDetails$ = [
+      3,
+      n05,
+      _ECIDl,
+      0,
+      [_Fa, _NT, _Re, _PD, _CG, _SFE],
+      [0, 0, 0, 0, 2, 2]
+    ];
+    var ESInstanceDetails$ = [
+      3,
+      n05,
+      _ESID,
+      0,
+      [_IC, _IS, _Re, _CG, _SFE],
+      [0, 0, 0, 2, 2]
+    ];
+    var Expression$ = [
+      3,
+      n05,
+      _Ex,
+      0,
+      [_O, _An, _No, _Di, _Tag, _CCos],
+      [() => Expressions, () => Expressions, () => Expression$, () => DimensionValues$, () => TagValues$, () => CostCategoryValues$]
+    ];
+    var ForecastResult$ = [
+      3,
+      n05,
+      _FR,
+      0,
+      [_TP, _MV, _PILB, _PIUB],
+      [() => DateInterval$, 0, 0, 0]
+    ];
+    var GenerationSummary$ = [
+      3,
+      n05,
+      _GS,
+      0,
+      [_RIe, _GSe, _GST, _GCT, _ECT],
+      [0, 0, 0, 0, 0]
+    ];
+    var GetAnomaliesRequest$ = [
+      3,
+      n05,
+      _GAR,
+      0,
+      [_DI, _MA, _F, _TI, _NPT, _MR],
+      [() => AnomalyDateInterval$, 0, 0, () => TotalImpactFilter$, 0, 1],
+      1
+    ];
+    var GetAnomaliesResponse$ = [
+      3,
+      n05,
+      _GARe,
+      0,
+      [_Ano, _NPT],
+      [() => Anomalies, 0],
+      1
+    ];
+    var GetAnomalyMonitorsRequest$ = [
+      3,
+      n05,
+      _GAMR,
+      0,
+      [_MAL, _NPT, _MR],
+      [64 | 0, 0, 1]
+    ];
+    var GetAnomalyMonitorsResponse$ = [
+      3,
+      n05,
+      _GAMRe,
+      0,
+      [_AMn, _NPT],
+      [() => AnomalyMonitors, 0],
+      1
+    ];
+    var GetAnomalySubscriptionsRequest$ = [
+      3,
+      n05,
+      _GASR,
+      0,
+      [_SAL, _MA, _NPT, _MR],
+      [64 | 0, 0, 0, 1]
+    ];
+    var GetAnomalySubscriptionsResponse$ = [
+      3,
+      n05,
+      _GASRe,
+      0,
+      [_ASnoma, _NPT],
+      [() => AnomalySubscriptions, 0],
+      1
+    ];
+    var GetApproximateUsageRecordsRequest$ = [
+      3,
+      n05,
+      _GAURR,
+      0,
+      [_Gr, _ADp, _Se],
+      [0, 0, 64 | 0],
+      2
+    ];
+    var GetApproximateUsageRecordsResponse$ = [
+      3,
+      n05,
+      _GAURRe,
+      0,
+      [_Se, _TR, _LP],
+      [128 | 1, 1, () => DateInterval$]
+    ];
+    var GetCommitmentPurchaseAnalysisRequest$ = [
+      3,
+      n05,
+      _GCPAR,
+      0,
+      [_AI],
+      [0],
+      1
+    ];
+    var GetCommitmentPurchaseAnalysisResponse$ = [
+      3,
+      n05,
+      _GCPARe,
+      0,
+      [_ECT, _AST, _AI, _ASn, _CPAC, _ACT, _EC, _AD],
+      [0, 0, 0, 0, () => CommitmentPurchaseAnalysisConfiguration$, 0, 0, () => AnalysisDetails$],
+      5
+    ];
+    var GetCostAndUsageComparisonsRequest$ = [
+      3,
+      n05,
+      _GCAUCR,
+      0,
+      [_BTP, _CTP, _MFC, _BVA, _Fi, _GB, _MR, _NPT],
+      [() => DateInterval$, () => DateInterval$, 0, 0, () => Expression$, () => GroupDefinitions, 1, 0],
+      3
+    ];
+    var GetCostAndUsageComparisonsResponse$ = [
+      3,
+      n05,
+      _GCAUCRe,
+      0,
+      [_CAUCo, _TCAU, _NPT],
+      [() => CostAndUsageComparisons, () => ComparisonMetrics, 0]
+    ];
+    var GetCostAndUsageRequest$ = [
+      3,
+      n05,
+      _GCAUR,
+      0,
+      [_TP, _Gr, _Me, _Fi, _GB, _BVA, _NPT],
+      [() => DateInterval$, 0, 64 | 0, () => Expression$, () => GroupDefinitions, 0, 0],
+      3
+    ];
+    var GetCostAndUsageResponse$ = [
+      3,
+      n05,
+      _GCAURe,
+      0,
+      [_NPT, _GD, _RBT, _DVA],
+      [0, () => GroupDefinitions, () => ResultsByTime, () => DimensionValuesWithAttributesList]
+    ];
+    var GetCostAndUsageWithResourcesRequest$ = [
+      3,
+      n05,
+      _GCAUWRR,
+      0,
+      [_TP, _Gr, _Fi, _Me, _GB, _BVA, _NPT],
+      [() => DateInterval$, 0, () => Expression$, 64 | 0, () => GroupDefinitions, 0, 0],
+      3
+    ];
+    var GetCostAndUsageWithResourcesResponse$ = [
+      3,
+      n05,
+      _GCAUWRRe,
+      0,
+      [_NPT, _GD, _RBT, _DVA],
+      [0, () => GroupDefinitions, () => ResultsByTime, () => DimensionValuesWithAttributesList]
+    ];
+    var GetCostCategoriesRequest$ = [
+      3,
+      n05,
+      _GCCR,
+      0,
+      [_TP, _SS, _CCN, _Fi, _SB, _BVA, _MR, _NPT],
+      [() => DateInterval$, 0, 0, () => Expression$, () => SortDefinitions, 0, 1, 0],
+      1
+    ];
+    var GetCostCategoriesResponse$ = [
+      3,
+      n05,
+      _GCCRe,
+      0,
+      [_RS, _TS, _NPT, _CCNo, _CCV],
+      [1, 1, 0, 64 | 0, 64 | 0],
+      2
+    ];
+    var GetCostComparisonDriversRequest$ = [
+      3,
+      n05,
+      _GCCDR,
+      0,
+      [_BTP, _CTP, _MFC, _BVA, _Fi, _GB, _MR, _NPT],
+      [() => DateInterval$, () => DateInterval$, 0, 0, () => Expression$, () => GroupDefinitions, 1, 0],
+      3
+    ];
+    var GetCostComparisonDriversResponse$ = [
+      3,
+      n05,
+      _GCCDRe,
+      0,
+      [_CCDo, _NPT],
+      [() => CostComparisonDrivers, 0]
+    ];
+    var GetCostForecastRequest$ = [
+      3,
+      n05,
+      _GCFR,
+      0,
+      [_TP, _Metr, _Gr, _Fi, _BVA, _PIL],
+      [() => DateInterval$, 0, 0, () => Expression$, 0, 1],
+      3
+    ];
+    var GetCostForecastResponse$ = [
+      3,
+      n05,
+      _GCFRe,
+      0,
+      [_To, _FRBT],
+      [() => MetricValue$, () => ForecastResultsByTime]
+    ];
+    var GetDimensionValuesRequest$ = [
+      3,
+      n05,
+      _GDVR,
+      0,
+      [_TP, _Dim, _SS, _Con, _Fi, _SB, _BVA, _MR, _NPT],
+      [() => DateInterval$, 0, 0, 0, () => Expression$, () => SortDefinitions, 0, 1, 0],
+      2
+    ];
+    var GetDimensionValuesResponse$ = [
+      3,
+      n05,
+      _GDVRe,
+      0,
+      [_DVi, _RS, _TS, _NPT],
+      [() => DimensionValuesWithAttributesList, 1, 1, 0],
+      3
+    ];
+    var GetReservationCoverageRequest$ = [
+      3,
+      n05,
+      _GRCR2,
+      0,
+      [_TP, _GB, _Gr, _Fi, _Me, _NPT, _SB, _MR],
+      [() => DateInterval$, () => GroupDefinitions, 0, () => Expression$, 64 | 0, 0, () => SortDefinition$, 1],
+      1
+    ];
+    var GetReservationCoverageResponse$ = [
+      3,
+      n05,
+      _GRCRe2,
+      0,
+      [_CBTo, _To, _NPT],
+      [() => CoveragesByTime, () => Coverage$, 0],
+      1
+    ];
+    var GetReservationPurchaseRecommendationRequest$ = [
+      3,
+      n05,
+      _GRPRR,
+      0,
+      [_Ser, _AIc, _Fi, _ASc, _LPID, _TIY, _PO, _SSe, _PSa, _NPT],
+      [0, 0, () => Expression$, 0, 0, 0, 0, () => ServiceSpecification$, 1, 0],
+      1
+    ];
+    var GetReservationPurchaseRecommendationResponse$ = [
+      3,
+      n05,
+      _GRPRRe,
+      0,
+      [_Meta, _Rec, _NPT],
+      [() => ReservationPurchaseRecommendationMetadata$, () => ReservationPurchaseRecommendations, 0]
+    ];
+    var GetReservationUtilizationRequest$ = [
+      3,
+      n05,
+      _GRUR,
+      0,
+      [_TP, _GB, _Gr, _Fi, _SB, _NPT, _MR],
+      [() => DateInterval$, () => GroupDefinitions, 0, () => Expression$, () => SortDefinition$, 0, 1],
+      1
+    ];
+    var GetReservationUtilizationResponse$ = [
+      3,
+      n05,
+      _GRURe,
+      0,
+      [_UBT, _To, _NPT],
+      [() => UtilizationsByTime, () => ReservationAggregates$, 0],
+      1
+    ];
+    var GetRightsizingRecommendationRequest$ = [
+      3,
+      n05,
+      _GRRR,
+      0,
+      [_Ser, _Fi, _Conf, _PSa, _NPT],
+      [0, () => Expression$, () => RightsizingRecommendationConfiguration$, 1, 0],
+      1
+    ];
+    var GetRightsizingRecommendationResponse$ = [
+      3,
+      n05,
+      _GRRRe,
+      0,
+      [_Meta, _Su, _RR, _NPT, _Conf],
+      [() => RightsizingRecommendationMetadata$, () => RightsizingRecommendationSummary$, () => RightsizingRecommendationList, 0, () => RightsizingRecommendationConfiguration$]
+    ];
+    var GetSavingsPlanPurchaseRecommendationDetailsRequest$ = [
+      3,
+      n05,
+      _GSPPRDR,
+      0,
+      [_RDI],
+      [0],
+      1
+    ];
+    var GetSavingsPlanPurchaseRecommendationDetailsResponse$ = [
+      3,
+      n05,
+      _GSPPRDRe,
+      0,
+      [_RDI, _RDD],
+      [0, () => RecommendationDetailData$]
+    ];
+    var GetSavingsPlansCoverageRequest$ = [
+      3,
+      n05,
+      _GSPCR,
+      0,
+      [_TP, _GB, _Gr, _Fi, _Me, _NTe, _MR, _SB],
+      [() => DateInterval$, () => GroupDefinitions, 0, () => Expression$, 64 | 0, 0, 1, () => SortDefinition$],
+      1
+    ];
+    var GetSavingsPlansCoverageResponse$ = [
+      3,
+      n05,
+      _GSPCRe,
+      0,
+      [_SPC, _NTe],
+      [() => SavingsPlansCoverages, 0],
+      1
+    ];
+    var GetSavingsPlansPurchaseRecommendationRequest$ = [
+      3,
+      n05,
+      _GSPPRR,
+      0,
+      [_SPT, _TIY, _PO, _LPID, _ASc, _NPT, _PSa, _Fi],
+      [0, 0, 0, 0, 0, 0, 1, () => Expression$],
+      4
+    ];
+    var GetSavingsPlansPurchaseRecommendationResponse$ = [
+      3,
+      n05,
+      _GSPPRRe,
+      0,
+      [_Meta, _SPPR, _NPT],
+      [() => SavingsPlansPurchaseRecommendationMetadata$, () => SavingsPlansPurchaseRecommendation$, 0]
+    ];
+    var GetSavingsPlansUtilizationDetailsRequest$ = [
+      3,
+      n05,
+      _GSPUDR,
+      0,
+      [_TP, _Fi, _DT, _NTe, _MR, _SB],
+      [() => DateInterval$, () => Expression$, 64 | 0, 0, 1, () => SortDefinition$],
+      1
+    ];
+    var GetSavingsPlansUtilizationDetailsResponse$ = [
+      3,
+      n05,
+      _GSPUDRe,
+      0,
+      [_SPUD, _TP, _To, _NTe],
+      [() => SavingsPlansUtilizationDetails, () => DateInterval$, () => SavingsPlansUtilizationAggregates$, 0],
+      2
+    ];
+    var GetSavingsPlansUtilizationRequest$ = [
+      3,
+      n05,
+      _GSPUR,
+      0,
+      [_TP, _Gr, _Fi, _SB],
+      [() => DateInterval$, 0, () => Expression$, () => SortDefinition$],
+      1
+    ];
+    var GetSavingsPlansUtilizationResponse$ = [
+      3,
+      n05,
+      _GSPURe,
+      0,
+      [_To, _SPUBT],
+      [() => SavingsPlansUtilizationAggregates$, () => SavingsPlansUtilizationsByTime],
+      1
+    ];
+    var GetTagsRequest$ = [
+      3,
+      n05,
+      _GTR,
+      0,
+      [_TP, _SS, _TK, _Fi, _SB, _BVA, _MR, _NPT],
+      [() => DateInterval$, 0, 0, () => Expression$, () => SortDefinitions, 0, 1, 0],
+      1
+    ];
+    var GetTagsResponse$ = [
+      3,
+      n05,
+      _GTRe,
+      0,
+      [_Tag, _RS, _TS, _NPT],
+      [64 | 0, 1, 1, 0],
+      3
+    ];
+    var GetUsageForecastRequest$ = [
+      3,
+      n05,
+      _GUFR,
+      0,
+      [_TP, _Metr, _Gr, _Fi, _BVA, _PIL],
+      [() => DateInterval$, 0, 0, () => Expression$, 0, 1],
+      3
+    ];
+    var GetUsageForecastResponse$ = [
+      3,
+      n05,
+      _GUFRe,
+      0,
+      [_To, _FRBT],
+      [() => MetricValue$, () => ForecastResultsByTime]
+    ];
+    var Group$ = [
+      3,
+      n05,
+      _Gro,
+      0,
+      [_Ke, _Me],
+      [64 | 0, () => Metrics]
+    ];
+    var GroupDefinition$ = [
+      3,
+      n05,
+      _GDr,
+      0,
+      [_Ty, _K2],
+      [0, 0]
+    ];
+    var Impact$ = [
+      3,
+      n05,
+      _I,
+      0,
+      [_MI, _TI, _TAS, _TES, _TIP],
+      [1, 1, 1, 1, 1],
+      1
+    ];
+    var InstanceDetails$ = [
+      3,
+      n05,
+      _ID,
+      0,
+      [_ECID, _RDSID, _RID, _ECIDl, _ESID, _MDBID],
+      [() => EC2InstanceDetails$, () => RDSInstanceDetails$, () => RedshiftInstanceDetails$, () => ElastiCacheInstanceDetails$, () => ESInstanceDetails$, () => MemoryDBInstanceDetails$]
+    ];
+    var ListCommitmentPurchaseAnalysesRequest$ = [
+      3,
+      n05,
+      _LCPAR,
+      0,
+      [_ASn, _NPT, _PSa, _AIna],
+      [0, 0, 1, 64 | 0]
+    ];
+    var ListCommitmentPurchaseAnalysesResponse$ = [
+      3,
+      n05,
+      _LCPARi,
+      0,
+      [_ASL, _NPT],
+      [() => AnalysisSummaryList, 0]
+    ];
+    var ListCostAllocationTagBackfillHistoryRequest$ = [
+      3,
+      n05,
+      _LCATBHR,
+      0,
+      [_NTe, _MR],
+      [0, 1]
+    ];
+    var ListCostAllocationTagBackfillHistoryResponse$ = [
+      3,
+      n05,
+      _LCATBHRi,
+      0,
+      [_BR, _NTe],
+      [() => CostAllocationTagBackfillRequestList, 0]
+    ];
+    var ListCostAllocationTagsRequest$ = [
+      3,
+      n05,
+      _LCATR,
+      0,
+      [_St, _TKa, _Ty, _NTe, _MR],
+      [0, 64 | 0, 0, 0, 1]
+    ];
+    var ListCostAllocationTagsResponse$ = [
+      3,
+      n05,
+      _LCATRi,
+      0,
+      [_CATo, _NTe],
+      [() => CostAllocationTagList, 0]
+    ];
+    var ListCostCategoryDefinitionsRequest$ = [
+      3,
+      n05,
+      _LCCDR,
+      0,
+      [_EO, _NTe, _MR, _SRT],
+      [0, 0, 1, 64 | 0]
+    ];
+    var ListCostCategoryDefinitionsResponse$ = [
+      3,
+      n05,
+      _LCCDRi,
+      0,
+      [_CCRos, _NTe],
+      [() => CostCategoryReferencesList, 0]
+    ];
+    var ListCostCategoryResourceAssociationsRequest$ = [
+      3,
+      n05,
+      _LCCRAR,
+      0,
+      [_CCA, _NTe, _MR],
+      [0, 0, 1]
+    ];
+    var ListCostCategoryResourceAssociationsResponse$ = [
+      3,
+      n05,
+      _LCCRARi,
+      0,
+      [_CCRAo, _NTe],
+      [() => CostCategoryResourceAssociations, 0]
+    ];
+    var ListSavingsPlansPurchaseRecommendationGenerationRequest$ = [
+      3,
+      n05,
+      _LSPPRGR,
+      0,
+      [_GSe, _RIec, _PSa, _NPT],
+      [0, 64 | 0, 1, 0]
+    ];
+    var ListSavingsPlansPurchaseRecommendationGenerationResponse$ = [
+      3,
+      n05,
+      _LSPPRGRi,
+      0,
+      [_GSL, _NPT],
+      [() => GenerationSummaryList, 0]
+    ];
+    var ListTagsForResourceRequest$ = [
+      3,
+      n05,
+      _LTFRR,
+      0,
+      [_RAe],
+      [0],
+      1
+    ];
+    var ListTagsForResourceResponse$ = [
+      3,
+      n05,
+      _LTFRRi,
+      0,
+      [_RT3],
+      [() => ResourceTagList]
+    ];
+    var MemoryDBInstanceDetails$ = [
+      3,
+      n05,
+      _MDBID,
+      0,
+      [_Fa, _NT, _Re, _CG, _SFE],
+      [0, 0, 0, 2, 2]
+    ];
+    var MetricValue$ = [
+      3,
+      n05,
+      _MVe,
+      0,
+      [_Am, _U],
+      [0, 0]
+    ];
+    var ModifyRecommendationDetail$ = [
+      3,
+      n05,
+      _MRD,
+      0,
+      [_TIa],
+      [() => TargetInstancesList]
+    ];
+    var NetworkResourceUtilization$ = [
+      3,
+      n05,
+      _NRU,
+      0,
+      [_NIBPS, _NOBPS, _NPIPS, _NPOPS],
+      [0, 0, 0, 0]
+    ];
+    var ProvideAnomalyFeedbackRequest$ = [
+      3,
+      n05,
+      _PAFR,
+      0,
+      [_AIn, _F],
+      [0, 0],
+      2
+    ];
+    var ProvideAnomalyFeedbackResponse$ = [
+      3,
+      n05,
+      _PAFRr,
+      0,
+      [_AIn],
+      [0],
+      1
+    ];
+    var RDSInstanceDetails$ = [
+      3,
+      n05,
+      _RDSID,
+      0,
+      [_Fa, _IT2, _Re, _DE, _DEa, _DO, _LM, _CG, _SFE, _DM],
+      [0, 0, 0, 0, 0, 0, 0, 2, 2, 0]
+    ];
+    var RecommendationDetailData$ = [
+      3,
+      n05,
+      _RDD,
+      0,
+      [_ASc, _LPID, _SPT, _TIY, _PO, _AIc, _CCu, _IF, _Re, _OI, _GT, _LUT, _CAHODS, _CMHODS, _CMHODSu, _EAU, _EMSA, _EODC, _EODCWCC, _EROI, _ESPC, _ESA, _ESP, _EHC, _HCTP, _UC, _CAC, _EAC, _MOLP],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, () => MetricsOverLookbackPeriod]
+    ];
+    var RecommendationDetailHourlyMetrics$ = [
+      3,
+      n05,
+      _RDHM,
+      0,
+      [_ST2, _EODC, _CCur, _ECs, _ENCU],
+      [0, 0, 0, 0, 0]
+    ];
+    var RedshiftInstanceDetails$ = [
+      3,
+      n05,
+      _RID,
+      0,
+      [_Fa, _NT, _Re, _CG, _SFE],
+      [0, 0, 0, 2, 2]
+    ];
+    var ReservationAggregates$ = [
+      3,
+      n05,
+      _RAes,
+      0,
+      [_UP, _UPIU, _PH, _PU, _TAH, _TAU, _UH, _UU, _ODCORIHU, _NRIS, _TPRIS, _AUF, _ARF, _TAF, _RICFUH, _RSe, _US],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    var ReservationCoverageGroup$ = [
+      3,
+      n05,
+      _RCG,
+      0,
+      [_At, _Co],
+      [128 | 0, () => Coverage$]
+    ];
+    var ReservationPurchaseRecommendation$ = [
+      3,
+      n05,
+      _RPR,
+      0,
+      [_ASc, _LPID, _TIY, _PO, _SSe, _RDe, _RSec],
+      [0, 0, 0, 0, () => ServiceSpecification$, () => ReservationPurchaseRecommendationDetails, () => ReservationPurchaseRecommendationSummary$]
+    ];
+    var ReservationPurchaseRecommendationDetail$ = [
+      3,
+      n05,
+      _RPRD,
+      0,
+      [_AIc, _ID, _RNOITP, _RNUTP, _MNOIUPH, _MNUUPH, _MNOIUPHa, _MNUUPHa, _ANOIUPH, _ANUUPH, _AU, _EBEIM, _CCu, _EMSA, _EMSP, _EMODC, _ERCFLP, _UC, _RSMC, _RCD, _RNOCUTP, _MNOCUUPH, _MNOCUUPHa, _ANOCUUPH],
+      [0, () => InstanceDetails$, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, () => ReservedCapacityDetails$, 0, 0, 0, 0]
+    ];
+    var ReservationPurchaseRecommendationMetadata$ = [
+      3,
+      n05,
+      _RPRM,
+      0,
+      [_RIe, _GT, _AMd],
+      [0, 0, 0]
+    ];
+    var ReservationPurchaseRecommendationSummary$ = [
+      3,
+      n05,
+      _RPRS,
+      0,
+      [_TEMSA, _TEMSP, _CCu],
+      [0, 0, 0]
+    ];
+    var ReservationUtilizationGroup$ = [
+      3,
+      n05,
+      _RUG,
+      0,
+      [_K2, _Va, _At, _Ut],
+      [0, 0, 128 | 0, () => ReservationAggregates$]
+    ];
+    var ReservedCapacityDetails$ = [
+      3,
+      n05,
+      _RCD,
+      0,
+      [_DDBCD],
+      [() => DynamoDBCapacityDetails$]
+    ];
+    var ResourceDetails$ = [
+      3,
+      n05,
+      _RD,
+      0,
+      [_ECRD],
+      [() => EC2ResourceDetails$]
+    ];
+    var ResourceTag$ = [
+      3,
+      n05,
+      _RTe,
+      0,
+      [_K2, _Va],
+      [0, 0],
+      2
+    ];
+    var ResourceUtilization$ = [
+      3,
+      n05,
+      _RU,
+      0,
+      [_ECRU],
+      [() => EC2ResourceUtilization$]
+    ];
+    var ResultByTime$ = [
+      3,
+      n05,
+      _RBTe,
+      0,
+      [_TP, _To, _G, _Es],
+      [() => DateInterval$, () => Metrics, () => Groups, 2]
+    ];
+    var RightsizingRecommendation$ = [
+      3,
+      n05,
+      _RRi,
+      0,
+      [_AIc, _CI, _RTi, _MRD, _TRD, _FRC],
+      [0, () => CurrentInstance$, 0, () => ModifyRecommendationDetail$, () => TerminateRecommendationDetail$, 64 | 0]
+    ];
+    var RightsizingRecommendationConfiguration$ = [
+      3,
+      n05,
+      _RRC,
+      0,
+      [_RTec, _BC],
+      [0, 2],
+      2
+    ];
+    var RightsizingRecommendationMetadata$ = [
+      3,
+      n05,
+      _RRM,
+      0,
+      [_RIe, _GT, _LPID, _AMd],
+      [0, 0, 0, 0]
+    ];
+    var RightsizingRecommendationSummary$ = [
+      3,
+      n05,
+      _RRS,
+      0,
+      [_TRC, _ETMSA, _SCC, _SP],
+      [0, 0, 0, 0]
+    ];
+    var RootCause$ = [
+      3,
+      n05,
+      _RCo,
+      0,
+      [_Ser, _Re, _LA, _LAN, _UT, _I],
+      [0, 0, 0, 0, 0, () => RootCauseImpact$]
+    ];
+    var RootCauseImpact$ = [
+      3,
+      n05,
+      _RCI,
+      0,
+      [_Cont],
+      [1],
+      1
+    ];
+    var SavingsPlans$ = [
+      3,
+      n05,
+      _SPa,
+      0,
+      [_PO, _SPT, _Re, _IF, _TIY, _SPCa, _OI],
+      [0, 0, 0, 0, 0, 1, 0]
+    ];
+    var SavingsPlansAmortizedCommitment$ = [
+      3,
+      n05,
+      _SPAC,
+      0,
+      [_ARC, _AUC, _TAC],
+      [0, 0, 0]
+    ];
+    var SavingsPlansCoverage$ = [
+      3,
+      n05,
+      _SPCav,
+      0,
+      [_At, _Co, _TP],
+      [128 | 0, () => SavingsPlansCoverageData$, () => DateInterval$]
+    ];
+    var SavingsPlansCoverageData$ = [
+      3,
+      n05,
+      _SPCD,
+      0,
+      [_SCBSP, _ODC, _TC2, _CP],
+      [0, 0, 0, 0]
+    ];
+    var SavingsPlansDetails$ = [
+      3,
+      n05,
+      _SPD,
+      0,
+      [_Re, _IF, _OI],
+      [0, 0, 0]
+    ];
+    var SavingsPlansPurchaseAnalysisConfiguration$ = [
+      3,
+      n05,
+      _SPPAC,
+      0,
+      [_AT3, _SPTA, _LBTP, _ASc, _AIc, _SPTE, _SPTC],
+      [0, () => SavingsPlansToAdd, () => DateInterval$, 0, 0, 64 | 0, 1],
+      3
+    ];
+    var SavingsPlansPurchaseAnalysisDetails$ = [
+      3,
+      n05,
+      _SPPAD,
+      0,
+      [_CCu, _LPIH, _CAC, _CAHODS, _CMHODS, _CMHODSu, _CODS, _EHC, _HCTP, _EAC, _EAU, _EMSA, _EODC, _EODCWCC, _EROI, _ESA, _ESP, _ECC, _LUT, _UC, _AMd, _MOLP],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, () => MetricsOverLookbackPeriod]
+    ];
+    var SavingsPlansPurchaseRecommendation$ = [
+      3,
+      n05,
+      _SPPR,
+      0,
+      [_ASc, _SPT, _TIY, _PO, _LPID, _SPPRD, _SPPRS],
+      [0, 0, 0, 0, 0, () => SavingsPlansPurchaseRecommendationDetailList, () => SavingsPlansPurchaseRecommendationSummary$]
+    ];
+    var SavingsPlansPurchaseRecommendationDetail$ = [
+      3,
+      n05,
+      _SPPRDa,
+      0,
+      [_SPD, _AIc, _UC, _EROI, _CCu, _ESPC, _EODC, _EODCWCC, _ESA, _ESP, _HCTP, _EAU, _EMSA, _CMHODSu, _CMHODS, _CAHODS, _RDI],
+      [() => SavingsPlansDetails$, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    var SavingsPlansPurchaseRecommendationMetadata$ = [
+      3,
+      n05,
+      _SPPRM,
+      0,
+      [_RIe, _GT, _AMd],
+      [0, 0, 0]
+    ];
+    var SavingsPlansPurchaseRecommendationSummary$ = [
+      3,
+      n05,
+      _SPPRS,
+      0,
+      [_EROI, _CCu, _ETC, _CODS, _ESA, _TRC, _DCTP, _HCTP, _ESP, _EMSA, _EODCWCC],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    var SavingsPlansSavings$ = [
+      3,
+      n05,
+      _SPS,
+      0,
+      [_NS, _ODCE],
+      [0, 0]
+    ];
+    var SavingsPlansUtilization$ = [
+      3,
+      n05,
+      _SPU,
+      0,
+      [_TCo, _UCs, _UCn, _UP],
+      [0, 0, 0, 0]
+    ];
+    var SavingsPlansUtilizationAggregates$ = [
+      3,
+      n05,
+      _SPUA,
+      0,
+      [_Ut, _Sa, _AC],
+      [() => SavingsPlansUtilization$, () => SavingsPlansSavings$, () => SavingsPlansAmortizedCommitment$],
+      1
+    ];
+    var SavingsPlansUtilizationByTime$ = [
+      3,
+      n05,
+      _SPUBTa,
+      0,
+      [_TP, _Ut, _Sa, _AC],
+      [() => DateInterval$, () => SavingsPlansUtilization$, () => SavingsPlansSavings$, () => SavingsPlansAmortizedCommitment$],
+      2
+    ];
+    var SavingsPlansUtilizationDetail$ = [
+      3,
+      n05,
+      _SPUDa,
+      0,
+      [_SPA, _At, _Ut, _Sa, _AC],
+      [0, 128 | 0, () => SavingsPlansUtilization$, () => SavingsPlansSavings$, () => SavingsPlansAmortizedCommitment$]
+    ];
+    var ServiceSpecification$ = [
+      3,
+      n05,
+      _SSe,
+      0,
+      [_ECS],
+      [() => EC2Specification$]
+    ];
+    var SortDefinition$ = [
+      3,
+      n05,
+      _SDo,
+      0,
+      [_K2, _SO],
+      [0, 0],
+      1
+    ];
+    var StartCommitmentPurchaseAnalysisRequest$ = [
+      3,
+      n05,
+      _SCPAR,
+      0,
+      [_CPAC],
+      [() => CommitmentPurchaseAnalysisConfiguration$],
+      1
+    ];
+    var StartCommitmentPurchaseAnalysisResponse$ = [
+      3,
+      n05,
+      _SCPARt,
+      0,
+      [_AI, _AST, _ECT],
+      [0, 0, 0],
+      3
+    ];
+    var StartCostAllocationTagBackfillRequest$ = [
+      3,
+      n05,
+      _SCATBR,
+      0,
+      [_BF],
+      [0],
+      1
+    ];
+    var StartCostAllocationTagBackfillResponse$ = [
+      3,
+      n05,
+      _SCATBRt,
+      0,
+      [_BRa],
+      [() => CostAllocationTagBackfillRequest$]
+    ];
+    var StartSavingsPlansPurchaseRecommendationGenerationRequest$ = [
+      3,
+      n05,
+      _SSPPRGR,
+      0,
+      [],
+      []
+    ];
+    var StartSavingsPlansPurchaseRecommendationGenerationResponse$ = [
+      3,
+      n05,
+      _SSPPRGRt,
+      0,
+      [_RIe, _GST, _ECT],
+      [0, 0, 0]
+    ];
+    var Subscriber$ = [
+      3,
+      n05,
+      _Sub,
+      0,
+      [_Ad, _Ty, _St],
+      [0, 0, 0]
+    ];
+    var TagResourceRequest$ = [
+      3,
+      n05,
+      _TRR,
+      0,
+      [_RAe, _RT3],
+      [0, () => ResourceTagList],
+      2
+    ];
+    var TagResourceResponse$ = [
+      3,
+      n05,
+      _TRRa,
+      0,
+      [],
+      []
+    ];
+    var TagValues$ = [
+      3,
+      n05,
+      _TV,
+      0,
+      [_K2, _V2, _MO],
+      [0, 64 | 0, 64 | 0]
+    ];
+    var TargetInstance$ = [
+      3,
+      n05,
+      _TIar,
+      0,
+      [_EMC, _EMS, _CCu, _DTI, _RD, _ERU, _PDl],
+      [0, 0, 0, 2, () => ResourceDetails$, () => ResourceUtilization$, 64 | 0]
+    ];
+    var TerminateRecommendationDetail$ = [
+      3,
+      n05,
+      _TRD,
+      0,
+      [_EMS, _CCu],
+      [0, 0]
+    ];
+    var TotalImpactFilter$ = [
+      3,
+      n05,
+      _TIF,
+      0,
+      [_NO, _SV, _EV],
+      [0, 1, 1],
+      2
+    ];
+    var UntagResourceRequest$ = [
+      3,
+      n05,
+      _URR,
+      0,
+      [_RAe, _RTK],
+      [0, 64 | 0],
+      2
+    ];
+    var UntagResourceResponse$ = [
+      3,
+      n05,
+      _URRn,
+      0,
+      [],
+      []
+    ];
+    var UpdateAnomalyMonitorRequest$ = [
+      3,
+      n05,
+      _UAMR,
+      0,
+      [_MA, _MN],
+      [0, 0],
+      1
+    ];
+    var UpdateAnomalyMonitorResponse$ = [
+      3,
+      n05,
+      _UAMRp,
+      0,
+      [_MA],
+      [0],
+      1
+    ];
+    var UpdateAnomalySubscriptionRequest$ = [
+      3,
+      n05,
+      _UASR,
+      0,
+      [_SA, _T2, _Fr, _MAL, _S, _SN2, _TE],
+      [0, 1, 0, 64 | 0, () => Subscribers, 0, () => Expression$],
+      1
+    ];
+    var UpdateAnomalySubscriptionResponse$ = [
+      3,
+      n05,
+      _UASRp,
+      0,
+      [_SA],
+      [0],
+      1
+    ];
+    var UpdateCostAllocationTagsStatusError$ = [
+      3,
+      n05,
+      _UCATSE,
+      0,
+      [_TK, _Cod, _M],
+      [0, 0, 0]
+    ];
+    var UpdateCostAllocationTagsStatusRequest$ = [
+      3,
+      n05,
+      _UCATSR,
+      0,
+      [_CATS],
+      [() => CostAllocationTagStatusList],
+      1
+    ];
+    var UpdateCostAllocationTagsStatusResponse$ = [
+      3,
+      n05,
+      _UCATSRp,
+      0,
+      [_Er],
+      [() => UpdateCostAllocationTagsStatusErrors]
+    ];
+    var UpdateCostCategoryDefinitionRequest$ = [
+      3,
+      n05,
+      _UCCDR,
+      0,
+      [_CCA, _RV, _R, _ES, _DVe, _SCR],
+      [0, 0, () => CostCategoryRulesList, 0, 0, () => CostCategorySplitChargeRulesList],
+      3
+    ];
+    var UpdateCostCategoryDefinitionResponse$ = [
+      3,
+      n05,
+      _UCCDRp,
+      0,
+      [_CCA, _ES],
+      [0, 0]
+    ];
+    var UtilizationByTime$ = [
+      3,
+      n05,
+      _UBTt,
+      0,
+      [_TP, _G, _To],
+      [() => DateInterval$, () => ReservationUtilizationGroups, () => ReservationAggregates$]
+    ];
+    var AnalysisSummaryList = [
+      1,
+      n05,
+      _ASL,
+      0,
+      () => AnalysisSummary$
+    ];
+    var Anomalies = [
+      1,
+      n05,
+      _Ano,
+      0,
+      () => Anomaly$
+    ];
+    var AnomalyMonitors = [
+      1,
+      n05,
+      _AMn,
+      0,
+      () => AnomalyMonitor$
+    ];
+    var AnomalySubscriptions = [
+      1,
+      n05,
+      _ASnoma,
+      0,
+      () => AnomalySubscription$
+    ];
+    var CostAllocationTagBackfillRequestList = [
+      1,
+      n05,
+      _CATBRL,
+      0,
+      () => CostAllocationTagBackfillRequest$
+    ];
+    var CostAllocationTagList = [
+      1,
+      n05,
+      _CATL,
+      0,
+      () => CostAllocationTag$
+    ];
+    var CostAllocationTagStatusList = [
+      1,
+      n05,
+      _CATSL,
+      0,
+      () => CostAllocationTagStatusEntry$
+    ];
+    var CostAndUsageComparisons = [
+      1,
+      n05,
+      _CAUCo,
+      0,
+      () => CostAndUsageComparison$
+    ];
+    var CostCategoryProcessingStatusList = [
+      1,
+      n05,
+      _CCPSL,
+      0,
+      () => CostCategoryProcessingStatus$
+    ];
+    var CostCategoryReferencesList = [
+      1,
+      n05,
+      _CCRL,
+      0,
+      () => CostCategoryReference$
+    ];
+    var CostCategoryResourceAssociations = [
+      1,
+      n05,
+      _CCRAo,
+      0,
+      () => CostCategoryResourceAssociation$
+    ];
+    var CostCategoryRulesList = [
+      1,
+      n05,
+      _CCRLo,
+      0,
+      () => CostCategoryRule$
+    ];
+    var CostCategorySplitChargeRuleParametersList = [
+      1,
+      n05,
+      _CCSCRPL,
+      0,
+      () => CostCategorySplitChargeRuleParameter$
+    ];
+    var CostCategorySplitChargeRulesList = [
+      1,
+      n05,
+      _CCSCRL,
+      0,
+      () => CostCategorySplitChargeRule$
+    ];
+    var CostComparisonDrivers = [
+      1,
+      n05,
+      _CCDo,
+      0,
+      () => CostComparisonDriver$
+    ];
+    var CostDrivers = [
+      1,
+      n05,
+      _CDo,
+      0,
+      () => CostDriver$
+    ];
+    var CoveragesByTime = [
+      1,
+      n05,
+      _CBTo,
+      0,
+      () => CoverageByTime$
+    ];
+    var DimensionValuesWithAttributesList = [
+      1,
+      n05,
+      _DVWAL,
+      0,
+      () => DimensionValuesWithAttributes$
+    ];
+    var Expressions = [
+      1,
+      n05,
+      _Exp,
+      0,
+      () => Expression$
+    ];
+    var ForecastResultsByTime = [
+      1,
+      n05,
+      _FRBT,
+      0,
+      () => ForecastResult$
+    ];
+    var GenerationSummaryList = [
+      1,
+      n05,
+      _GSL,
+      0,
+      () => GenerationSummary$
+    ];
+    var GroupDefinitions = [
+      1,
+      n05,
+      _GD,
+      0,
+      () => GroupDefinition$
+    ];
+    var Groups = [
+      1,
+      n05,
+      _G,
+      0,
+      () => Group$
+    ];
+    var MetricsOverLookbackPeriod = [
+      1,
+      n05,
+      _MOLP,
+      0,
+      () => RecommendationDetailHourlyMetrics$
+    ];
+    var ReservationCoverageGroups = [
+      1,
+      n05,
+      _RCGe,
+      0,
+      () => ReservationCoverageGroup$
+    ];
+    var ReservationPurchaseRecommendationDetails = [
+      1,
+      n05,
+      _RPRDe,
+      0,
+      () => ReservationPurchaseRecommendationDetail$
+    ];
+    var ReservationPurchaseRecommendations = [
+      1,
+      n05,
+      _RPRe,
+      0,
+      () => ReservationPurchaseRecommendation$
+    ];
+    var ReservationUtilizationGroups = [
+      1,
+      n05,
+      _RUGe,
+      0,
+      () => ReservationUtilizationGroup$
+    ];
+    var ResourceTagList = [
+      1,
+      n05,
+      _RTL,
+      0,
+      () => ResourceTag$
+    ];
+    var ResultsByTime = [
+      1,
+      n05,
+      _RBT,
+      0,
+      () => ResultByTime$
+    ];
+    var RightsizingRecommendationList = [
+      1,
+      n05,
+      _RRL,
+      0,
+      () => RightsizingRecommendation$
+    ];
+    var RootCauses = [
+      1,
+      n05,
+      _RC2,
+      0,
+      () => RootCause$
+    ];
+    var SavingsPlansCoverages = [
+      1,
+      n05,
+      _SPC,
+      0,
+      () => SavingsPlansCoverage$
+    ];
+    var SavingsPlansPurchaseRecommendationDetailList = [
+      1,
+      n05,
+      _SPPRDL,
+      0,
+      () => SavingsPlansPurchaseRecommendationDetail$
+    ];
+    var SavingsPlansToAdd = [
+      1,
+      n05,
+      _SPTA,
+      0,
+      () => SavingsPlans$
+    ];
+    var SavingsPlansUtilizationDetails = [
+      1,
+      n05,
+      _SPUD,
+      0,
+      () => SavingsPlansUtilizationDetail$
+    ];
+    var SavingsPlansUtilizationsByTime = [
+      1,
+      n05,
+      _SPUBT,
+      0,
+      () => SavingsPlansUtilizationByTime$
+    ];
+    var SortDefinitions = [
+      1,
+      n05,
+      _SDor,
+      0,
+      () => SortDefinition$
+    ];
+    var Subscribers = [
+      1,
+      n05,
+      _S,
+      0,
+      () => Subscriber$
+    ];
+    var TagValuesList = [
+      1,
+      n05,
+      _TVL,
+      0,
+      () => TagValues$
+    ];
+    var TargetInstancesList = [
+      1,
+      n05,
+      _TIL,
+      0,
+      () => TargetInstance$
+    ];
+    var UpdateCostAllocationTagsStatusErrors = [
+      1,
+      n05,
+      _UCATSEp,
+      0,
+      () => UpdateCostAllocationTagsStatusError$
+    ];
+    var UtilizationsByTime = [
+      1,
+      n05,
+      _UBT,
+      0,
+      () => UtilizationByTime$
+    ];
+    var ComparisonMetrics = [
+      2,
+      n05,
+      _CM,
+      0,
+      0,
+      () => ComparisonMetricValue$
+    ];
+    var Metrics = [
+      2,
+      n05,
+      _Me,
+      0,
+      0,
+      () => MetricValue$
+    ];
+    var CreateAnomalyMonitor$ = [
+      9,
+      n05,
+      _CAM,
+      0,
+      () => CreateAnomalyMonitorRequest$,
+      () => CreateAnomalyMonitorResponse$
+    ];
+    var CreateAnomalySubscription$ = [
+      9,
+      n05,
+      _CAS,
+      0,
+      () => CreateAnomalySubscriptionRequest$,
+      () => CreateAnomalySubscriptionResponse$
+    ];
+    var CreateCostCategoryDefinition$ = [
+      9,
+      n05,
+      _CCCD,
+      0,
+      () => CreateCostCategoryDefinitionRequest$,
+      () => CreateCostCategoryDefinitionResponse$
+    ];
+    var DeleteAnomalyMonitor$ = [
+      9,
+      n05,
+      _DAM,
+      0,
+      () => DeleteAnomalyMonitorRequest$,
+      () => DeleteAnomalyMonitorResponse$
+    ];
+    var DeleteAnomalySubscription$ = [
+      9,
+      n05,
+      _DAS,
+      0,
+      () => DeleteAnomalySubscriptionRequest$,
+      () => DeleteAnomalySubscriptionResponse$
+    ];
+    var DeleteCostCategoryDefinition$ = [
+      9,
+      n05,
+      _DCCD,
+      0,
+      () => DeleteCostCategoryDefinitionRequest$,
+      () => DeleteCostCategoryDefinitionResponse$
+    ];
+    var DescribeCostCategoryDefinition$ = [
+      9,
+      n05,
+      _DCCDe,
+      0,
+      () => DescribeCostCategoryDefinitionRequest$,
+      () => DescribeCostCategoryDefinitionResponse$
+    ];
+    var GetAnomalies$ = [
+      9,
+      n05,
+      _GA,
+      0,
+      () => GetAnomaliesRequest$,
+      () => GetAnomaliesResponse$
+    ];
+    var GetAnomalyMonitors$ = [
+      9,
+      n05,
+      _GAM,
+      0,
+      () => GetAnomalyMonitorsRequest$,
+      () => GetAnomalyMonitorsResponse$
+    ];
+    var GetAnomalySubscriptions$ = [
+      9,
+      n05,
+      _GAS,
+      0,
+      () => GetAnomalySubscriptionsRequest$,
+      () => GetAnomalySubscriptionsResponse$
+    ];
+    var GetApproximateUsageRecords$ = [
+      9,
+      n05,
+      _GAUR,
+      0,
+      () => GetApproximateUsageRecordsRequest$,
+      () => GetApproximateUsageRecordsResponse$
+    ];
+    var GetCommitmentPurchaseAnalysis$ = [
+      9,
+      n05,
+      _GCPA,
+      0,
+      () => GetCommitmentPurchaseAnalysisRequest$,
+      () => GetCommitmentPurchaseAnalysisResponse$
+    ];
+    var GetCostAndUsage$ = [
+      9,
+      n05,
+      _GCAU,
+      0,
+      () => GetCostAndUsageRequest$,
+      () => GetCostAndUsageResponse$
+    ];
+    var GetCostAndUsageComparisons$ = [
+      9,
+      n05,
+      _GCAUC,
+      0,
+      () => GetCostAndUsageComparisonsRequest$,
+      () => GetCostAndUsageComparisonsResponse$
+    ];
+    var GetCostAndUsageWithResources$ = [
+      9,
+      n05,
+      _GCAUWR,
+      0,
+      () => GetCostAndUsageWithResourcesRequest$,
+      () => GetCostAndUsageWithResourcesResponse$
+    ];
+    var GetCostCategories$ = [
+      9,
+      n05,
+      _GCC,
+      0,
+      () => GetCostCategoriesRequest$,
+      () => GetCostCategoriesResponse$
+    ];
+    var GetCostComparisonDrivers$ = [
+      9,
+      n05,
+      _GCCD,
+      0,
+      () => GetCostComparisonDriversRequest$,
+      () => GetCostComparisonDriversResponse$
+    ];
+    var GetCostForecast$ = [
+      9,
+      n05,
+      _GCF,
+      0,
+      () => GetCostForecastRequest$,
+      () => GetCostForecastResponse$
+    ];
+    var GetDimensionValues$ = [
+      9,
+      n05,
+      _GDV,
+      0,
+      () => GetDimensionValuesRequest$,
+      () => GetDimensionValuesResponse$
+    ];
+    var GetReservationCoverage$ = [
+      9,
+      n05,
+      _GRC2,
+      0,
+      () => GetReservationCoverageRequest$,
+      () => GetReservationCoverageResponse$
+    ];
+    var GetReservationPurchaseRecommendation$ = [
+      9,
+      n05,
+      _GRPR,
+      0,
+      () => GetReservationPurchaseRecommendationRequest$,
+      () => GetReservationPurchaseRecommendationResponse$
+    ];
+    var GetReservationUtilization$ = [
+      9,
+      n05,
+      _GRU,
+      0,
+      () => GetReservationUtilizationRequest$,
+      () => GetReservationUtilizationResponse$
+    ];
+    var GetRightsizingRecommendation$ = [
+      9,
+      n05,
+      _GRR,
+      0,
+      () => GetRightsizingRecommendationRequest$,
+      () => GetRightsizingRecommendationResponse$
+    ];
+    var GetSavingsPlanPurchaseRecommendationDetails$ = [
+      9,
+      n05,
+      _GSPPRD,
+      0,
+      () => GetSavingsPlanPurchaseRecommendationDetailsRequest$,
+      () => GetSavingsPlanPurchaseRecommendationDetailsResponse$
+    ];
+    var GetSavingsPlansCoverage$ = [
+      9,
+      n05,
+      _GSPC,
+      0,
+      () => GetSavingsPlansCoverageRequest$,
+      () => GetSavingsPlansCoverageResponse$
+    ];
+    var GetSavingsPlansPurchaseRecommendation$ = [
+      9,
+      n05,
+      _GSPPR,
+      0,
+      () => GetSavingsPlansPurchaseRecommendationRequest$,
+      () => GetSavingsPlansPurchaseRecommendationResponse$
+    ];
+    var GetSavingsPlansUtilization$ = [
+      9,
+      n05,
+      _GSPU,
+      0,
+      () => GetSavingsPlansUtilizationRequest$,
+      () => GetSavingsPlansUtilizationResponse$
+    ];
+    var GetSavingsPlansUtilizationDetails$ = [
+      9,
+      n05,
+      _GSPUD,
+      0,
+      () => GetSavingsPlansUtilizationDetailsRequest$,
+      () => GetSavingsPlansUtilizationDetailsResponse$
+    ];
+    var GetTags$ = [
+      9,
+      n05,
+      _GTe,
+      0,
+      () => GetTagsRequest$,
+      () => GetTagsResponse$
+    ];
+    var GetUsageForecast$ = [
+      9,
+      n05,
+      _GUF,
+      0,
+      () => GetUsageForecastRequest$,
+      () => GetUsageForecastResponse$
+    ];
+    var ListCommitmentPurchaseAnalyses$ = [
+      9,
+      n05,
+      _LCPA,
+      0,
+      () => ListCommitmentPurchaseAnalysesRequest$,
+      () => ListCommitmentPurchaseAnalysesResponse$
+    ];
+    var ListCostAllocationTagBackfillHistory$ = [
+      9,
+      n05,
+      _LCATBH,
+      0,
+      () => ListCostAllocationTagBackfillHistoryRequest$,
+      () => ListCostAllocationTagBackfillHistoryResponse$
+    ];
+    var ListCostAllocationTags$ = [
+      9,
+      n05,
+      _LCAT,
+      0,
+      () => ListCostAllocationTagsRequest$,
+      () => ListCostAllocationTagsResponse$
+    ];
+    var ListCostCategoryDefinitions$ = [
+      9,
+      n05,
+      _LCCD,
+      0,
+      () => ListCostCategoryDefinitionsRequest$,
+      () => ListCostCategoryDefinitionsResponse$
+    ];
+    var ListCostCategoryResourceAssociations$ = [
+      9,
+      n05,
+      _LCCRA,
+      0,
+      () => ListCostCategoryResourceAssociationsRequest$,
+      () => ListCostCategoryResourceAssociationsResponse$
+    ];
+    var ListSavingsPlansPurchaseRecommendationGeneration$ = [
+      9,
+      n05,
+      _LSPPRG,
+      0,
+      () => ListSavingsPlansPurchaseRecommendationGenerationRequest$,
+      () => ListSavingsPlansPurchaseRecommendationGenerationResponse$
+    ];
+    var ListTagsForResource$ = [
+      9,
+      n05,
+      _LTFR,
+      0,
+      () => ListTagsForResourceRequest$,
+      () => ListTagsForResourceResponse$
+    ];
+    var ProvideAnomalyFeedback$ = [
+      9,
+      n05,
+      _PAF,
+      0,
+      () => ProvideAnomalyFeedbackRequest$,
+      () => ProvideAnomalyFeedbackResponse$
+    ];
+    var StartCommitmentPurchaseAnalysis$ = [
+      9,
+      n05,
+      _SCPA,
+      0,
+      () => StartCommitmentPurchaseAnalysisRequest$,
+      () => StartCommitmentPurchaseAnalysisResponse$
+    ];
+    var StartCostAllocationTagBackfill$ = [
+      9,
+      n05,
+      _SCATB,
+      0,
+      () => StartCostAllocationTagBackfillRequest$,
+      () => StartCostAllocationTagBackfillResponse$
+    ];
+    var StartSavingsPlansPurchaseRecommendationGeneration$ = [
+      9,
+      n05,
+      _SSPPRG,
+      0,
+      () => StartSavingsPlansPurchaseRecommendationGenerationRequest$,
+      () => StartSavingsPlansPurchaseRecommendationGenerationResponse$
+    ];
+    var TagResource$ = [
+      9,
+      n05,
+      _TRa,
+      0,
+      () => TagResourceRequest$,
+      () => TagResourceResponse$
+    ];
+    var UntagResource$ = [
+      9,
+      n05,
+      _UR,
+      0,
+      () => UntagResourceRequest$,
+      () => UntagResourceResponse$
+    ];
+    var UpdateAnomalyMonitor$ = [
+      9,
+      n05,
+      _UAM,
+      0,
+      () => UpdateAnomalyMonitorRequest$,
+      () => UpdateAnomalyMonitorResponse$
+    ];
+    var UpdateAnomalySubscription$ = [
+      9,
+      n05,
+      _UAS,
+      0,
+      () => UpdateAnomalySubscriptionRequest$,
+      () => UpdateAnomalySubscriptionResponse$
+    ];
+    var UpdateCostAllocationTagsStatus$ = [
+      9,
+      n05,
+      _UCATS,
+      0,
+      () => UpdateCostAllocationTagsStatusRequest$,
+      () => UpdateCostAllocationTagsStatusResponse$
+    ];
+    var UpdateCostCategoryDefinition$ = [
+      9,
+      n05,
+      _UCCD,
+      0,
+      () => UpdateCostCategoryDefinitionRequest$,
+      () => UpdateCostCategoryDefinitionResponse$
+    ];
+    var getRuntimeConfig$1 = (config) => {
+      return {
+        apiVersion: "2017-10-25",
+        base64Decoder: config?.base64Decoder ?? fromBase642,
+        base64Encoder: config?.base64Encoder ?? toBase643,
+        disableHostPrefix: config?.disableHostPrefix ?? false,
+        endpointProvider: config?.endpointProvider ?? defaultEndpointResolver5,
+        extensions: config?.extensions ?? [],
+        httpAuthSchemeProvider: config?.httpAuthSchemeProvider ?? defaultCostExplorerHttpAuthSchemeProvider,
+        httpAuthSchemes: config?.httpAuthSchemes ?? [
+          {
+            schemeId: "aws.auth#sigv4",
+            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4"),
+            signer: new AwsSdkSigV4Signer2()
+          }
+        ],
+        logger: config?.logger ?? new NoOpLogger2(),
+        protocol: config?.protocol ?? AwsJson1_1Protocol2,
+        protocolSettings: config?.protocolSettings ?? {
+          defaultNamespace: "com.amazonaws.costexplorer",
+          errorTypeRegistries: errorTypeRegistries5,
+          version: "2017-10-25",
+          serviceTarget: "AWSInsightsIndexService"
+        },
+        serviceId: config?.serviceId ?? "Cost Explorer",
+        sha256: config?.sha256 ?? Sha256,
+        urlParser: config?.urlParser ?? parseUrl2,
+        utf8Decoder: config?.utf8Decoder ?? fromUtf83,
+        utf8Encoder: config?.utf8Encoder ?? toUtf83
+      };
+    };
+    var getRuntimeConfig9 = (config) => {
+      emitWarningIfUnsupportedVersion3(process.version);
+      const defaultsMode = resolveDefaultsModeConfig2(config);
+      const defaultConfigProvider = () => defaultsMode().then(loadConfigsForDefaultMode2);
+      const clientSharedValues = getRuntimeConfig$1(config);
+      emitWarningIfUnsupportedVersion$1(process.version);
+      const loaderConfig = {
+        profile: config?.profile,
+        logger: clientSharedValues.logger
+      };
+      return {
+        ...clientSharedValues,
+        ...config,
+        runtime: "node",
+        defaultsMode,
+        authSchemePreference: config?.authSchemePreference ?? loadConfig2(NODE_AUTH_SCHEME_PREFERENCE_OPTIONS2, loaderConfig),
+        bodyLengthChecker: config?.bodyLengthChecker ?? calculateBodyLength2,
+        credentialDefaultProvider: config?.credentialDefaultProvider ?? defaultProvider,
+        defaultUserAgentProvider: config?.defaultUserAgentProvider ?? createDefaultUserAgentProvider2({ serviceId: clientSharedValues.serviceId, clientVersion: packageInfo.version }),
+        maxAttempts: config?.maxAttempts ?? loadConfig2(NODE_MAX_ATTEMPT_CONFIG_OPTIONS2, config),
+        region: config?.region ?? loadConfig2(NODE_REGION_CONFIG_OPTIONS2, { ...NODE_REGION_CONFIG_FILE_OPTIONS2, ...loaderConfig }),
+        requestHandler: NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
+        retryMode: config?.retryMode ?? loadConfig2({
+          ...NODE_RETRY_MODE_CONFIG_OPTIONS2,
+          default: async () => (await defaultConfigProvider()).retryMode || DEFAULT_RETRY_MODE2
+        }, config),
+        streamCollector: config?.streamCollector ?? streamCollector7,
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? loadConfig2(NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS2, loaderConfig),
+        useFipsEndpoint: config?.useFipsEndpoint ?? loadConfig2(NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS2, loaderConfig),
+        userAgentAppId: config?.userAgentAppId ?? loadConfig2(NODE_APP_ID_CONFIG_OPTIONS2, loaderConfig)
+      };
+    };
+    var getHttpAuthExtensionConfiguration5 = (runtimeConfig) => {
+      const _httpAuthSchemes = runtimeConfig.httpAuthSchemes;
+      let _httpAuthSchemeProvider = runtimeConfig.httpAuthSchemeProvider;
+      let _credentials = runtimeConfig.credentials;
+      return {
+        setHttpAuthScheme(httpAuthScheme) {
+          const index = _httpAuthSchemes.findIndex((scheme) => scheme.schemeId === httpAuthScheme.schemeId);
+          if (index === -1) {
+            _httpAuthSchemes.push(httpAuthScheme);
+          } else {
+            _httpAuthSchemes.splice(index, 1, httpAuthScheme);
+          }
+        },
+        httpAuthSchemes() {
+          return _httpAuthSchemes;
+        },
+        setHttpAuthSchemeProvider(httpAuthSchemeProvider) {
+          _httpAuthSchemeProvider = httpAuthSchemeProvider;
+        },
+        httpAuthSchemeProvider() {
+          return _httpAuthSchemeProvider;
+        },
+        setCredentials(credentials) {
+          _credentials = credentials;
+        },
+        credentials() {
+          return _credentials;
+        }
+      };
+    };
+    var resolveHttpAuthRuntimeConfig5 = (config) => {
+      return {
+        httpAuthSchemes: config.httpAuthSchemes(),
+        httpAuthSchemeProvider: config.httpAuthSchemeProvider(),
+        credentials: config.credentials()
+      };
+    };
+    var resolveRuntimeExtensions5 = (runtimeConfig, extensions) => {
+      const extensionConfiguration = Object.assign(getAwsRegionExtensionConfiguration2(runtimeConfig), getDefaultExtensionConfiguration2(runtimeConfig), getHttpHandlerExtensionConfiguration2(runtimeConfig), getHttpAuthExtensionConfiguration5(runtimeConfig));
+      extensions.forEach((extension) => extension.configure(extensionConfiguration));
+      return Object.assign(runtimeConfig, resolveAwsRegionExtensionConfiguration2(extensionConfiguration), resolveDefaultRuntimeConfig2(extensionConfiguration), resolveHttpHandlerRuntimeConfig2(extensionConfiguration), resolveHttpAuthRuntimeConfig5(extensionConfiguration));
+    };
+    var CostExplorerClient = class extends Client2 {
+      config;
+      constructor(...[configuration]) {
+        const _config_0 = getRuntimeConfig9(configuration || {});
+        super(_config_0);
+        this.initConfig = _config_0;
+        const _config_1 = resolveClientEndpointParameters5(_config_0);
+        const _config_2 = resolveUserAgentConfig2(_config_1);
+        const _config_3 = resolveRetryConfig2(_config_2);
+        const _config_4 = resolveRegionConfig2(_config_3);
+        const _config_5 = resolveHostHeaderConfig2(_config_4);
+        const _config_6 = resolveEndpointConfig2(_config_5);
+        const _config_7 = resolveHttpAuthSchemeConfig5(_config_6);
+        const _config_8 = resolveRuntimeExtensions5(_config_7, configuration?.extensions || []);
+        this.config = _config_8;
+        this.middlewareStack.use(getSchemaSerdePlugin2(this.config));
+        this.middlewareStack.use(getUserAgentPlugin2(this.config));
+        this.middlewareStack.use(getRetryPlugin2(this.config));
+        this.middlewareStack.use(getContentLengthPlugin2(this.config));
+        this.middlewareStack.use(getHostHeaderPlugin2(this.config));
+        this.middlewareStack.use(getLoggerPlugin2(this.config));
+        this.middlewareStack.use(getRecursionDetectionPlugin2(this.config));
+        this.middlewareStack.use(getHttpAuthSchemeEndpointRuleSetPlugin2(this.config, {
+          httpAuthSchemeParametersProvider: defaultCostExplorerHttpAuthSchemeParametersProvider,
+          identityProviderConfigProvider: async (config) => new DefaultIdentityProviderConfig2({
+            "aws.auth#sigv4": config.credentials
+          })
+        }));
+        this.middlewareStack.use(getHttpSigningPlugin2(this.config));
+      }
+      destroy() {
+        super.destroy();
+      }
+    };
+    var command5 = makeBuilder2(commonParams5, "AWSInsightsIndexService", "CostExplorerClient", getEndpointPlugin2);
+    var _ep05 = {};
+    var _mw05 = (Command2, cs, config, o3) => [];
+    var CreateAnomalyMonitorCommand = class extends command5(_ep05, _mw05, "CreateAnomalyMonitor", CreateAnomalyMonitor$) {
+    };
+    var CreateAnomalySubscriptionCommand = class extends command5(_ep05, _mw05, "CreateAnomalySubscription", CreateAnomalySubscription$) {
+    };
+    var CreateCostCategoryDefinitionCommand = class extends command5(_ep05, _mw05, "CreateCostCategoryDefinition", CreateCostCategoryDefinition$) {
+    };
+    var DeleteAnomalyMonitorCommand = class extends command5(_ep05, _mw05, "DeleteAnomalyMonitor", DeleteAnomalyMonitor$) {
+    };
+    var DeleteAnomalySubscriptionCommand = class extends command5(_ep05, _mw05, "DeleteAnomalySubscription", DeleteAnomalySubscription$) {
+    };
+    var DeleteCostCategoryDefinitionCommand = class extends command5(_ep05, _mw05, "DeleteCostCategoryDefinition", DeleteCostCategoryDefinition$) {
+    };
+    var DescribeCostCategoryDefinitionCommand = class extends command5(_ep05, _mw05, "DescribeCostCategoryDefinition", DescribeCostCategoryDefinition$) {
+    };
+    var GetAnomaliesCommand = class extends command5(_ep05, _mw05, "GetAnomalies", GetAnomalies$) {
+    };
+    var GetAnomalyMonitorsCommand = class extends command5(_ep05, _mw05, "GetAnomalyMonitors", GetAnomalyMonitors$) {
+    };
+    var GetAnomalySubscriptionsCommand = class extends command5(_ep05, _mw05, "GetAnomalySubscriptions", GetAnomalySubscriptions$) {
+    };
+    var GetApproximateUsageRecordsCommand = class extends command5(_ep05, _mw05, "GetApproximateUsageRecords", GetApproximateUsageRecords$) {
+    };
+    var GetCommitmentPurchaseAnalysisCommand = class extends command5(_ep05, _mw05, "GetCommitmentPurchaseAnalysis", GetCommitmentPurchaseAnalysis$) {
+    };
+    var GetCostAndUsageCommand = class extends command5(_ep05, _mw05, "GetCostAndUsage", GetCostAndUsage$) {
+    };
+    var GetCostAndUsageComparisonsCommand = class extends command5(_ep05, _mw05, "GetCostAndUsageComparisons", GetCostAndUsageComparisons$) {
+    };
+    var GetCostAndUsageWithResourcesCommand = class extends command5(_ep05, _mw05, "GetCostAndUsageWithResources", GetCostAndUsageWithResources$) {
+    };
+    var GetCostCategoriesCommand = class extends command5(_ep05, _mw05, "GetCostCategories", GetCostCategories$) {
+    };
+    var GetCostComparisonDriversCommand = class extends command5(_ep05, _mw05, "GetCostComparisonDrivers", GetCostComparisonDrivers$) {
+    };
+    var GetCostForecastCommand = class extends command5(_ep05, _mw05, "GetCostForecast", GetCostForecast$) {
+    };
+    var GetDimensionValuesCommand = class extends command5(_ep05, _mw05, "GetDimensionValues", GetDimensionValues$) {
+    };
+    var GetReservationCoverageCommand = class extends command5(_ep05, _mw05, "GetReservationCoverage", GetReservationCoverage$) {
+    };
+    var GetReservationPurchaseRecommendationCommand = class extends command5(_ep05, _mw05, "GetReservationPurchaseRecommendation", GetReservationPurchaseRecommendation$) {
+    };
+    var GetReservationUtilizationCommand = class extends command5(_ep05, _mw05, "GetReservationUtilization", GetReservationUtilization$) {
+    };
+    var GetRightsizingRecommendationCommand = class extends command5(_ep05, _mw05, "GetRightsizingRecommendation", GetRightsizingRecommendation$) {
+    };
+    var GetSavingsPlanPurchaseRecommendationDetailsCommand = class extends command5(_ep05, _mw05, "GetSavingsPlanPurchaseRecommendationDetails", GetSavingsPlanPurchaseRecommendationDetails$) {
+    };
+    var GetSavingsPlansCoverageCommand = class extends command5(_ep05, _mw05, "GetSavingsPlansCoverage", GetSavingsPlansCoverage$) {
+    };
+    var GetSavingsPlansPurchaseRecommendationCommand = class extends command5(_ep05, _mw05, "GetSavingsPlansPurchaseRecommendation", GetSavingsPlansPurchaseRecommendation$) {
+    };
+    var GetSavingsPlansUtilizationCommand = class extends command5(_ep05, _mw05, "GetSavingsPlansUtilization", GetSavingsPlansUtilization$) {
+    };
+    var GetSavingsPlansUtilizationDetailsCommand = class extends command5(_ep05, _mw05, "GetSavingsPlansUtilizationDetails", GetSavingsPlansUtilizationDetails$) {
+    };
+    var GetTagsCommand = class extends command5(_ep05, _mw05, "GetTags", GetTags$) {
+    };
+    var GetUsageForecastCommand = class extends command5(_ep05, _mw05, "GetUsageForecast", GetUsageForecast$) {
+    };
+    var ListCommitmentPurchaseAnalysesCommand = class extends command5(_ep05, _mw05, "ListCommitmentPurchaseAnalyses", ListCommitmentPurchaseAnalyses$) {
+    };
+    var ListCostAllocationTagBackfillHistoryCommand = class extends command5(_ep05, _mw05, "ListCostAllocationTagBackfillHistory", ListCostAllocationTagBackfillHistory$) {
+    };
+    var ListCostAllocationTagsCommand = class extends command5(_ep05, _mw05, "ListCostAllocationTags", ListCostAllocationTags$) {
+    };
+    var ListCostCategoryDefinitionsCommand = class extends command5(_ep05, _mw05, "ListCostCategoryDefinitions", ListCostCategoryDefinitions$) {
+    };
+    var ListCostCategoryResourceAssociationsCommand = class extends command5(_ep05, _mw05, "ListCostCategoryResourceAssociations", ListCostCategoryResourceAssociations$) {
+    };
+    var ListSavingsPlansPurchaseRecommendationGenerationCommand = class extends command5(_ep05, _mw05, "ListSavingsPlansPurchaseRecommendationGeneration", ListSavingsPlansPurchaseRecommendationGeneration$) {
+    };
+    var ListTagsForResourceCommand = class extends command5(_ep05, _mw05, "ListTagsForResource", ListTagsForResource$) {
+    };
+    var ProvideAnomalyFeedbackCommand = class extends command5(_ep05, _mw05, "ProvideAnomalyFeedback", ProvideAnomalyFeedback$) {
+    };
+    var StartCommitmentPurchaseAnalysisCommand = class extends command5(_ep05, _mw05, "StartCommitmentPurchaseAnalysis", StartCommitmentPurchaseAnalysis$) {
+    };
+    var StartCostAllocationTagBackfillCommand = class extends command5(_ep05, _mw05, "StartCostAllocationTagBackfill", StartCostAllocationTagBackfill$) {
+    };
+    var StartSavingsPlansPurchaseRecommendationGenerationCommand = class extends command5(_ep05, _mw05, "StartSavingsPlansPurchaseRecommendationGeneration", StartSavingsPlansPurchaseRecommendationGeneration$) {
+    };
+    var TagResourceCommand = class extends command5(_ep05, _mw05, "TagResource", TagResource$) {
+    };
+    var UntagResourceCommand = class extends command5(_ep05, _mw05, "UntagResource", UntagResource$) {
+    };
+    var UpdateAnomalyMonitorCommand = class extends command5(_ep05, _mw05, "UpdateAnomalyMonitor", UpdateAnomalyMonitor$) {
+    };
+    var UpdateAnomalySubscriptionCommand = class extends command5(_ep05, _mw05, "UpdateAnomalySubscription", UpdateAnomalySubscription$) {
+    };
+    var UpdateCostAllocationTagsStatusCommand = class extends command5(_ep05, _mw05, "UpdateCostAllocationTagsStatus", UpdateCostAllocationTagsStatus$) {
+    };
+    var UpdateCostCategoryDefinitionCommand = class extends command5(_ep05, _mw05, "UpdateCostCategoryDefinition", UpdateCostCategoryDefinition$) {
+    };
+    var paginateGetAnomalies = createPaginator2(CostExplorerClient, GetAnomaliesCommand, "NextPageToken", "NextPageToken", "MaxResults");
+    var paginateGetAnomalyMonitors = createPaginator2(CostExplorerClient, GetAnomalyMonitorsCommand, "NextPageToken", "NextPageToken", "MaxResults");
+    var paginateGetAnomalySubscriptions = createPaginator2(CostExplorerClient, GetAnomalySubscriptionsCommand, "NextPageToken", "NextPageToken", "MaxResults");
+    var paginateGetCostAndUsageComparisons = createPaginator2(CostExplorerClient, GetCostAndUsageComparisonsCommand, "NextPageToken", "NextPageToken", "MaxResults");
+    var paginateGetCostComparisonDrivers = createPaginator2(CostExplorerClient, GetCostComparisonDriversCommand, "NextPageToken", "NextPageToken", "MaxResults");
+    var paginateGetReservationPurchaseRecommendation = createPaginator2(CostExplorerClient, GetReservationPurchaseRecommendationCommand, "NextPageToken", "NextPageToken", "PageSize");
+    var paginateGetRightsizingRecommendation = createPaginator2(CostExplorerClient, GetRightsizingRecommendationCommand, "NextPageToken", "NextPageToken", "PageSize");
+    var paginateGetSavingsPlansCoverage = createPaginator2(CostExplorerClient, GetSavingsPlansCoverageCommand, "NextToken", "NextToken", "MaxResults");
+    var paginateGetSavingsPlansUtilizationDetails = createPaginator2(CostExplorerClient, GetSavingsPlansUtilizationDetailsCommand, "NextToken", "NextToken", "MaxResults");
+    var paginateListCommitmentPurchaseAnalyses = createPaginator2(CostExplorerClient, ListCommitmentPurchaseAnalysesCommand, "NextPageToken", "NextPageToken", "PageSize");
+    var paginateListCostAllocationTagBackfillHistory = createPaginator2(CostExplorerClient, ListCostAllocationTagBackfillHistoryCommand, "NextToken", "NextToken", "MaxResults");
+    var paginateListCostAllocationTags = createPaginator2(CostExplorerClient, ListCostAllocationTagsCommand, "NextToken", "NextToken", "MaxResults");
+    var paginateListCostCategoryDefinitions = createPaginator2(CostExplorerClient, ListCostCategoryDefinitionsCommand, "NextToken", "NextToken", "MaxResults");
+    var paginateListCostCategoryResourceAssociations = createPaginator2(CostExplorerClient, ListCostCategoryResourceAssociationsCommand, "NextToken", "NextToken", "MaxResults");
+    var paginateListSavingsPlansPurchaseRecommendationGeneration = createPaginator2(CostExplorerClient, ListSavingsPlansPurchaseRecommendationGenerationCommand, "NextPageToken", "NextPageToken", "PageSize");
+    var commands5 = {
+      CreateAnomalyMonitorCommand,
+      CreateAnomalySubscriptionCommand,
+      CreateCostCategoryDefinitionCommand,
+      DeleteAnomalyMonitorCommand,
+      DeleteAnomalySubscriptionCommand,
+      DeleteCostCategoryDefinitionCommand,
+      DescribeCostCategoryDefinitionCommand,
+      GetAnomaliesCommand,
+      GetAnomalyMonitorsCommand,
+      GetAnomalySubscriptionsCommand,
+      GetApproximateUsageRecordsCommand,
+      GetCommitmentPurchaseAnalysisCommand,
+      GetCostAndUsageCommand,
+      GetCostAndUsageComparisonsCommand,
+      GetCostAndUsageWithResourcesCommand,
+      GetCostCategoriesCommand,
+      GetCostComparisonDriversCommand,
+      GetCostForecastCommand,
+      GetDimensionValuesCommand,
+      GetReservationCoverageCommand,
+      GetReservationPurchaseRecommendationCommand,
+      GetReservationUtilizationCommand,
+      GetRightsizingRecommendationCommand,
+      GetSavingsPlanPurchaseRecommendationDetailsCommand,
+      GetSavingsPlansCoverageCommand,
+      GetSavingsPlansPurchaseRecommendationCommand,
+      GetSavingsPlansUtilizationCommand,
+      GetSavingsPlansUtilizationDetailsCommand,
+      GetTagsCommand,
+      GetUsageForecastCommand,
+      ListCommitmentPurchaseAnalysesCommand,
+      ListCostAllocationTagBackfillHistoryCommand,
+      ListCostAllocationTagsCommand,
+      ListCostCategoryDefinitionsCommand,
+      ListCostCategoryResourceAssociationsCommand,
+      ListSavingsPlansPurchaseRecommendationGenerationCommand,
+      ListTagsForResourceCommand,
+      ProvideAnomalyFeedbackCommand,
+      StartCommitmentPurchaseAnalysisCommand,
+      StartCostAllocationTagBackfillCommand,
+      StartSavingsPlansPurchaseRecommendationGenerationCommand,
+      TagResourceCommand,
+      UntagResourceCommand,
+      UpdateAnomalyMonitorCommand,
+      UpdateAnomalySubscriptionCommand,
+      UpdateCostAllocationTagsStatusCommand,
+      UpdateCostCategoryDefinitionCommand
+    };
+    var paginators = {
+      paginateGetAnomalies,
+      paginateGetAnomalyMonitors,
+      paginateGetAnomalySubscriptions,
+      paginateGetCostAndUsageComparisons,
+      paginateGetCostComparisonDrivers,
+      paginateGetReservationPurchaseRecommendation,
+      paginateGetRightsizingRecommendation,
+      paginateGetSavingsPlansCoverage,
+      paginateGetSavingsPlansUtilizationDetails,
+      paginateListCommitmentPurchaseAnalyses,
+      paginateListCostAllocationTagBackfillHistory,
+      paginateListCostAllocationTags,
+      paginateListCostCategoryDefinitions,
+      paginateListCostCategoryResourceAssociations,
+      paginateListSavingsPlansPurchaseRecommendationGeneration
+    };
+    var CostExplorer = class extends CostExplorerClient {
+    };
+    createAggregatedClient2(commands5, CostExplorer, { paginators });
+    var AccountScope = {
+      LINKED: "LINKED",
+      PAYER: "PAYER"
+    };
+    var AnalysisStatus = {
+      FAILED: "FAILED",
+      PROCESSING: "PROCESSING",
+      SUCCEEDED: "SUCCEEDED"
+    };
+    var AnalysisType = {
+      CUSTOM_COMMITMENT: "CUSTOM_COMMITMENT",
+      MAX_SAVINGS: "MAX_SAVINGS",
+      TARGET_AVERAGE_COVERAGE: "TARGET_AVERAGE_COVERAGE"
+    };
+    var PaymentOption = {
+      ALL_UPFRONT: "ALL_UPFRONT",
+      HEAVY_UTILIZATION: "HEAVY_UTILIZATION",
+      LIGHT_UTILIZATION: "LIGHT_UTILIZATION",
+      MEDIUM_UTILIZATION: "MEDIUM_UTILIZATION",
+      NO_UPFRONT: "NO_UPFRONT",
+      PARTIAL_UPFRONT: "PARTIAL_UPFRONT"
+    };
+    var SupportedSavingsPlansType = {
+      COMPUTE_SP: "COMPUTE_SP",
+      DATABASE_SP: "DATABASE_SP",
+      EC2_INSTANCE_SP: "EC2_INSTANCE_SP",
+      SAGEMAKER_SP: "SAGEMAKER_SP"
+    };
+    var TermInYears = {
+      ONE_YEAR: "ONE_YEAR",
+      THREE_YEARS: "THREE_YEARS"
+    };
+    var ErrorCode = {
+      INTERNAL_FAILURE: "INTERNAL_FAILURE",
+      INVALID_ACCOUNT_ID: "INVALID_ACCOUNT_ID",
+      INVALID_SAVINGS_PLANS_TO_ADD: "INVALID_SAVINGS_PLANS_TO_ADD",
+      INVALID_SAVINGS_PLANS_TO_EXCLUDE: "INVALID_SAVINGS_PLANS_TO_EXCLUDE",
+      NO_USAGE_FOUND: "NO_USAGE_FOUND"
+    };
+    var AnomalyFeedbackType = {
+      NO: "NO",
+      PLANNED_ACTIVITY: "PLANNED_ACTIVITY",
+      YES: "YES"
+    };
+    var MonitorDimension = {
+      COST_CATEGORY: "COST_CATEGORY",
+      LINKED_ACCOUNT: "LINKED_ACCOUNT",
+      SERVICE: "SERVICE",
+      TAG: "TAG"
+    };
+    var MatchOption = {
+      ABSENT: "ABSENT",
+      CASE_INSENSITIVE: "CASE_INSENSITIVE",
+      CASE_SENSITIVE: "CASE_SENSITIVE",
+      CONTAINS: "CONTAINS",
+      ENDS_WITH: "ENDS_WITH",
+      EQUALS: "EQUALS",
+      GREATER_THAN_OR_EQUAL: "GREATER_THAN_OR_EQUAL",
+      STARTS_WITH: "STARTS_WITH"
+    };
+    var Dimension = {
+      AGREEMENT_END_DATE_TIME_AFTER: "AGREEMENT_END_DATE_TIME_AFTER",
+      AGREEMENT_END_DATE_TIME_BEFORE: "AGREEMENT_END_DATE_TIME_BEFORE",
+      ANOMALY_TOTAL_IMPACT_ABSOLUTE: "ANOMALY_TOTAL_IMPACT_ABSOLUTE",
+      ANOMALY_TOTAL_IMPACT_PERCENTAGE: "ANOMALY_TOTAL_IMPACT_PERCENTAGE",
+      AZ: "AZ",
+      BILLING_ENTITY: "BILLING_ENTITY",
+      CACHE_ENGINE: "CACHE_ENGINE",
+      DATABASE_ENGINE: "DATABASE_ENGINE",
+      DEPLOYMENT_OPTION: "DEPLOYMENT_OPTION",
+      INSTANCE_TYPE: "INSTANCE_TYPE",
+      INSTANCE_TYPE_FAMILY: "INSTANCE_TYPE_FAMILY",
+      INVOICING_ENTITY: "INVOICING_ENTITY",
+      LEGAL_ENTITY_NAME: "LEGAL_ENTITY_NAME",
+      LINKED_ACCOUNT: "LINKED_ACCOUNT",
+      LINKED_ACCOUNT_NAME: "LINKED_ACCOUNT_NAME",
+      OPERATING_SYSTEM: "OPERATING_SYSTEM",
+      OPERATION: "OPERATION",
+      PAYER_ACCOUNT: "PAYER_ACCOUNT",
+      PAYMENT_OPTION: "PAYMENT_OPTION",
+      PLATFORM: "PLATFORM",
+      PURCHASE_TYPE: "PURCHASE_TYPE",
+      RECORD_TYPE: "RECORD_TYPE",
+      REGION: "REGION",
+      RESERVATION_ID: "RESERVATION_ID",
+      RESOURCE_ID: "RESOURCE_ID",
+      RIGHTSIZING_TYPE: "RIGHTSIZING_TYPE",
+      SAVINGS_PLANS_TYPE: "SAVINGS_PLANS_TYPE",
+      SAVINGS_PLAN_ARN: "SAVINGS_PLAN_ARN",
+      SCOPE: "SCOPE",
+      SERVICE: "SERVICE",
+      SERVICE_CODE: "SERVICE_CODE",
+      SUBSCRIPTION_ID: "SUBSCRIPTION_ID",
+      TENANCY: "TENANCY",
+      USAGE_TYPE: "USAGE_TYPE",
+      USAGE_TYPE_GROUP: "USAGE_TYPE_GROUP"
+    };
+    var MonitorType = {
+      CUSTOM: "CUSTOM",
+      DIMENSIONAL: "DIMENSIONAL"
+    };
+    var AnomalySubscriptionFrequency = {
+      DAILY: "DAILY",
+      IMMEDIATE: "IMMEDIATE",
+      WEEKLY: "WEEKLY"
+    };
+    var SubscriberStatus = {
+      CONFIRMED: "CONFIRMED",
+      DECLINED: "DECLINED"
+    };
+    var SubscriberType = {
+      EMAIL: "EMAIL",
+      SNS: "SNS"
+    };
+    var ApproximationDimension = {
+      RESOURCE: "RESOURCE",
+      SERVICE: "SERVICE"
+    };
+    var CostCategoryInheritedValueDimensionName = {
+      LINKED_ACCOUNT_NAME: "LINKED_ACCOUNT_NAME",
+      TAG: "TAG"
+    };
+    var CostCategoryRuleType = {
+      INHERITED_VALUE: "INHERITED_VALUE",
+      REGULAR: "REGULAR"
+    };
+    var CostCategoryRuleVersion = {
+      CostCategoryExpressionV1: "CostCategoryExpression.v1"
+    };
+    var CostCategorySplitChargeMethod = {
+      EVEN: "EVEN",
+      FIXED: "FIXED",
+      PROPORTIONAL: "PROPORTIONAL"
+    };
+    var CostCategorySplitChargeRuleParameterType = {
+      ALLOCATION_PERCENTAGES: "ALLOCATION_PERCENTAGES"
+    };
+    var CostCategoryStatusComponent = {
+      COST_EXPLORER: "COST_EXPLORER"
+    };
+    var CostCategoryStatus = {
+      APPLIED: "APPLIED",
+      PROCESSING: "PROCESSING"
+    };
+    var NumericOperator = {
+      BETWEEN: "BETWEEN",
+      EQUAL: "EQUAL",
+      GREATER_THAN: "GREATER_THAN",
+      GREATER_THAN_OR_EQUAL: "GREATER_THAN_OR_EQUAL",
+      LESS_THAN: "LESS_THAN",
+      LESS_THAN_OR_EQUAL: "LESS_THAN_OR_EQUAL"
+    };
+    var Granularity = {
+      DAILY: "DAILY",
+      HOURLY: "HOURLY",
+      MONTHLY: "MONTHLY"
+    };
+    var GroupDefinitionType = {
+      COST_CATEGORY: "COST_CATEGORY",
+      DIMENSION: "DIMENSION",
+      TAG: "TAG"
+    };
+    var SortOrder = {
+      ASCENDING: "ASCENDING",
+      DESCENDING: "DESCENDING"
+    };
+    var Metric = {
+      AMORTIZED_COST: "AMORTIZED_COST",
+      BLENDED_COST: "BLENDED_COST",
+      NET_AMORTIZED_COST: "NET_AMORTIZED_COST",
+      NET_UNBLENDED_COST: "NET_UNBLENDED_COST",
+      NORMALIZED_USAGE_AMOUNT: "NORMALIZED_USAGE_AMOUNT",
+      UNBLENDED_COST: "UNBLENDED_COST",
+      USAGE_QUANTITY: "USAGE_QUANTITY"
+    };
+    var Context = {
+      COST_AND_USAGE: "COST_AND_USAGE",
+      RESERVATIONS: "RESERVATIONS",
+      SAVINGS_PLANS: "SAVINGS_PLANS"
+    };
+    var LookbackPeriodInDays = {
+      SEVEN_DAYS: "SEVEN_DAYS",
+      SIXTY_DAYS: "SIXTY_DAYS",
+      THIRTY_DAYS: "THIRTY_DAYS"
+    };
+    var OfferingClass = {
+      CONVERTIBLE: "CONVERTIBLE",
+      STANDARD: "STANDARD"
+    };
+    var RecommendationTarget = {
+      CROSS_INSTANCE_FAMILY: "CROSS_INSTANCE_FAMILY",
+      SAME_INSTANCE_FAMILY: "SAME_INSTANCE_FAMILY"
+    };
+    var FindingReasonCode = {
+      CPU_OVER_PROVISIONED: "CPU_OVER_PROVISIONED",
+      CPU_UNDER_PROVISIONED: "CPU_UNDER_PROVISIONED",
+      DISK_IOPS_OVER_PROVISIONED: "DISK_IOPS_OVER_PROVISIONED",
+      DISK_IOPS_UNDER_PROVISIONED: "DISK_IOPS_UNDER_PROVISIONED",
+      DISK_THROUGHPUT_OVER_PROVISIONED: "DISK_THROUGHPUT_OVER_PROVISIONED",
+      DISK_THROUGHPUT_UNDER_PROVISIONED: "DISK_THROUGHPUT_UNDER_PROVISIONED",
+      EBS_IOPS_OVER_PROVISIONED: "EBS_IOPS_OVER_PROVISIONED",
+      EBS_IOPS_UNDER_PROVISIONED: "EBS_IOPS_UNDER_PROVISIONED",
+      EBS_THROUGHPUT_OVER_PROVISIONED: "EBS_THROUGHPUT_OVER_PROVISIONED",
+      EBS_THROUGHPUT_UNDER_PROVISIONED: "EBS_THROUGHPUT_UNDER_PROVISIONED",
+      MEMORY_OVER_PROVISIONED: "MEMORY_OVER_PROVISIONED",
+      MEMORY_UNDER_PROVISIONED: "MEMORY_UNDER_PROVISIONED",
+      NETWORK_BANDWIDTH_OVER_PROVISIONED: "NETWORK_BANDWIDTH_OVER_PROVISIONED",
+      NETWORK_BANDWIDTH_UNDER_PROVISIONED: "NETWORK_BANDWIDTH_UNDER_PROVISIONED",
+      NETWORK_PPS_OVER_PROVISIONED: "NETWORK_PPS_OVER_PROVISIONED",
+      NETWORK_PPS_UNDER_PROVISIONED: "NETWORK_PPS_UNDER_PROVISIONED"
+    };
+    var PlatformDifference = {
+      HYPERVISOR: "HYPERVISOR",
+      INSTANCE_STORE_AVAILABILITY: "INSTANCE_STORE_AVAILABILITY",
+      NETWORK_INTERFACE: "NETWORK_INTERFACE",
+      STORAGE_INTERFACE: "STORAGE_INTERFACE",
+      VIRTUALIZATION_TYPE: "VIRTUALIZATION_TYPE"
+    };
+    var RightsizingType = {
+      MODIFY: "MODIFY",
+      TERMINATE: "TERMINATE"
+    };
+    var SavingsPlansDataType = {
+      AMORTIZED_COMMITMENT: "AMORTIZED_COMMITMENT",
+      ATTRIBUTES: "ATTRIBUTES",
+      SAVINGS: "SAVINGS",
+      UTILIZATION: "UTILIZATION"
+    };
+    var CostAllocationTagBackfillStatus = {
+      FAILED: "FAILED",
+      PROCESSING: "PROCESSING",
+      SUCCEEDED: "SUCCEEDED"
+    };
+    var CostAllocationTagStatus = {
+      ACTIVE: "Active",
+      INACTIVE: "Inactive"
+    };
+    var CostAllocationTagType = {
+      AWS_GENERATED: "AWSGenerated",
+      USER_DEFINED: "UserDefined"
+    };
+    var GenerationStatus = {
+      FAILED: "FAILED",
+      PROCESSING: "PROCESSING",
+      SUCCEEDED: "SUCCEEDED"
+    };
+    exports2.AccountScope = AccountScope;
+    exports2.AnalysisDetails$ = AnalysisDetails$;
+    exports2.AnalysisNotFoundException = AnalysisNotFoundException;
+    exports2.AnalysisNotFoundException$ = AnalysisNotFoundException$;
+    exports2.AnalysisStatus = AnalysisStatus;
+    exports2.AnalysisSummary$ = AnalysisSummary$;
+    exports2.AnalysisType = AnalysisType;
+    exports2.Anomaly$ = Anomaly$;
+    exports2.AnomalyDateInterval$ = AnomalyDateInterval$;
+    exports2.AnomalyFeedbackType = AnomalyFeedbackType;
+    exports2.AnomalyMonitor$ = AnomalyMonitor$;
+    exports2.AnomalyScore$ = AnomalyScore$;
+    exports2.AnomalySubscription$ = AnomalySubscription$;
+    exports2.AnomalySubscriptionFrequency = AnomalySubscriptionFrequency;
+    exports2.ApproximationDimension = ApproximationDimension;
+    exports2.BackfillLimitExceededException = BackfillLimitExceededException;
+    exports2.BackfillLimitExceededException$ = BackfillLimitExceededException$;
+    exports2.BillExpirationException = BillExpirationException;
+    exports2.BillExpirationException$ = BillExpirationException$;
+    exports2.BillingViewHealthStatusException = BillingViewHealthStatusException;
+    exports2.BillingViewHealthStatusException$ = BillingViewHealthStatusException$;
+    exports2.CommitmentPurchaseAnalysisConfiguration$ = CommitmentPurchaseAnalysisConfiguration$;
+    exports2.ComparisonMetricValue$ = ComparisonMetricValue$;
+    exports2.Context = Context;
+    exports2.CostAllocationTag$ = CostAllocationTag$;
+    exports2.CostAllocationTagBackfillRequest$ = CostAllocationTagBackfillRequest$;
+    exports2.CostAllocationTagBackfillStatus = CostAllocationTagBackfillStatus;
+    exports2.CostAllocationTagStatus = CostAllocationTagStatus;
+    exports2.CostAllocationTagStatusEntry$ = CostAllocationTagStatusEntry$;
+    exports2.CostAllocationTagType = CostAllocationTagType;
+    exports2.CostAndUsageComparison$ = CostAndUsageComparison$;
+    exports2.CostCategory$ = CostCategory$;
+    exports2.CostCategoryInheritedValueDimension$ = CostCategoryInheritedValueDimension$;
+    exports2.CostCategoryInheritedValueDimensionName = CostCategoryInheritedValueDimensionName;
+    exports2.CostCategoryProcessingStatus$ = CostCategoryProcessingStatus$;
+    exports2.CostCategoryReference$ = CostCategoryReference$;
+    exports2.CostCategoryResourceAssociation$ = CostCategoryResourceAssociation$;
+    exports2.CostCategoryRule$ = CostCategoryRule$;
+    exports2.CostCategoryRuleType = CostCategoryRuleType;
+    exports2.CostCategoryRuleVersion = CostCategoryRuleVersion;
+    exports2.CostCategorySplitChargeMethod = CostCategorySplitChargeMethod;
+    exports2.CostCategorySplitChargeRule$ = CostCategorySplitChargeRule$;
+    exports2.CostCategorySplitChargeRuleParameter$ = CostCategorySplitChargeRuleParameter$;
+    exports2.CostCategorySplitChargeRuleParameterType = CostCategorySplitChargeRuleParameterType;
+    exports2.CostCategoryStatus = CostCategoryStatus;
+    exports2.CostCategoryStatusComponent = CostCategoryStatusComponent;
+    exports2.CostCategoryValues$ = CostCategoryValues$;
+    exports2.CostComparisonDriver$ = CostComparisonDriver$;
+    exports2.CostDriver$ = CostDriver$;
+    exports2.CostExplorer = CostExplorer;
+    exports2.CostExplorerClient = CostExplorerClient;
+    exports2.CostExplorerServiceException = CostExplorerServiceException;
+    exports2.CostExplorerServiceException$ = CostExplorerServiceException$;
+    exports2.Coverage$ = Coverage$;
+    exports2.CoverageByTime$ = CoverageByTime$;
+    exports2.CoverageCost$ = CoverageCost$;
+    exports2.CoverageHours$ = CoverageHours$;
+    exports2.CoverageNormalizedUnits$ = CoverageNormalizedUnits$;
+    exports2.CreateAnomalyMonitor$ = CreateAnomalyMonitor$;
+    exports2.CreateAnomalyMonitorCommand = CreateAnomalyMonitorCommand;
+    exports2.CreateAnomalyMonitorRequest$ = CreateAnomalyMonitorRequest$;
+    exports2.CreateAnomalyMonitorResponse$ = CreateAnomalyMonitorResponse$;
+    exports2.CreateAnomalySubscription$ = CreateAnomalySubscription$;
+    exports2.CreateAnomalySubscriptionCommand = CreateAnomalySubscriptionCommand;
+    exports2.CreateAnomalySubscriptionRequest$ = CreateAnomalySubscriptionRequest$;
+    exports2.CreateAnomalySubscriptionResponse$ = CreateAnomalySubscriptionResponse$;
+    exports2.CreateCostCategoryDefinition$ = CreateCostCategoryDefinition$;
+    exports2.CreateCostCategoryDefinitionCommand = CreateCostCategoryDefinitionCommand;
+    exports2.CreateCostCategoryDefinitionRequest$ = CreateCostCategoryDefinitionRequest$;
+    exports2.CreateCostCategoryDefinitionResponse$ = CreateCostCategoryDefinitionResponse$;
+    exports2.CurrentInstance$ = CurrentInstance$;
+    exports2.DataUnavailableException = DataUnavailableException;
+    exports2.DataUnavailableException$ = DataUnavailableException$;
+    exports2.DateInterval$ = DateInterval$;
+    exports2.DeleteAnomalyMonitor$ = DeleteAnomalyMonitor$;
+    exports2.DeleteAnomalyMonitorCommand = DeleteAnomalyMonitorCommand;
+    exports2.DeleteAnomalyMonitorRequest$ = DeleteAnomalyMonitorRequest$;
+    exports2.DeleteAnomalyMonitorResponse$ = DeleteAnomalyMonitorResponse$;
+    exports2.DeleteAnomalySubscription$ = DeleteAnomalySubscription$;
+    exports2.DeleteAnomalySubscriptionCommand = DeleteAnomalySubscriptionCommand;
+    exports2.DeleteAnomalySubscriptionRequest$ = DeleteAnomalySubscriptionRequest$;
+    exports2.DeleteAnomalySubscriptionResponse$ = DeleteAnomalySubscriptionResponse$;
+    exports2.DeleteCostCategoryDefinition$ = DeleteCostCategoryDefinition$;
+    exports2.DeleteCostCategoryDefinitionCommand = DeleteCostCategoryDefinitionCommand;
+    exports2.DeleteCostCategoryDefinitionRequest$ = DeleteCostCategoryDefinitionRequest$;
+    exports2.DeleteCostCategoryDefinitionResponse$ = DeleteCostCategoryDefinitionResponse$;
+    exports2.DescribeCostCategoryDefinition$ = DescribeCostCategoryDefinition$;
+    exports2.DescribeCostCategoryDefinitionCommand = DescribeCostCategoryDefinitionCommand;
+    exports2.DescribeCostCategoryDefinitionRequest$ = DescribeCostCategoryDefinitionRequest$;
+    exports2.DescribeCostCategoryDefinitionResponse$ = DescribeCostCategoryDefinitionResponse$;
+    exports2.Dimension = Dimension;
+    exports2.DimensionValues$ = DimensionValues$;
+    exports2.DimensionValuesWithAttributes$ = DimensionValuesWithAttributes$;
+    exports2.DiskResourceUtilization$ = DiskResourceUtilization$;
+    exports2.DynamoDBCapacityDetails$ = DynamoDBCapacityDetails$;
+    exports2.EBSResourceUtilization$ = EBSResourceUtilization$;
+    exports2.EC2InstanceDetails$ = EC2InstanceDetails$;
+    exports2.EC2ResourceDetails$ = EC2ResourceDetails$;
+    exports2.EC2ResourceUtilization$ = EC2ResourceUtilization$;
+    exports2.EC2Specification$ = EC2Specification$;
+    exports2.ESInstanceDetails$ = ESInstanceDetails$;
+    exports2.ElastiCacheInstanceDetails$ = ElastiCacheInstanceDetails$;
+    exports2.ErrorCode = ErrorCode;
+    exports2.Expression$ = Expression$;
+    exports2.FindingReasonCode = FindingReasonCode;
+    exports2.ForecastResult$ = ForecastResult$;
+    exports2.GenerationExistsException = GenerationExistsException;
+    exports2.GenerationExistsException$ = GenerationExistsException$;
+    exports2.GenerationStatus = GenerationStatus;
+    exports2.GenerationSummary$ = GenerationSummary$;
+    exports2.GetAnomalies$ = GetAnomalies$;
+    exports2.GetAnomaliesCommand = GetAnomaliesCommand;
+    exports2.GetAnomaliesRequest$ = GetAnomaliesRequest$;
+    exports2.GetAnomaliesResponse$ = GetAnomaliesResponse$;
+    exports2.GetAnomalyMonitors$ = GetAnomalyMonitors$;
+    exports2.GetAnomalyMonitorsCommand = GetAnomalyMonitorsCommand;
+    exports2.GetAnomalyMonitorsRequest$ = GetAnomalyMonitorsRequest$;
+    exports2.GetAnomalyMonitorsResponse$ = GetAnomalyMonitorsResponse$;
+    exports2.GetAnomalySubscriptions$ = GetAnomalySubscriptions$;
+    exports2.GetAnomalySubscriptionsCommand = GetAnomalySubscriptionsCommand;
+    exports2.GetAnomalySubscriptionsRequest$ = GetAnomalySubscriptionsRequest$;
+    exports2.GetAnomalySubscriptionsResponse$ = GetAnomalySubscriptionsResponse$;
+    exports2.GetApproximateUsageRecords$ = GetApproximateUsageRecords$;
+    exports2.GetApproximateUsageRecordsCommand = GetApproximateUsageRecordsCommand;
+    exports2.GetApproximateUsageRecordsRequest$ = GetApproximateUsageRecordsRequest$;
+    exports2.GetApproximateUsageRecordsResponse$ = GetApproximateUsageRecordsResponse$;
+    exports2.GetCommitmentPurchaseAnalysis$ = GetCommitmentPurchaseAnalysis$;
+    exports2.GetCommitmentPurchaseAnalysisCommand = GetCommitmentPurchaseAnalysisCommand;
+    exports2.GetCommitmentPurchaseAnalysisRequest$ = GetCommitmentPurchaseAnalysisRequest$;
+    exports2.GetCommitmentPurchaseAnalysisResponse$ = GetCommitmentPurchaseAnalysisResponse$;
+    exports2.GetCostAndUsage$ = GetCostAndUsage$;
+    exports2.GetCostAndUsageCommand = GetCostAndUsageCommand;
+    exports2.GetCostAndUsageComparisons$ = GetCostAndUsageComparisons$;
+    exports2.GetCostAndUsageComparisonsCommand = GetCostAndUsageComparisonsCommand;
+    exports2.GetCostAndUsageComparisonsRequest$ = GetCostAndUsageComparisonsRequest$;
+    exports2.GetCostAndUsageComparisonsResponse$ = GetCostAndUsageComparisonsResponse$;
+    exports2.GetCostAndUsageRequest$ = GetCostAndUsageRequest$;
+    exports2.GetCostAndUsageResponse$ = GetCostAndUsageResponse$;
+    exports2.GetCostAndUsageWithResources$ = GetCostAndUsageWithResources$;
+    exports2.GetCostAndUsageWithResourcesCommand = GetCostAndUsageWithResourcesCommand;
+    exports2.GetCostAndUsageWithResourcesRequest$ = GetCostAndUsageWithResourcesRequest$;
+    exports2.GetCostAndUsageWithResourcesResponse$ = GetCostAndUsageWithResourcesResponse$;
+    exports2.GetCostCategories$ = GetCostCategories$;
+    exports2.GetCostCategoriesCommand = GetCostCategoriesCommand;
+    exports2.GetCostCategoriesRequest$ = GetCostCategoriesRequest$;
+    exports2.GetCostCategoriesResponse$ = GetCostCategoriesResponse$;
+    exports2.GetCostComparisonDrivers$ = GetCostComparisonDrivers$;
+    exports2.GetCostComparisonDriversCommand = GetCostComparisonDriversCommand;
+    exports2.GetCostComparisonDriversRequest$ = GetCostComparisonDriversRequest$;
+    exports2.GetCostComparisonDriversResponse$ = GetCostComparisonDriversResponse$;
+    exports2.GetCostForecast$ = GetCostForecast$;
+    exports2.GetCostForecastCommand = GetCostForecastCommand;
+    exports2.GetCostForecastRequest$ = GetCostForecastRequest$;
+    exports2.GetCostForecastResponse$ = GetCostForecastResponse$;
+    exports2.GetDimensionValues$ = GetDimensionValues$;
+    exports2.GetDimensionValuesCommand = GetDimensionValuesCommand;
+    exports2.GetDimensionValuesRequest$ = GetDimensionValuesRequest$;
+    exports2.GetDimensionValuesResponse$ = GetDimensionValuesResponse$;
+    exports2.GetReservationCoverage$ = GetReservationCoverage$;
+    exports2.GetReservationCoverageCommand = GetReservationCoverageCommand;
+    exports2.GetReservationCoverageRequest$ = GetReservationCoverageRequest$;
+    exports2.GetReservationCoverageResponse$ = GetReservationCoverageResponse$;
+    exports2.GetReservationPurchaseRecommendation$ = GetReservationPurchaseRecommendation$;
+    exports2.GetReservationPurchaseRecommendationCommand = GetReservationPurchaseRecommendationCommand;
+    exports2.GetReservationPurchaseRecommendationRequest$ = GetReservationPurchaseRecommendationRequest$;
+    exports2.GetReservationPurchaseRecommendationResponse$ = GetReservationPurchaseRecommendationResponse$;
+    exports2.GetReservationUtilization$ = GetReservationUtilization$;
+    exports2.GetReservationUtilizationCommand = GetReservationUtilizationCommand;
+    exports2.GetReservationUtilizationRequest$ = GetReservationUtilizationRequest$;
+    exports2.GetReservationUtilizationResponse$ = GetReservationUtilizationResponse$;
+    exports2.GetRightsizingRecommendation$ = GetRightsizingRecommendation$;
+    exports2.GetRightsizingRecommendationCommand = GetRightsizingRecommendationCommand;
+    exports2.GetRightsizingRecommendationRequest$ = GetRightsizingRecommendationRequest$;
+    exports2.GetRightsizingRecommendationResponse$ = GetRightsizingRecommendationResponse$;
+    exports2.GetSavingsPlanPurchaseRecommendationDetails$ = GetSavingsPlanPurchaseRecommendationDetails$;
+    exports2.GetSavingsPlanPurchaseRecommendationDetailsCommand = GetSavingsPlanPurchaseRecommendationDetailsCommand;
+    exports2.GetSavingsPlanPurchaseRecommendationDetailsRequest$ = GetSavingsPlanPurchaseRecommendationDetailsRequest$;
+    exports2.GetSavingsPlanPurchaseRecommendationDetailsResponse$ = GetSavingsPlanPurchaseRecommendationDetailsResponse$;
+    exports2.GetSavingsPlansCoverage$ = GetSavingsPlansCoverage$;
+    exports2.GetSavingsPlansCoverageCommand = GetSavingsPlansCoverageCommand;
+    exports2.GetSavingsPlansCoverageRequest$ = GetSavingsPlansCoverageRequest$;
+    exports2.GetSavingsPlansCoverageResponse$ = GetSavingsPlansCoverageResponse$;
+    exports2.GetSavingsPlansPurchaseRecommendation$ = GetSavingsPlansPurchaseRecommendation$;
+    exports2.GetSavingsPlansPurchaseRecommendationCommand = GetSavingsPlansPurchaseRecommendationCommand;
+    exports2.GetSavingsPlansPurchaseRecommendationRequest$ = GetSavingsPlansPurchaseRecommendationRequest$;
+    exports2.GetSavingsPlansPurchaseRecommendationResponse$ = GetSavingsPlansPurchaseRecommendationResponse$;
+    exports2.GetSavingsPlansUtilization$ = GetSavingsPlansUtilization$;
+    exports2.GetSavingsPlansUtilizationCommand = GetSavingsPlansUtilizationCommand;
+    exports2.GetSavingsPlansUtilizationDetails$ = GetSavingsPlansUtilizationDetails$;
+    exports2.GetSavingsPlansUtilizationDetailsCommand = GetSavingsPlansUtilizationDetailsCommand;
+    exports2.GetSavingsPlansUtilizationDetailsRequest$ = GetSavingsPlansUtilizationDetailsRequest$;
+    exports2.GetSavingsPlansUtilizationDetailsResponse$ = GetSavingsPlansUtilizationDetailsResponse$;
+    exports2.GetSavingsPlansUtilizationRequest$ = GetSavingsPlansUtilizationRequest$;
+    exports2.GetSavingsPlansUtilizationResponse$ = GetSavingsPlansUtilizationResponse$;
+    exports2.GetTags$ = GetTags$;
+    exports2.GetTagsCommand = GetTagsCommand;
+    exports2.GetTagsRequest$ = GetTagsRequest$;
+    exports2.GetTagsResponse$ = GetTagsResponse$;
+    exports2.GetUsageForecast$ = GetUsageForecast$;
+    exports2.GetUsageForecastCommand = GetUsageForecastCommand;
+    exports2.GetUsageForecastRequest$ = GetUsageForecastRequest$;
+    exports2.GetUsageForecastResponse$ = GetUsageForecastResponse$;
+    exports2.Granularity = Granularity;
+    exports2.Group$ = Group$;
+    exports2.GroupDefinition$ = GroupDefinition$;
+    exports2.GroupDefinitionType = GroupDefinitionType;
+    exports2.Impact$ = Impact$;
+    exports2.InstanceDetails$ = InstanceDetails$;
+    exports2.InvalidNextTokenException = InvalidNextTokenException;
+    exports2.InvalidNextTokenException$ = InvalidNextTokenException$;
+    exports2.LimitExceededException = LimitExceededException;
+    exports2.LimitExceededException$ = LimitExceededException$;
+    exports2.ListCommitmentPurchaseAnalyses$ = ListCommitmentPurchaseAnalyses$;
+    exports2.ListCommitmentPurchaseAnalysesCommand = ListCommitmentPurchaseAnalysesCommand;
+    exports2.ListCommitmentPurchaseAnalysesRequest$ = ListCommitmentPurchaseAnalysesRequest$;
+    exports2.ListCommitmentPurchaseAnalysesResponse$ = ListCommitmentPurchaseAnalysesResponse$;
+    exports2.ListCostAllocationTagBackfillHistory$ = ListCostAllocationTagBackfillHistory$;
+    exports2.ListCostAllocationTagBackfillHistoryCommand = ListCostAllocationTagBackfillHistoryCommand;
+    exports2.ListCostAllocationTagBackfillHistoryRequest$ = ListCostAllocationTagBackfillHistoryRequest$;
+    exports2.ListCostAllocationTagBackfillHistoryResponse$ = ListCostAllocationTagBackfillHistoryResponse$;
+    exports2.ListCostAllocationTags$ = ListCostAllocationTags$;
+    exports2.ListCostAllocationTagsCommand = ListCostAllocationTagsCommand;
+    exports2.ListCostAllocationTagsRequest$ = ListCostAllocationTagsRequest$;
+    exports2.ListCostAllocationTagsResponse$ = ListCostAllocationTagsResponse$;
+    exports2.ListCostCategoryDefinitions$ = ListCostCategoryDefinitions$;
+    exports2.ListCostCategoryDefinitionsCommand = ListCostCategoryDefinitionsCommand;
+    exports2.ListCostCategoryDefinitionsRequest$ = ListCostCategoryDefinitionsRequest$;
+    exports2.ListCostCategoryDefinitionsResponse$ = ListCostCategoryDefinitionsResponse$;
+    exports2.ListCostCategoryResourceAssociations$ = ListCostCategoryResourceAssociations$;
+    exports2.ListCostCategoryResourceAssociationsCommand = ListCostCategoryResourceAssociationsCommand;
+    exports2.ListCostCategoryResourceAssociationsRequest$ = ListCostCategoryResourceAssociationsRequest$;
+    exports2.ListCostCategoryResourceAssociationsResponse$ = ListCostCategoryResourceAssociationsResponse$;
+    exports2.ListSavingsPlansPurchaseRecommendationGeneration$ = ListSavingsPlansPurchaseRecommendationGeneration$;
+    exports2.ListSavingsPlansPurchaseRecommendationGenerationCommand = ListSavingsPlansPurchaseRecommendationGenerationCommand;
+    exports2.ListSavingsPlansPurchaseRecommendationGenerationRequest$ = ListSavingsPlansPurchaseRecommendationGenerationRequest$;
+    exports2.ListSavingsPlansPurchaseRecommendationGenerationResponse$ = ListSavingsPlansPurchaseRecommendationGenerationResponse$;
+    exports2.ListTagsForResource$ = ListTagsForResource$;
+    exports2.ListTagsForResourceCommand = ListTagsForResourceCommand;
+    exports2.ListTagsForResourceRequest$ = ListTagsForResourceRequest$;
+    exports2.ListTagsForResourceResponse$ = ListTagsForResourceResponse$;
+    exports2.LookbackPeriodInDays = LookbackPeriodInDays;
+    exports2.MatchOption = MatchOption;
+    exports2.MemoryDBInstanceDetails$ = MemoryDBInstanceDetails$;
+    exports2.Metric = Metric;
+    exports2.MetricValue$ = MetricValue$;
+    exports2.ModifyRecommendationDetail$ = ModifyRecommendationDetail$;
+    exports2.MonitorDimension = MonitorDimension;
+    exports2.MonitorType = MonitorType;
+    exports2.NetworkResourceUtilization$ = NetworkResourceUtilization$;
+    exports2.NumericOperator = NumericOperator;
+    exports2.OfferingClass = OfferingClass;
+    exports2.PaymentOption = PaymentOption;
+    exports2.PlatformDifference = PlatformDifference;
+    exports2.ProvideAnomalyFeedback$ = ProvideAnomalyFeedback$;
+    exports2.ProvideAnomalyFeedbackCommand = ProvideAnomalyFeedbackCommand;
+    exports2.ProvideAnomalyFeedbackRequest$ = ProvideAnomalyFeedbackRequest$;
+    exports2.ProvideAnomalyFeedbackResponse$ = ProvideAnomalyFeedbackResponse$;
+    exports2.RDSInstanceDetails$ = RDSInstanceDetails$;
+    exports2.RecommendationDetailData$ = RecommendationDetailData$;
+    exports2.RecommendationDetailHourlyMetrics$ = RecommendationDetailHourlyMetrics$;
+    exports2.RecommendationTarget = RecommendationTarget;
+    exports2.RedshiftInstanceDetails$ = RedshiftInstanceDetails$;
+    exports2.RequestChangedException = RequestChangedException;
+    exports2.RequestChangedException$ = RequestChangedException$;
+    exports2.ReservationAggregates$ = ReservationAggregates$;
+    exports2.ReservationCoverageGroup$ = ReservationCoverageGroup$;
+    exports2.ReservationPurchaseRecommendation$ = ReservationPurchaseRecommendation$;
+    exports2.ReservationPurchaseRecommendationDetail$ = ReservationPurchaseRecommendationDetail$;
+    exports2.ReservationPurchaseRecommendationMetadata$ = ReservationPurchaseRecommendationMetadata$;
+    exports2.ReservationPurchaseRecommendationSummary$ = ReservationPurchaseRecommendationSummary$;
+    exports2.ReservationUtilizationGroup$ = ReservationUtilizationGroup$;
+    exports2.ReservedCapacityDetails$ = ReservedCapacityDetails$;
+    exports2.ResourceDetails$ = ResourceDetails$;
+    exports2.ResourceNotFoundException = ResourceNotFoundException2;
+    exports2.ResourceNotFoundException$ = ResourceNotFoundException$2;
+    exports2.ResourceTag$ = ResourceTag$;
+    exports2.ResourceUtilization$ = ResourceUtilization$;
+    exports2.ResultByTime$ = ResultByTime$;
+    exports2.RightsizingRecommendation$ = RightsizingRecommendation$;
+    exports2.RightsizingRecommendationConfiguration$ = RightsizingRecommendationConfiguration$;
+    exports2.RightsizingRecommendationMetadata$ = RightsizingRecommendationMetadata$;
+    exports2.RightsizingRecommendationSummary$ = RightsizingRecommendationSummary$;
+    exports2.RightsizingType = RightsizingType;
+    exports2.RootCause$ = RootCause$;
+    exports2.RootCauseImpact$ = RootCauseImpact$;
+    exports2.SavingsPlans$ = SavingsPlans$;
+    exports2.SavingsPlansAmortizedCommitment$ = SavingsPlansAmortizedCommitment$;
+    exports2.SavingsPlansCoverage$ = SavingsPlansCoverage$;
+    exports2.SavingsPlansCoverageData$ = SavingsPlansCoverageData$;
+    exports2.SavingsPlansDataType = SavingsPlansDataType;
+    exports2.SavingsPlansDetails$ = SavingsPlansDetails$;
+    exports2.SavingsPlansPurchaseAnalysisConfiguration$ = SavingsPlansPurchaseAnalysisConfiguration$;
+    exports2.SavingsPlansPurchaseAnalysisDetails$ = SavingsPlansPurchaseAnalysisDetails$;
+    exports2.SavingsPlansPurchaseRecommendation$ = SavingsPlansPurchaseRecommendation$;
+    exports2.SavingsPlansPurchaseRecommendationDetail$ = SavingsPlansPurchaseRecommendationDetail$;
+    exports2.SavingsPlansPurchaseRecommendationMetadata$ = SavingsPlansPurchaseRecommendationMetadata$;
+    exports2.SavingsPlansPurchaseRecommendationSummary$ = SavingsPlansPurchaseRecommendationSummary$;
+    exports2.SavingsPlansSavings$ = SavingsPlansSavings$;
+    exports2.SavingsPlansUtilization$ = SavingsPlansUtilization$;
+    exports2.SavingsPlansUtilizationAggregates$ = SavingsPlansUtilizationAggregates$;
+    exports2.SavingsPlansUtilizationByTime$ = SavingsPlansUtilizationByTime$;
+    exports2.SavingsPlansUtilizationDetail$ = SavingsPlansUtilizationDetail$;
+    exports2.ServiceQuotaExceededException = ServiceQuotaExceededException;
+    exports2.ServiceQuotaExceededException$ = ServiceQuotaExceededException$;
+    exports2.ServiceSpecification$ = ServiceSpecification$;
+    exports2.SortDefinition$ = SortDefinition$;
+    exports2.SortOrder = SortOrder;
+    exports2.StartCommitmentPurchaseAnalysis$ = StartCommitmentPurchaseAnalysis$;
+    exports2.StartCommitmentPurchaseAnalysisCommand = StartCommitmentPurchaseAnalysisCommand;
+    exports2.StartCommitmentPurchaseAnalysisRequest$ = StartCommitmentPurchaseAnalysisRequest$;
+    exports2.StartCommitmentPurchaseAnalysisResponse$ = StartCommitmentPurchaseAnalysisResponse$;
+    exports2.StartCostAllocationTagBackfill$ = StartCostAllocationTagBackfill$;
+    exports2.StartCostAllocationTagBackfillCommand = StartCostAllocationTagBackfillCommand;
+    exports2.StartCostAllocationTagBackfillRequest$ = StartCostAllocationTagBackfillRequest$;
+    exports2.StartCostAllocationTagBackfillResponse$ = StartCostAllocationTagBackfillResponse$;
+    exports2.StartSavingsPlansPurchaseRecommendationGeneration$ = StartSavingsPlansPurchaseRecommendationGeneration$;
+    exports2.StartSavingsPlansPurchaseRecommendationGenerationCommand = StartSavingsPlansPurchaseRecommendationGenerationCommand;
+    exports2.StartSavingsPlansPurchaseRecommendationGenerationRequest$ = StartSavingsPlansPurchaseRecommendationGenerationRequest$;
+    exports2.StartSavingsPlansPurchaseRecommendationGenerationResponse$ = StartSavingsPlansPurchaseRecommendationGenerationResponse$;
+    exports2.Subscriber$ = Subscriber$;
+    exports2.SubscriberStatus = SubscriberStatus;
+    exports2.SubscriberType = SubscriberType;
+    exports2.SupportedSavingsPlansType = SupportedSavingsPlansType;
+    exports2.TagResource$ = TagResource$;
+    exports2.TagResourceCommand = TagResourceCommand;
+    exports2.TagResourceRequest$ = TagResourceRequest$;
+    exports2.TagResourceResponse$ = TagResourceResponse$;
+    exports2.TagValues$ = TagValues$;
+    exports2.TargetInstance$ = TargetInstance$;
+    exports2.TermInYears = TermInYears;
+    exports2.TerminateRecommendationDetail$ = TerminateRecommendationDetail$;
+    exports2.TooManyTagsException = TooManyTagsException;
+    exports2.TooManyTagsException$ = TooManyTagsException$;
+    exports2.TotalImpactFilter$ = TotalImpactFilter$;
+    exports2.UnknownMonitorException = UnknownMonitorException;
+    exports2.UnknownMonitorException$ = UnknownMonitorException$;
+    exports2.UnknownSubscriptionException = UnknownSubscriptionException;
+    exports2.UnknownSubscriptionException$ = UnknownSubscriptionException$;
+    exports2.UnresolvableUsageUnitException = UnresolvableUsageUnitException;
+    exports2.UnresolvableUsageUnitException$ = UnresolvableUsageUnitException$;
+    exports2.UntagResource$ = UntagResource$;
+    exports2.UntagResourceCommand = UntagResourceCommand;
+    exports2.UntagResourceRequest$ = UntagResourceRequest$;
+    exports2.UntagResourceResponse$ = UntagResourceResponse$;
+    exports2.UpdateAnomalyMonitor$ = UpdateAnomalyMonitor$;
+    exports2.UpdateAnomalyMonitorCommand = UpdateAnomalyMonitorCommand;
+    exports2.UpdateAnomalyMonitorRequest$ = UpdateAnomalyMonitorRequest$;
+    exports2.UpdateAnomalyMonitorResponse$ = UpdateAnomalyMonitorResponse$;
+    exports2.UpdateAnomalySubscription$ = UpdateAnomalySubscription$;
+    exports2.UpdateAnomalySubscriptionCommand = UpdateAnomalySubscriptionCommand;
+    exports2.UpdateAnomalySubscriptionRequest$ = UpdateAnomalySubscriptionRequest$;
+    exports2.UpdateAnomalySubscriptionResponse$ = UpdateAnomalySubscriptionResponse$;
+    exports2.UpdateCostAllocationTagsStatus$ = UpdateCostAllocationTagsStatus$;
+    exports2.UpdateCostAllocationTagsStatusCommand = UpdateCostAllocationTagsStatusCommand;
+    exports2.UpdateCostAllocationTagsStatusError$ = UpdateCostAllocationTagsStatusError$;
+    exports2.UpdateCostAllocationTagsStatusRequest$ = UpdateCostAllocationTagsStatusRequest$;
+    exports2.UpdateCostAllocationTagsStatusResponse$ = UpdateCostAllocationTagsStatusResponse$;
+    exports2.UpdateCostCategoryDefinition$ = UpdateCostCategoryDefinition$;
+    exports2.UpdateCostCategoryDefinitionCommand = UpdateCostCategoryDefinitionCommand;
+    exports2.UpdateCostCategoryDefinitionRequest$ = UpdateCostCategoryDefinitionRequest$;
+    exports2.UpdateCostCategoryDefinitionResponse$ = UpdateCostCategoryDefinitionResponse$;
+    exports2.UtilizationByTime$ = UtilizationByTime$;
+    exports2.errorTypeRegistries = errorTypeRegistries5;
+    exports2.paginateGetAnomalies = paginateGetAnomalies;
+    exports2.paginateGetAnomalyMonitors = paginateGetAnomalyMonitors;
+    exports2.paginateGetAnomalySubscriptions = paginateGetAnomalySubscriptions;
+    exports2.paginateGetCostAndUsageComparisons = paginateGetCostAndUsageComparisons;
+    exports2.paginateGetCostComparisonDrivers = paginateGetCostComparisonDrivers;
+    exports2.paginateGetReservationPurchaseRecommendation = paginateGetReservationPurchaseRecommendation;
+    exports2.paginateGetRightsizingRecommendation = paginateGetRightsizingRecommendation;
+    exports2.paginateGetSavingsPlansCoverage = paginateGetSavingsPlansCoverage;
+    exports2.paginateGetSavingsPlansUtilizationDetails = paginateGetSavingsPlansUtilizationDetails;
+    exports2.paginateListCommitmentPurchaseAnalyses = paginateListCommitmentPurchaseAnalyses;
+    exports2.paginateListCostAllocationTagBackfillHistory = paginateListCostAllocationTagBackfillHistory;
+    exports2.paginateListCostAllocationTags = paginateListCostAllocationTags;
+    exports2.paginateListCostCategoryDefinitions = paginateListCostCategoryDefinitions;
+    exports2.paginateListCostCategoryResourceAssociations = paginateListCostCategoryResourceAssociations;
+    exports2.paginateListSavingsPlansPurchaseRecommendationGeneration = paginateListSavingsPlansPurchaseRecommendationGeneration;
+  }
+});
+
 // ../cloudfix-agent-skill/co/co-gp2-to-gp3-tool/scripts/gp2.ts
 var gp2_exports = {};
 __export(gp2_exports, {
   cli: () => cli,
   collect: () => collect,
+  collectBilling: () => collectBilling,
   customerSummary: () => customerSummary,
   runNative: () => runNative,
   validateResult: () => validateResult
@@ -212129,6 +216599,7 @@ var import_node_fs3 = require("node:fs");
 var import_node_path6 = require("node:path");
 var import_node_child_process = require("node:child_process");
 var import_node_util = require("node:util");
+var import_node_crypto8 = require("node:crypto");
 var InputError = class extends Error {
 };
 var MissingEvidence = class extends Error {
@@ -212539,6 +217010,7 @@ function realTransport(options) {
 async function collect(options, transport) {
   const context = contextFor(transport ? "recorded_collection_test" : "live_collection", jsonCopy(options));
   const evidence = { asOf: context.started_at, region: options.region, resources: [], responses: [] };
+  context.cost_input = options.costs ?? null;
   try {
     requireInput(typeof options.region === "string" && /^[a-z]{2}(?:-[a-z]+)+-\d$/.test(options.region), "region must be explicit");
     requireInput(options.costBasis === "public" !== (options.costs !== void 0), "Choose --cost-basis public or --costs");
@@ -212565,6 +217037,16 @@ async function collect(options, transport) {
     requireInput(options.account === void 0 || options.account === identity2.Account, "Authenticated account does not match --account");
     evidence.accountId = identity2.Account;
     context.identity = identity2;
+    context.scope = {
+      account: evidence.accountId,
+      region: options.region,
+      selected_volume_ids: ids,
+      discovery: ids.length ? "selected_ids" : "DescribeVolumes gp2 inventory"
+    };
+    if (options.costs?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
+      requireInput(ids.length > 0, "CE cost estimates require the same explicit --volume-id selection; do not rediscover the account");
+      validateBillingScope(options.costs, evidence.accountId, options.region, ids);
+    }
     const volumes = [];
     const batches = ids.length ? Array.from({ length: Math.ceil(ids.length / 200) }, (_4, i5) => ids.slice(i5 * 200, i5 * 200 + 200)) : [[]];
     for (const batch of batches) {
@@ -212594,6 +217076,9 @@ async function collect(options, transport) {
     context.scope = { account: evidence.accountId, region: options.region, selected_volume_ids: selected, discovery: ids.length ? "selected_ids" : "DescribeVolumes gp2 inventory" };
     context.cost_basis = options.costs ? "caller_supplied_costs" : "public_price_estimate";
     context.cost_input = options.costs ?? null;
+    if (options.costs?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
+      validateBillingScope(options.costs, evidence.accountId, options.region, selected, volumes);
+    }
     if (selected.length === 0) {
       context.no_candidates = true;
       return { evidence, context };
@@ -212683,6 +217168,23 @@ async function collect(options, transport) {
     throw failure;
   }
 }
+function validateBillingScope(costs, account, region, ids, volumes) {
+  const billing = costs?.billing_evidence;
+  if (billing?.method !== "ce_account_region_gp2_effective_rate") return;
+  const sameIds = (values2) => Array.isArray(values2) && values2.length === ids.length && new Set(values2).size === values2.length && values2.every((id) => typeof id === "string" && ids.includes(id));
+  requireInput(billing.status === "complete" && object2(billing.scope) && billing.scope.account === account && billing.scope.region === region && sameIds(billing.scope.selected_volume_ids), "CE billing scope does not match the assessed account, region and selected volumes");
+  requireInput(Array.isArray(costs.resources) && sameIds(costs.resources.map((row) => row?.resourceId)) && Array.isArray(billing.baselines) && sameIds(billing.baselines.map((row) => row?.resourceId)), "CE billing resource scope is incomplete or changed");
+  if (volumes) {
+    const byId = new Map(volumes.filter(object2).map((volume) => [volume.VolumeId, volume]));
+    for (const baseline of billing.baselines) {
+      const volume = byId.get(baseline.resourceId);
+      requireInput(
+        typeof baseline.sizeGiB === "number" && Number.isFinite(baseline.sizeGiB) && baseline.sizeGiB > 0 && volume?.Size === baseline.sizeGiB && volume?.VolumeType === "gp2",
+        `Volume state differs from the billing estimate for ${baseline.resourceId}; rerun assessment and billing`
+      );
+    }
+  }
+}
 function replayInput(original) {
   requireInput(object2(original), "Evidence must be an object or fixture packet");
   const packet = Object.prototype.hasOwnProperty.call(original, "evidence");
@@ -212704,13 +217206,292 @@ function replayInput(original) {
   context.assessment_clock_basis = (packet ? original.evidence.asOf : original.asOf) === void 0 ? "recorded_at_invocation" : "caller_supplied";
   context.cost_basis = packet && object2(original.run_context) ? original.run_context.cost_basis ?? "supplied_evidence" : "supplied_evidence";
   context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
+  if (context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
+    try {
+      const volumes = Array.isArray(evidence.responses) ? evidence.responses.flatMap((response) => response?.operation === "DescribeVolumes" && Array.isArray(response.output?.Volumes) ? response.output.Volumes : []) : [];
+      validateBillingScope(
+        context.cost_input,
+        evidence.accountId,
+        evidence.region,
+        Array.isArray(evidence.resources) ? evidence.resources.map((row) => row?.resourceId) : [],
+        volumes
+      );
+    } catch (error2) {
+      const failure = error2 instanceof Error ? error2 : new Error(String(error2));
+      Object.assign(failure, { partial: { evidence, context } });
+      throw failure;
+    }
+  }
   return { evidence, context };
+}
+async function collectBilling(options, transport, now = /* @__PURE__ */ new Date()) {
+  const context = {
+    status: "collecting",
+    method: "ce_account_region_gp2_effective_rate",
+    estimate: true,
+    started_at: Number.isFinite(now.getTime()) ? now.toISOString() : null,
+    build: define_CLOUDFIX_BUILD_default,
+    options: jsonCopy(options),
+    reads: [],
+    issues: [],
+    assessment: { directory: typeof options.assessment === "string" ? (0, import_node_path6.resolve)(options.assessment) : null, files: {} },
+    qualifications: [
+      "This is an account/region GP2 effective-rate estimate, not per-volume billed cost or a CUR-equivalent baseline.",
+      "The observed GP2 rate is applied to each selected volume at its recorded current capacity for 12 months; common effective pricing is assumed.",
+      "The original finder estimates GP3 using its public GP3/GP2 price ratio; negotiated GP3 pricing is not independently retrieved.",
+      "Cost Explorer reflects the caller's visible billing view, which may be pro forma; final invoice and discount visibility are not independently verified.",
+      "The public baseline is saved assessment pricing, not same-period Cost Explorer public billing; their ratio is not a verified contractual discount."
+    ]
+  };
+  const issue = (resourceId, reason) => {
+    context.issues.push({ resourceId, reason });
+  };
+  try {
+    requireInput(Number.isFinite(now.getTime()), "Billing clock must be valid");
+    requireInput(typeof options.assessment === "string" && options.assessment.length > 0, "A saved assessment directory is required");
+    const inputs = {};
+    for (const name of ["summary", "evidence", "context", "result"]) {
+      const file = (0, import_node_path6.join)(context.assessment.directory, `${name}.json`);
+      const raw = (0, import_node_fs3.readFileSync)(file, "utf8");
+      const record = { path: file, sha256: (0, import_node_crypto8.createHash)("sha256").update(raw).digest("hex") };
+      context.assessment.files[name] = record;
+      try {
+        record.document = inputs[name] = JSON.parse(raw);
+      } catch (error2) {
+        record.original_text = raw;
+        throw error2;
+      }
+    }
+    requireInput(inputs.summary?.status === "complete" && inputs.context?.status === "complete", "Billing needs a completed saved assessment");
+    const evidence = parseEvidence(inputs.evidence);
+    validateResult(inputs.result, evidence);
+    const ids = evidence.resources.map((row) => row.resourceId);
+    requireInput(new Set(ids).size === ids.length, "Assessment resource IDs must be unique");
+    context.scope = { account: evidence.accountId, region: evidence.region, selected_volume_ids: ids };
+    for (const scope of [inputs.summary.scope, inputs.context.scope].filter((value) => value !== void 0)) {
+      requireInput(scope.account === evidence.accountId && scope.region === evidence.region && (0, import_node_util.isDeepStrictEqual)(scope.selected_volume_ids, ids), "Saved assessment scope is inconsistent");
+    }
+    requireInput(Array.isArray(inputs.summary.resources) && inputs.summary.resources.length === ids.length && inputs.summary.resources.every((row, i5) => row.resource_id === ids[i5] && row.account === evidence.accountId && row.region === evidence.region), "Saved summary resource scope is inconsistent");
+    const volumes = /* @__PURE__ */ new Map();
+    for (const response of evidence.responses) {
+      if (response.operation === "DescribeVolumes" && Array.isArray(response.output.Volumes)) {
+        for (const volume of response.output.Volumes) if (object2(volume) && typeof volume.VolumeId === "string") volumes.set(volume.VolumeId, volume);
+      }
+    }
+    const baselines = ids.map((resourceId, i5) => {
+      const volume = volumes.get(resourceId);
+      const native = inputs.result[i5];
+      const size2 = volume?.Size;
+      const publicBasis = inputs.context.cost_basis === "public_price_estimate" && inputs.summary.cost_basis?.kind === "public_price_estimate";
+      const publicAnnualCost = native?.finderReportData?.gp2PublicCost ?? (publicBasis ? evidence.resources[i5].publicAnnualCost : void 0);
+      if (volume?.VolumeType !== "gp2" || typeof size2 !== "number" || !Number.isFinite(size2) || size2 <= 0 || native?.finderReportData?.volumeSize !== void 0 && native.finderReportData.volumeSize !== size2) {
+        issue(resourceId, "A consistent recorded GP2 size is unavailable");
+      }
+      if (typeof publicAnnualCost !== "number" || !Number.isFinite(publicAnnualCost) || publicAnnualCost < 0) {
+        issue(resourceId, "The completed finder result lacks a usable current public-price baseline");
+      }
+      return {
+        resourceId,
+        sizeGiB: size2,
+        publicAnnualCost,
+        public_baseline_source: native?.finderReportData?.gp2PublicCost === void 0 ? "public_price_assessment_resource" : "native_result"
+      };
+    });
+    context.baselines = baselines;
+    requireInput(context.issues.length === 0, "Some selected resources lack usable assessment baselines; see every issue in billing-context.json");
+    const midnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const day = 864e5;
+    const start = new Date(midnight - 32 * day).toISOString().slice(0, 10);
+    const end2 = new Date(midnight - day).toISOString().slice(0, 10);
+    context.period = { start, end: end2, days: 31, timezone: "UTC", end_exclusive: true };
+    let send = transport;
+    if (!send) {
+      const { defaultProvider } = require_dist_cjs15();
+      const credentials = defaultProvider(options.profile ? { profile: options.profile } : {});
+      const ce = require_dist_cjs37();
+      const sts = require_dist_cjs36();
+      const clients = {
+        ce: new ce.CostExplorerClient({ region: "us-east-1", credentials }),
+        sts: new sts.STSClient({ region: "us-east-1", credentials })
+      };
+      const commands5 = {
+        "ce.GetDimensionValues": ce.GetDimensionValuesCommand,
+        "ce.GetCostAndUsage": ce.GetCostAndUsageCommand,
+        "sts.GetCallerIdentity": sts.GetCallerIdentityCommand
+      };
+      send = async (service, operation2, input, region) => {
+        requireInput(region === "us-east-1" && commands5[`${service}.${operation2}`], "Unsupported billing operation");
+        return jsonCopy(await clients[service].send(new commands5[`${service}.${operation2}`](input)));
+      };
+    }
+    const read = async (service, operation2, input, region) => {
+      const entry = { service, operation: operation2, region, input: jsonCopy(input), observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+      context.reads.push(entry);
+      try {
+        const output = jsonCopy(await send(service, operation2, input, region));
+        requireInput(object2(output), `Invalid ${operation2} response`);
+        entry.output = output;
+        return output;
+      } catch (error2) {
+        entry.error = errorData(error2);
+        throw error2;
+      }
+    };
+    context.billing_identity = await read("sts", "GetCallerIdentity", {}, "us-east-1");
+    requireInput(typeof context.billing_identity.Account === "string" && /^\d{12}$/.test(context.billing_identity.Account), "Billing identity lacks an account");
+    const dimensions = (Key, Values) => ({ Dimensions: { Key, Values } });
+    const filters = [
+      dimensions("LINKED_ACCOUNT", [evidence.accountId]),
+      dimensions("REGION", [evidence.region]),
+      dimensions("SERVICE", ["EC2 - Other"]),
+      dimensions("RECORD_TYPE", ["Usage"])
+    ];
+    const TimePeriod = { Start: start, End: end2 };
+    const unitIsGbMonth = (unit) => typeof unit === "string" && ["gb-mo", "gb-month", "gb-months"].includes(unit.toLowerCase());
+    const usageTypes = /* @__PURE__ */ new Map();
+    let token;
+    const tokens = /* @__PURE__ */ new Set();
+    do {
+      const output = await read("ce", "GetDimensionValues", {
+        TimePeriod,
+        Dimension: "USAGE_TYPE",
+        Context: "COST_AND_USAGE",
+        SearchString: "VolumeUsage.gp2",
+        Filter: { And: filters },
+        ...token ? { NextPageToken: token } : {}
+      }, "us-east-1");
+      requireInput(Array.isArray(output.DimensionValues), "Cost Explorer dimension response lacks values");
+      for (const value of output.DimensionValues) {
+        requireInput(object2(value) && typeof value.Value === "string", "Invalid usage-type dimension");
+        if (!/(?:^|-)EBS:VolumeUsage\.gp2$/.test(value.Value)) continue;
+        const unit = object2(value.Attributes) ? value.Attributes.unit : void 0;
+        requireInput(unitIsGbMonth(unit), `Unsupported or missing usage unit for ${value.Value}`);
+        requireInput(!usageTypes.has(value.Value) || usageTypes.get(value.Value) === unit, `Conflicting usage units for ${value.Value}`);
+        usageTypes.set(value.Value, unit);
+      }
+      token = output.NextPageToken;
+      requireInput(token === void 0 || typeof token === "string" && token.length > 0 && !tokens.has(token), "Invalid or repeated dimension pagination token");
+      if (token) tokens.add(token);
+    } while (token);
+    context.usage_types = [...usageTypes].map(([value, unit]) => ({ value, unit }));
+    if (usageTypes.size === 0) {
+      for (const id of ids) issue(id, "No scoped GP2 storage usage is visible in Cost Explorer");
+      throw new InputError("No scoped GP2 storage usage is visible; this may be billing visibility or absence of data, not zero cost");
+    }
+    context.cost_filter = { And: [...filters, dimensions("USAGE_TYPE", [...usageTypes.keys()])] };
+    tokens.clear();
+    token = void 0;
+    const periods = [];
+    const seenDays = /* @__PURE__ */ new Set();
+    let netCost = 0, unblendedCost = 0, usageQuantity = 0, fallbackPeriods = 0;
+    const metric = (total, name, allowMissing = false) => {
+      const value = total[name];
+      if (allowMissing && (value === void 0 || value === null || value.Amount === null)) return null;
+      requireInput(object2(value) && typeof value.Amount === "string" && value.Amount.trim() !== "", `Missing or invalid ${name} amount`);
+      requireInput(/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.Amount), `Invalid decimal ${name} amount`);
+      const amount = Number(value.Amount);
+      requireInput(Number.isFinite(amount), `Nonfinite ${name} amount`);
+      if (name === "UsageQuantity") requireInput(value.Unit === "N/A" || unitIsGbMonth(value.Unit), "UsageQuantity is not a verified GB-month quantity");
+      else requireInput(value.Unit === "USD", `Unsupported ${name} currency; USD is required`);
+      return amount;
+    };
+    do {
+      const output = await read("ce", "GetCostAndUsage", {
+        TimePeriod,
+        Granularity: "DAILY",
+        Metrics: ["NetUnblendedCost", "UnblendedCost", "UsageQuantity"],
+        Filter: context.cost_filter,
+        ...token ? { NextPageToken: token } : {}
+      }, "us-east-1");
+      requireInput(Array.isArray(output.ResultsByTime), "Cost Explorer cost response lacks periods");
+      for (const value of output.ResultsByTime) {
+        requireInput(object2(value) && object2(value.TimePeriod) && object2(value.Total) && (!Array.isArray(value.Groups) || value.Groups.length === 0), "Invalid or unexpectedly grouped billing period");
+        const periodStart = value.TimePeriod.Start, periodEnd = value.TimePeriod.End;
+        requireInput(typeof periodStart === "string" && typeof periodEnd === "string" && /^\d{4}-\d\d-\d\d$/.test(periodStart) && /^\d{4}-\d\d-\d\d$/.test(periodEnd) && periodStart >= start && periodEnd <= end2 && Date.parse(`${periodEnd}T00:00:00Z`) - Date.parse(`${periodStart}T00:00:00Z`) === day && !seenDays.has(periodStart), "Cost Explorer returned duplicate, overlapping or out-of-window periods");
+        seenDays.add(periodStart);
+        const quantity = metric(value.Total, "UsageQuantity");
+        const unblended = metric(value.Total, "UnblendedCost");
+        const net2 = metric(value.Total, "NetUnblendedCost", true);
+        requireInput(quantity >= 0, "Negative usage quantity cannot establish a GP2 effective rate");
+        requireInput(quantity > 0 || (net2 ?? unblended) === 0 && unblended === 0, "Nonzero cost without storage usage cannot establish a GP2 rate");
+        requireInput(typeof value.Estimated === "boolean", "Billing period lacks its Estimated flag");
+        if (net2 === null) fallbackPeriods++;
+        netCost += net2 ?? unblended;
+        unblendedCost += unblended;
+        usageQuantity += quantity;
+        periods.push({ ...value, selected_cost: net2 ?? unblended, net_metric_fallback: net2 === null });
+      }
+      context.periods = periods;
+      context.totals = { net_cost: netCost, unblended_cost: unblendedCost, usage_quantity: usageQuantity };
+      token = output.NextPageToken;
+      requireInput(token === void 0 || typeof token === "string" && token.length > 0 && !tokens.has(token), "Invalid or repeated cost pagination token");
+      if (token) tokens.add(token);
+    } while (token);
+    requireInput(periods.length > 0 && usageQuantity > 0 && Number.isFinite(usageQuantity), "No positive GP2 storage usage was returned; a rate is unavailable, not zero");
+    requireInput(Number.isFinite(netCost) && netCost >= 0 && Number.isFinite(unblendedCost), "Aggregated billing costs are unusable");
+    const rate = netCost / usageQuantity;
+    requireInput(Number.isFinite(rate) && rate >= 0, "Effective GP2 rate is invalid");
+    context.effective_monthly_gp2_rate = rate;
+    context.currency = "USD";
+    context.quantity_unit = "GB-month (AWS EBS storage quantity)";
+    context.net_metric_fallback_periods = fallbackPeriods;
+    context.estimated_data = periods.some((period) => period.Estimated);
+    context.coverage = { periods_returned: periods.length, requested_days: 31, missing_days: 31 - seenDays.size };
+    if (fallbackPeriods) context.qualifications.push(`NetUnblendedCost was absent or null in ${fallbackPeriods} returned periods; UnblendedCost was used there. Net discounts are not verified for those periods.`);
+    if (context.estimated_data) context.qualifications.push("Cost Explorer marks some source periods Estimated; billing may be revised.");
+    if (seenDays.size !== 31) context.qualifications.push(`Cost Explorer returned ${seenDays.size} of 31 requested daily periods; the rate reflects returned usage only.`);
+    const resources = baselines.map(({ resourceId, sizeGiB, publicAnnualCost }) => {
+      const annualCost = sizeGiB * rate * 12;
+      requireInput(Number.isFinite(annualCost) && annualCost >= 0, `Invalid annual cost for ${resourceId}`);
+      return { resourceId, annualCost, publicAnnualCost };
+    });
+    context.allocations = resources;
+    context.status = "complete";
+    context.completed_at = (/* @__PURE__ */ new Date()).toISOString();
+    return { context, costs: {
+      currency: "USD",
+      source: "AWS Cost Explorer account/region GP2 effective-rate estimate; not per-volume billed cost",
+      period: `${start} <= usage < ${end2} UTC; recorded current volume capacity annualized at 12 months`,
+      resources,
+      billing_evidence: context
+    } };
+  } catch (error2) {
+    context.status = "error";
+    context.error = errorData(error2);
+    context.completed_at = (/* @__PURE__ */ new Date()).toISOString();
+    const failure = error2 instanceof Error ? error2 : new Error(String(error2));
+    Object.assign(failure, { billing_context: context });
+    throw failure;
+  }
+}
+async function billingCli(options, directory, transport) {
+  const context_file = (0, import_node_path6.join)(directory, "billing-context.json");
+  try {
+    const { costs, context } = await collectBilling(options, transport);
+    (0, import_node_fs3.writeFileSync)(context_file, `${JSON.stringify(context, null, 2)}
+`, { mode: 384 });
+    const costs_file = (0, import_node_path6.join)(directory, "costs.json");
+    (0, import_node_fs3.writeFileSync)(costs_file, `${JSON.stringify(costs, null, 2)}
+`, { mode: 384 });
+    process.stdout.write(`${JSON.stringify({ status: "complete", costs_file, billing_context_file: context_file })}
+`);
+    return 0;
+  } catch (error2) {
+    const context = error2?.billing_context ?? { status: "error", error: errorData(error2) };
+    (0, import_node_fs3.writeFileSync)(context_file, `${JSON.stringify(context, null, 2)}
+`, { mode: 384 });
+    process.stdout.write(`${JSON.stringify({ status: "error", billing_context_file: context_file, error: context.error })}
+`);
+    return 1;
+  }
 }
 var HELP = `GP2 assessment using local evidence. Node 22+.
 
   node gp2.cjs assess --region REGION [--profile PROFILE] [--account EXPECTED]
     [--volume-id ID ...] (--cost-basis public | --costs FILE) --out NEW_DIRECTORY
   node gp2.cjs replay --evidence FILE --out NEW_DIRECTORY
+  node gp2.cjs billing --assessment EXISTING_ASSESSMENT_DIRECTORY
+    [--profile BILLING_PROFILE] --out NEW_DIRECTORY
   node gp2.cjs --version
 
 assess uses read-only STS, EC2 and AWS Pricing calls. public means list-price
@@ -212718,15 +217499,22 @@ estimates, not billed savings. --costs JSON requires currency=USD, source, perio
 and resources with resourceId, annualCost, publicAnnualCost. Supplied costs are
 preserved; missing entries fail explicitly.
 replay accepts raw evidence or {evidence, run_context} fixtures; it makes no AWS calls.
-Read summary.json for the assessment. All modes also save complete evidence.json,
+billing uses read-only STS and Cost Explorer calls in us-east-1. It derives an
+account/region GP2 effective-rate estimate, not per-volume billed cost, from the
+31-day UTC window ending yesterday (exclusive). It needs existing billing visibility,
+not CUR. It saves complete billing-context.json on success/error and costs.json only
+on success. Pass that costs file to assess with the same exact account/region/volume
+selection and the workload profile. Missing/unknown billing data never becomes zero.
+Cost Explorer requests may incur AWS charges; this tool changes no billing settings.
+Read summary.json for the assessment. assess/replay also save complete evidence.json,
 context.json and the unchanged native result.json for review and reproduction.
 Exit codes: 0 complete (including negative decisions), 2 needs evidence, 1 error.
 `;
 function argumentsFor(argv) {
   const mode = argv[0];
-  requireInput(mode === "assess" || mode === "replay", "Choose assess or replay; use --help");
+  requireInput(["assess", "replay", "billing"].includes(mode), "Choose assess, replay or billing; use --help");
   const options = { mode, volumeIds: [] };
-  const allowed = mode === "assess" ? ["region", "profile", "account", "volume-id", "cost-basis", "costs", "out"] : ["evidence", "out"];
+  const allowed = mode === "assess" ? ["region", "profile", "account", "volume-id", "cost-basis", "costs", "out"] : mode === "billing" ? ["assessment", "profile", "out"] : ["evidence", "out"];
   for (let i5 = 1; i5 < argv.length; i5 += 2) {
     const key = argv[i5].replace(/^--/, "");
     requireInput(argv[i5].startsWith("--") && allowed.includes(key), `Unknown option ${argv[i5]}`);
@@ -212740,6 +217528,7 @@ function argumentsFor(argv) {
   }
   requireInput(typeof options.out === "string", "--out is required");
   if (mode === "replay") requireInput(typeof options.evidence === "string", "--evidence is required");
+  else if (mode === "billing") requireInput(typeof options.assessment === "string", "--assessment is required");
   else {
     requireInput(typeof options.region === "string", "--region is required");
     requireInput(options["cost-basis"] === "public" !== (options.costs !== void 0), "Choose --cost-basis public or --costs");
@@ -212748,7 +217537,7 @@ function argumentsFor(argv) {
   return options;
 }
 async function cli(argv = process.argv.slice(2), transport) {
-  const commandHelp = ["assess", "replay"].includes(argv[0]) && argv.slice(1).some((argument) => argument === "--help" || argument === "-h");
+  const commandHelp = ["assess", "replay", "billing"].includes(argv[0]) && argv.slice(1).some((argument) => argument === "--help" || argument === "-h");
   if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h" || commandHelp) {
     process.stdout.write(HELP);
     return 0;
@@ -212768,6 +217557,7 @@ async function cli(argv = process.argv.slice(2), transport) {
     const output = (0, import_node_path6.resolve)(args.out);
     (0, import_node_fs3.mkdirSync)(output, { mode: 448 });
     directory = output;
+    if (args.mode === "billing") return await billingCli({ assessment: args.assessment, profile: args.profile }, directory, transport);
     if (args.mode === "replay") {
       const text = (0, import_node_fs3.readFileSync)((0, import_node_path6.resolve)(args.evidence), "utf8");
       context = contextFor("replay", null);
@@ -212997,7 +217787,13 @@ function customerSummary(result2, evidence, context, artifacts) {
       fallback_used: lookups.length ? lookups.some((lookup) => lookup.fallback_used) : null,
       lookup_count: lookups.length,
       fallback_count: lookups.filter((lookup) => lookup.fallback_used).length,
-      lookup_evidence: { artifact: "context", json_pointer: "/pricing_lookups" }
+      lookup_evidence: { artifact: "context", json_pointer: "/pricing_lookups" },
+      ...object2(context.cost_input?.billing_evidence) ? { billing: {
+        method: context.cost_input.billing_evidence.method ?? "unknown",
+        estimate: true,
+        qualifications: context.cost_input.billing_evidence.qualifications ?? [],
+        evidence: { artifact: "context", json_pointer: "/cost_input/billing_evidence" }
+      } } : {}
     },
     configuration: context.configuration ?? null,
     no_candidates: context.no_candidates === true,
@@ -213057,6 +217853,7 @@ if (require.main === module) {
 0 && (module.exports = {
   cli,
   collect,
+  collectBilling,
   customerSummary,
   runNative,
   validateResult
