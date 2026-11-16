@@ -2,9 +2,28 @@
 
 AWS cost optimization skills and tools for your agent. **Public preview: EBS GP2 to GP3.**
 
-Give your agent this repository URL. It can select the published release and fetch its skill and executable without a GitHub login or permanent skill installation. Implementation source, build tooling, tests and customer run data are maintained separately.
+Give your agent this repository URL and choose the instruction-only or executable variant. It can select a commit or published release and fetch that package without a GitHub login or permanent skill installation. Implementation source, build tooling, tests and customer run data are maintained separately.
 
-## Available skill
+## Available skills
+
+The executable preview and a separately named instruction-only comparison follow the same pinned GP2 algorithm:
+
+| Skill | How it runs | Package |
+| --- | --- | --- |
+| `co-gp2-to-gp3` | Executes the original TypeScript finder locally | `SKILL.md` plus `scripts/gp2.cjs`; Node 22+ |
+| `co-gp2-to-gp3-guided` | Your agent follows the same rules using its AWS tools and calculator | One `SKILL.md`; no bundled executable or required language runtime |
+
+### Instruction-only variant
+
+Read [`co-gp2-to-gp3-guided`](skills/co-gp2-to-gp3-guided/SKILL.md) when you want the skill-only version. It includes the same validation order, local defaults, sizing/pricing formulas, CE effective-rate calculation, failure handling and requested change workflow. It produces a labelled harness assessment, not JSON emitted by the native finder. Calculations must use the harness's calculator or execution tools; a language model must not invent or mentally estimate the numbers.
+
+Fetch only `skills/co-gp2-to-gp3-guided/SKILL.md` and `LICENSE` from one full commit SHA. You do not need to clone the repository, download the sibling executable or install a skill permanently. Record the selected commit; a future release containing this variant can be selected and resolved to a commit in the same way. This instruction-only comparison is delivered separately from the executable release candidate `v0.1.0-preview.1` described below; use a commit containing this file. It is not part of that draft release target.
+
+> Follow the co-gp2-to-gp3-guided skill at COMMIT_PINNED_SKILL_URL. Assess GP2 volumes in AWS account ACCOUNT_ID, region REGION, using my existing AWS tools and billing estimates. Use the skill's exact algorithm and a calculator. Prepare the appropriate proposed change; do not apply changes or merge a PR.
+
+Billing uses the same read actions and disclosed CE request charges described below. Use the selected skill's instructions for its result format and workflow; the executable commands, Node requirement, artifact filenames and checksum below apply to `co-gp2-to-gp3`.
+
+### Original-finder executable variant
 
 [`co-gp2-to-gp3`](https://github.com/trilogy-ai-group/cloudfix-ai/blob/v0.1.0-preview.1/skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
 
