@@ -5,7 +5,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Sequence
+from typing import Any, Literal, Mapping, Sequence
 
 from cloudfix.common.errors import InputError
 
@@ -77,15 +77,7 @@ def _validate(s: Setting, value: Any) -> Any:
     return value
 
 
-def load_config(path: Path, settings: Sequence[Setting]) -> dict[str, Any]:
-    try:
-        raw = json.loads(Path(path).read_text(encoding="utf-8"))
-    except OSError as e:
-        raise InputError(f"cannot read config {path}: {e.strerror or e}") from e
-    except json.JSONDecodeError as e:
-        raise InputError(f"config {path} is not valid JSON: {e}") from e
-    if not isinstance(raw, dict):
-        raise InputError("config must be a JSON object")
+def validate_config(raw: Mapping[str, Any], settings: Sequence[Setting]) -> dict[str, Any]:
     known = {s.name: s for s in settings}
     for key in raw:
         if key not in known:
@@ -99,3 +91,15 @@ def load_config(path: Path, settings: Sequence[Setting]) -> dict[str, Any]:
         else:
             config[s.name] = s.default
     return config
+
+
+def load_config(path: Path, settings: Sequence[Setting]) -> dict[str, Any]:
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except OSError as e:
+        raise InputError(f"cannot read config {path}: {e.strerror or e}") from e
+    except json.JSONDecodeError as e:
+        raise InputError(f"config {path} is not valid JSON: {e}") from e
+    if not isinstance(raw, dict):
+        raise InputError("config must be a JSON object")
+    return validate_config(raw, settings)
