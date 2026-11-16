@@ -13,8 +13,8 @@ SettingType = Literal[
     "string", "integer", "number", "string_list", "account_id", "region", "choice", "path"
 ]
 
-_REGION = re.compile(r"^[a-z]{2}(-[a-z]+)+-\d$")
-_ACCOUNT = re.compile(r"^\d{12}$")
+_REGION = re.compile(r"[a-z]{2}(-[a-z]+)+-[0-9]")
+_ACCOUNT = re.compile(r"[0-9]{12}")
 
 
 @dataclass(frozen=True)
@@ -64,10 +64,10 @@ def _validate(s: Setting, value: Any) -> Any:
         if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
             raise bad("expected a list of strings")
     elif s.type == "account_id":
-        if not isinstance(value, str) or not _ACCOUNT.match(value):
+        if not isinstance(value, str) or not _ACCOUNT.fullmatch(value):
             raise bad("expected a 12-digit account id")
     elif s.type == "region":
-        if not isinstance(value, str) or not _REGION.match(value):
+        if not isinstance(value, str) or not _REGION.fullmatch(value):
             raise bad("expected an AWS region such as us-east-1")
     elif s.type == "choice":
         if value not in s.choices:

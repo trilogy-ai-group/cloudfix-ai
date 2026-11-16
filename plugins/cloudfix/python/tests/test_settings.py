@@ -42,13 +42,13 @@ def test_rejects_missing_required(tmp_path):
         load_config(_cfg(tmp_path, {}), SETTINGS)
 
 
-@pytest.mark.parametrize("bad", ["12345", "12345678901a", "1234567890123", 123456789012])
+@pytest.mark.parametrize("bad", ["12345", "12345678901a", "1234567890123", 123456789012, "123456789012\n", "١٢٣٤٥٦٧٨٩٠١٢"])
 def test_rejects_bad_account(tmp_path, bad):
     with pytest.raises(InputError):
         load_config(_cfg(tmp_path, {"account": bad}), SETTINGS)
 
 
-@pytest.mark.parametrize("bad", ["us-east", "US-EAST-1", "useast1", "us-east-12"])
+@pytest.mark.parametrize("bad", ["us-east", "US-EAST-1", "useast1", "us-east-12", "us-east-1\n", "us-east-١"])
 def test_rejects_bad_region(tmp_path, bad):
     with pytest.raises(InputError):
         load_config(_cfg(tmp_path, {"account": "123456789012", "region": bad}), SETTINGS)
