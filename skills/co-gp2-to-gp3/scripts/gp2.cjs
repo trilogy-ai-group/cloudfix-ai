@@ -55,7 +55,7 @@ var __decorateParam = (index, decorator) => (target, key) => decorator(target, k
 var define_CLOUDFIX_BUILD_default;
 var init_define_CLOUDFIX_BUILD = __esm({
   "<define:__CLOUDFIX_BUILD__>"() {
-    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "52ab4264f0be0f7fb2533d2e9be60febfb5a243e01821b949049bd62e3462c04" };
+    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "640cbab21212132d5efe46a1d3f92e282a4ee10334955bef4d2a3b538d648edc" };
   }
 });
 
@@ -216837,28 +216837,86 @@ async function nativeEntry() {
 var jsonCopy = (value) => JSON.parse(JSON.stringify(value));
 var errorData = (error2) => ({
   code: error2 instanceof InputError ? "invalid_input" : String(error2?.name || "Error"),
-  message: error2 instanceof Error ? error2.message : "The assessment could not complete."
+  message: error2 instanceof Error ? error2.message : typeof error2 === "string" ? error2 : "The assessment could not complete.",
+  ...error2?.aws_request ? { aws_request: error2.aws_request } : {}
 });
+function awsReadFailure(error2, entry) {
+  const failure = error2 instanceof Error ? error2 : new Error(String(error2));
+  Object.assign(failure, { aws_request: {
+    action: `${entry.service}:${entry.operation}`,
+    profile: entry.profile,
+    region: entry.region,
+    input: jsonCopy(entry.input)
+  } });
+  return failure;
+}
+var DEFAULT_CONFIGURATION = { volumeAgeThreshold: 7, minimalSavings: 0 };
+function runMetadata(context) {
+  const configuration = object2(context.configuration) ? context.configuration : {};
+  return {
+    run_classification: context.experiment != null ? "experimental" : "standard",
+    experiment: context.experiment ?? null,
+    configuration_overrides: Object.fromEntries(Object.entries(configuration).filter(([key, value]) => !(0, import_node_util.isDeepStrictEqual)(value, DEFAULT_CONFIGURATION[key])))
+  };
+}
+function applyExperiment(context, supplied, reason) {
+  if (supplied !== void 0) context.experiment = structuredClone(supplied);
+  if (context.experiment != null) requireInput(
+    object2(context.experiment) && typeof context.experiment.reason === "string" && context.experiment.reason.trim().length > 0,
+    "experiment must be an object with a nonempty reason"
+  );
+  if (reason !== void 0) {
+    requireInput(reason.trim().length > 0, "--experiment-reason must be nonempty");
+    requireInput(
+      context.experiment == null || context.experiment.reason === reason,
+      "--experiment-reason conflicts with the recorded experiment reason"
+    );
+    if (context.experiment == null) context.experiment = { reason };
+  }
+}
+function claimsCeCostBasis(context) {
+  return context.cost_basis === "ce_account_region_gp2_effective_rate" || context.cost_basis === "caller_supplied_costs" && context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate";
+}
+function completeCeCostEvidence(context) {
+  return context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate" && context.cost_input.billing_evidence.status === "complete" && context.cost_input.currency === "USD" && typeof context.cost_input.source === "string" && context.cost_input.source.length > 0 && typeof context.cost_input.period === "string" && context.cost_input.period.length > 0;
+}
+function validateCostProvenance(context) {
+  if (!claimsCeCostBasis(context) || billingPending(context)) return;
+  requireInput(completeCeCostEvidence(context), "Cost Explorer cost basis requires complete CE billing evidence");
+}
+function effectiveCostBasis(context) {
+  if (billingPending(context)) return "billing_estimate_unavailable";
+  if (claimsCeCostBasis(context)) return completeCeCostEvidence(context) ? "ce_account_region_gp2_effective_rate" : "billing_estimate_unavailable";
+  return context.cost_basis ?? "unknown";
+}
 function readAssessment(directory, record) {
   const inputs = {};
+  const failures = [];
   record.directory = (0, import_node_path6.resolve)(directory);
   record.files = {};
   for (const name of ["summary", "evidence", "context", "result"]) {
     const file = (0, import_node_path6.join)(record.directory, `${name}.json`);
-    const raw = (0, import_node_fs3.readFileSync)(file, "utf8");
-    const item = { path: file, sha256: (0, import_node_crypto8.createHash)("sha256").update(raw).digest("hex") };
+    const item = { path: file };
     record.files[name] = item;
     try {
-      item.document = inputs[name] = JSON.parse(raw);
+      const raw = (0, import_node_fs3.readFileSync)(file, "utf8");
+      item.sha256 = (0, import_node_crypto8.createHash)("sha256").update(raw).digest("hex");
+      try {
+        item.document = inputs[name] = JSON.parse(raw);
+      } catch (error2) {
+        item.original_text = raw;
+        throw error2;
+      }
     } catch (error2) {
-      item.original_text = raw;
-      throw error2;
+      item.error = errorData(error2);
+      failures.push(error2);
     }
   }
+  if (failures.length) throw failures[0];
   return inputs;
 }
 function billingPending(context) {
-  return object2(context.billing_request) && !["complete", "not_needed"].includes(context.billing_request.status);
+  return context.cost_basis === "billing_estimate_unavailable" || object2(context.billing_request) && !["complete", "not_needed"].includes(context.billing_request.status);
 }
 function unpricedEvidence(evidence) {
   if (!object2(evidence)) return evidence;
@@ -216879,7 +216937,7 @@ function validateEmptyScope(evidence, context) {
     !reads.some((row) => row?.operation === "DescribeVolumes" && row.error === void 0 && Array.isArray(row.output?.Volumes) && row.output.Volumes.length > 0),
     "The no-volumes result conflicts with recorded volumes."
   );
-  const inventory = (Array.isArray(context.reads) ? context.reads : []).filter((row) => row?.operation === "DescribeVolumes");
+  const inventory = (Array.isArray(context.reads) ? context.reads : []).filter((row) => row?.operation === "DescribeVolumes" && row.input?.DryRun !== true);
   requireInput(inventory.length > 0, "No completed GP2 inventory was recorded; absence of evidence is not an empty account.");
   let token;
   let finished = false;
@@ -217072,6 +217130,7 @@ async function collect(options, transport) {
   const evidence = { asOf: context.started_at, region: options.region, resources: [], responses: [] };
   context.cost_input = options.costs ?? null;
   try {
+    applyExperiment(context, options.experiment);
     requireInput(typeof options.region === "string" && /^[a-z]{2}(?:-[a-z]+)+-\d$/.test(options.region), "region must be explicit");
     requireInput(options.costBasis === "public" !== (options.costs !== void 0), "Choose --cost-basis public or --costs");
     if (options.account !== void 0) requireInput(/^\d{12}$/.test(options.account), "account must contain 12 digits");
@@ -217080,17 +217139,33 @@ async function collect(options, transport) {
     requireInput(new Set(ids).size === ids.length, "Duplicate volume IDs are not allowed");
     const send = transport ?? realTransport(options);
     const read = async (service, operation2, input, region) => {
-      const entry = { service, operation: operation2, region, input: jsonCopy(input), observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+      const entry = {
+        service,
+        operation: operation2,
+        region,
+        profile: options.profile ?? process.env.AWS_PROFILE ?? process.env.AWS_DEFAULT_PROFILE ?? "default credential chain",
+        input: jsonCopy(input),
+        observed_at: (/* @__PURE__ */ new Date()).toISOString()
+      };
       context.reads.push(entry);
       try {
         const output = jsonCopy(await send(service, operation2, input, region));
         requireInput(object2(output), `Invalid ${operation2} response`);
         entry.output = output;
+        requireInput(input.DryRun !== true, `EC2 ${operation2} dry run did not return DryRunOperation`);
         return output;
       } catch (error2) {
-        entry.error = errorData(error2);
-        throw error2;
+        if (service === "ec2" && input.DryRun === true && error2?.name === "DryRunOperation") {
+          entry.access_check = { status: "authorized", response: errorData(error2) };
+          return {};
+        }
+        const failure = awsReadFailure(error2, entry);
+        entry.error = errorData(failure);
+        throw failure;
       }
+    };
+    const accessCheck = async (operation2, input) => {
+      await read("ec2", operation2, { ...input, DryRun: true }, options.region);
     };
     const identity2 = await read("sts", "GetCallerIdentity", {}, options.region);
     requireInput(typeof identity2.Account === "string" && /^\d{12}$/.test(identity2.Account), "AWS identity did not return an account");
@@ -217106,42 +217181,6 @@ async function collect(options, transport) {
     if (options.costs?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
       requireInput(ids.length > 0, "CE cost estimates require the same explicit --volume-id selection; do not rediscover the account");
       validateBillingScope(options.costs, evidence.accountId, options.region, ids);
-    }
-    const volumes = [];
-    const batches = ids.length ? Array.from({ length: Math.ceil(ids.length / 200) }, (_4, i5) => ids.slice(i5 * 200, i5 * 200 + 200)) : [[]];
-    for (const batch of batches) {
-      const base = { Filters: [{ Name: batch.length ? "volume-id" : "volume-type", Values: batch.length ? batch : ["gp2"] }] };
-      let token;
-      const tokens = /* @__PURE__ */ new Set();
-      do {
-        const input = token === void 0 ? base : { ...base, NextToken: token };
-        const output = await read("ec2", "DescribeVolumes", input, options.region);
-        requireInput(Array.isArray(output.Volumes), "DescribeVolumes response lacks Volumes");
-        volumes.push(...output.Volumes);
-        if (batch.length) evidence.responses.push({ operation: "DescribeVolumes", input, output });
-        const next = output.NextToken;
-        requireInput(next === void 0 || typeof next === "string", "Invalid volume pagination token");
-        token = next;
-        if (token) {
-          requireInput(!tokens.has(token), "DescribeVolumes repeated a pagination token");
-          tokens.add(token);
-        }
-      } while (token);
-    }
-    const selected = ids.length ? ids : volumes.map((v) => {
-      requireInput(object2(v) && typeof v.VolumeId === "string", "Discovery returned a volume without an ID");
-      return v.VolumeId;
-    });
-    requireInput(new Set(selected).size === selected.length, "Discovery returned duplicate volume IDs");
-    context.scope = { account: evidence.accountId, region: options.region, selected_volume_ids: selected, discovery: ids.length ? "selected_ids" : "DescribeVolumes gp2 inventory" };
-    context.cost_basis = options.costs ? "caller_supplied_costs" : "public_price_estimate";
-    context.cost_input = options.costs ?? null;
-    if (options.costs?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
-      validateBillingScope(options.costs, evidence.accountId, options.region, selected, volumes);
-    }
-    if (selected.length === 0) {
-      context.no_candidates = true;
-      return { evidence, context };
     }
     process.env.POWERTOOLS_TRACE_DISABLED = "true";
     require_Reflect();
@@ -217179,6 +217218,44 @@ async function collect(options, transport) {
       gp2: await pricing.getEbsVolumePricing(options.region, "gp2"),
       gp3: await pricing.getEbsVolumePricing(options.region, "gp3")
     };
+    const volumes = [];
+    const batches = ids.length ? Array.from({ length: Math.ceil(ids.length / 200) }, (_4, i5) => ids.slice(i5 * 200, i5 * 200 + 200)) : [[]];
+    for (const batch of batches) {
+      const base = { Filters: [{ Name: batch.length ? "volume-id" : "volume-type", Values: batch.length ? batch : ["gp2"] }] };
+      await accessCheck("DescribeVolumes", base);
+      let token;
+      const tokens = /* @__PURE__ */ new Set();
+      do {
+        const input = token === void 0 ? base : { ...base, NextToken: token };
+        const output = await read("ec2", "DescribeVolumes", input, options.region);
+        requireInput(Array.isArray(output.Volumes), "DescribeVolumes response lacks Volumes");
+        volumes.push(...output.Volumes);
+        if (batch.length) evidence.responses.push({ operation: "DescribeVolumes", input, output });
+        const next = output.NextToken;
+        requireInput(next === void 0 || typeof next === "string", "Invalid volume pagination token");
+        token = next;
+        if (token) {
+          requireInput(!tokens.has(token), "DescribeVolumes repeated a pagination token");
+          tokens.add(token);
+        }
+      } while (token);
+    }
+    const selected = ids.length ? ids : volumes.map((v) => {
+      requireInput(object2(v) && typeof v.VolumeId === "string", "Discovery returned a volume without an ID");
+      return v.VolumeId;
+    });
+    requireInput(new Set(selected).size === selected.length, "Discovery returned duplicate volume IDs");
+    context.scope = { account: evidence.accountId, region: options.region, selected_volume_ids: selected, discovery: ids.length ? "selected_ids" : "DescribeVolumes gp2 inventory" };
+    context.cost_basis = options.costs ? "caller_supplied_costs" : "public_price_estimate";
+    context.cost_basis = effectiveCostBasis(context);
+    context.cost_input = options.costs ?? null;
+    if (options.costs?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
+      validateBillingScope(options.costs, evidence.accountId, options.region, selected, volumes);
+    }
+    if (selected.length === 0) {
+      context.no_candidates = true;
+      return { evidence, context };
+    }
     const capturedPricing = { getEbsVolumePricing: async (region, type) => {
       requireInput(region === evidence.region && ["gp2", "gp3"].includes(type), "Unexpected baseline pricing request");
       return evidence.prices[type];
@@ -217218,6 +217295,7 @@ async function collect(options, transport) {
         !evidence.responses.some((row) => row.operation === request.operation && (0, import_node_util.isDeepStrictEqual)(row.input, request.input)),
         "Finder requested evidence already supplied"
       );
+      if (request.operation === "DescribeInstances" && request.input.NextToken === void 0) await accessCheck(request.operation, request.input);
       const output = await read("ec2", request.operation, request.input, options.region);
       evidence.responses.push({ operation: request.operation, input: request.input, output });
     }
@@ -217245,18 +217323,14 @@ function validateBillingScope(costs, account, region, ids, volumes) {
     }
   }
 }
-function replayInput(original) {
-  requireInput(object2(original), "Evidence must be an object or fixture packet");
-  const packet = Object.prototype.hasOwnProperty.call(original, "evidence");
-  const evidence = structuredClone(packet ? original.evidence : original);
-  requireInput(object2(evidence), "Packet evidence must be an object");
-  const configuration = packet && object2(original.run_context) ? original.run_context.configuration : void 0;
-  if (configuration !== void 0) {
-    requireInput(evidence.configuration === void 0 || (0, import_node_util.isDeepStrictEqual)(evidence.configuration, configuration), "Conflicting evidence and packet configuration");
-    evidence.configuration = structuredClone(configuration);
-  }
+function replayInput(original, experimentReason) {
   const context = contextFor("replay", original);
-  if (packet && object2(original.run_context)) {
+  let evidence = null;
+  try {
+    applyExperiment(context, void 0, experimentReason);
+    requireInput(object2(original), "Evidence must be an object or fixture packet");
+    const packet = Object.prototype.hasOwnProperty.call(original, "evidence");
+    const suppliedContext = packet && object2(original.run_context) ? original.run_context : {};
     for (const key of [
       "scope",
       "reads",
@@ -217266,25 +217340,34 @@ function replayInput(original) {
       "billing_request",
       "billing_attempt",
       "resource_collection",
-      "resume_source"
+      "resume_source",
+      "assessment_request",
+      "configuration"
     ]) {
-      if (original.run_context[key] !== void 0) context[key] = structuredClone(original.run_context[key]);
+      if (suppliedContext[key] !== void 0) context[key] = structuredClone(suppliedContext[key]);
     }
-    context.reads_origin = "supplied_run_context";
-  }
-  if (evidence.asOf === void 0) evidence.asOf = context.started_at;
-  context.assessment_clock_basis = (packet ? original.evidence.asOf : original.asOf) === void 0 ? "recorded_at_invocation" : "caller_supplied";
-  context.cost_basis = packet && object2(original.run_context) ? original.run_context.cost_basis ?? "supplied_evidence" : "supplied_evidence";
-  context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
-  if (billingPending(context)) {
-    const previousError = packet && object2(original.run_context) ? original.run_context.error : void 0;
-    const failure = new Error(previousError?.message ?? "Billing did not complete; resume billing or start an explicit public-price assessment.");
-    failure.name = previousError?.code ?? "BillingUnavailable";
-    Object.assign(failure, { partial: { evidence, context } });
-    throw failure;
-  }
-  if (context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
-    try {
+    applyExperiment(context, suppliedContext.experiment, experimentReason);
+    if (packet) context.reads_origin = "supplied_run_context";
+    context.cost_basis = suppliedContext.cost_basis ?? "supplied_evidence";
+    evidence = structuredClone(packet ? original.evidence : original);
+    requireInput(object2(evidence), "Packet evidence must be an object");
+    const configuration = suppliedContext.configuration;
+    context.configuration = configuration ?? evidence.configuration ?? DEFAULT_CONFIGURATION;
+    if (configuration !== void 0) {
+      requireInput(evidence.configuration === void 0 || (0, import_node_util.isDeepStrictEqual)(evidence.configuration, configuration), "Conflicting evidence and packet configuration");
+      evidence.configuration = structuredClone(configuration);
+    }
+    context.assessment_clock_basis = evidence.asOf === void 0 ? "recorded_at_invocation" : "caller_supplied";
+    if (evidence.asOf === void 0) evidence.asOf = context.started_at;
+    validateCostProvenance(context);
+    context.cost_basis = effectiveCostBasis(context);
+    if (billingPending(context)) {
+      const failure = new Error(suppliedContext.error?.message ?? "Billing did not complete; resume billing or start an explicit public-price assessment.");
+      failure.name = suppliedContext.error?.code ?? "BillingUnavailable";
+      if (suppliedContext.error?.aws_request) Object.assign(failure, { aws_request: structuredClone(suppliedContext.error.aws_request) });
+      throw failure;
+    }
+    if (context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
       const volumes = Array.isArray(evidence.responses) ? evidence.responses.flatMap((response) => response?.operation === "DescribeVolumes" && Array.isArray(response.output?.Volumes) ? response.output.Volumes : []) : [];
       validateBillingScope(
         context.cost_input,
@@ -217293,13 +217376,13 @@ function replayInput(original) {
         Array.isArray(evidence.resources) ? evidence.resources.map((row) => row?.resourceId) : [],
         volumes
       );
-    } catch (error2) {
-      const failure = error2 instanceof Error ? error2 : new Error(String(error2));
-      Object.assign(failure, { partial: { evidence, context } });
-      throw failure;
     }
+    return { evidence, context };
+  } catch (error2) {
+    const failure = error2 instanceof Error ? error2 : new Error(String(error2));
+    Object.assign(failure, { partial: { evidence, context } });
+    throw failure;
   }
-  return { evidence, context };
 }
 async function collectBilling(options, transport, now = /* @__PURE__ */ new Date(), collection) {
   const context = {
@@ -217334,6 +217417,7 @@ async function collectBilling(options, transport, now = /* @__PURE__ */ new Date
       requireInput(typeof options.assessment === "string" && options.assessment.length > 0, "A saved assessment directory is required");
       inputs = readAssessment(options.assessment, context.assessment);
       requireInput(inputs.summary?.status === "complete" && inputs.context?.status === "complete", "Billing needs a completed saved assessment");
+      validateCostProvenance(inputs.context);
     }
     if (inputs.context.no_candidates === true) {
       validateEmptyScope(inputs.evidence, inputs.context);
@@ -217407,7 +217491,14 @@ async function collectBilling(options, transport, now = /* @__PURE__ */ new Date
       };
     }
     const read = async (service, operation2, input, region) => {
-      const entry = { service, operation: operation2, region, input: jsonCopy(input), observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+      const entry = {
+        service,
+        operation: operation2,
+        region,
+        profile: options.profile ?? process.env.AWS_PROFILE ?? process.env.AWS_DEFAULT_PROFILE ?? "default credential chain",
+        input: jsonCopy(input),
+        observed_at: (/* @__PURE__ */ new Date()).toISOString()
+      };
       context.reads.push(entry);
       try {
         const output = jsonCopy(await send(service, operation2, input, region));
@@ -217415,8 +217506,9 @@ async function collectBilling(options, transport, now = /* @__PURE__ */ new Date
         entry.output = output;
         return output;
       } catch (error2) {
-        entry.error = errorData(error2);
-        throw error2;
+        const failure = awsReadFailure(error2, entry);
+        entry.error = errorData(failure);
+        throw failure;
       }
     };
     context.billing_identity = await read("sts", "GetCallerIdentity", {}, "us-east-1");
@@ -217576,12 +217668,16 @@ async function assessWithBilling(args, transport) {
   let evidence = null;
   let context = contextFor(transport ? "recorded_collection_test" : "live_collection", jsonCopy(args));
   const request = { status: "collecting_resources", profile: args["billing-profile"] ?? args.profile ?? null };
+  context.assessment_request = jsonCopy(args);
   try {
+    applyExperiment(context, void 0, args["experiment-reason"]);
     let collection;
     if (args.resume) {
       const record = {};
       context.resume_source = record;
       const previous = readAssessment(args.resume, record);
+      context.configuration = previous.context?.configuration;
+      applyExperiment(context, previous.context?.experiment, args["experiment-reason"]);
       requireInput(
         previous.context?.status === "error" && previous.summary?.status === "error" && previous.context.billing_request?.status === "failed" && previous.context.resource_collection?.status === "complete",
         "Resume requires a failed billing run with completed resource collection; otherwise start a new assessment."
@@ -217591,6 +217687,7 @@ async function assessWithBilling(args, transport) {
       if (previous.evidence?.configuration !== void 0) expected.configuration = collection.context.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
       requireInput((0, import_node_util.isDeepStrictEqual)(previous.evidence, expected) && (0, import_node_util.isDeepStrictEqual)(previous.context.scope, collection.context.scope), "Saved resource evidence changed; start a new assessment.");
       context = structuredClone(collection.context);
+      applyExperiment(context, previous.context.experiment, args["experiment-reason"]);
       context.mode = "billing_resume";
       context.started_at = (/* @__PURE__ */ new Date()).toISOString();
       context.resume_source = record;
@@ -217603,10 +217700,12 @@ async function assessWithBilling(args, transport) {
         profile: args.profile,
         account: args.account,
         volumeIds: args.volumeIds,
-        costBasis: "public"
+        costBasis: "public",
+        experiment: args["experiment-reason"] === void 0 ? void 0 : { reason: args["experiment-reason"] }
       }, transport);
       context = structuredClone(collection.context);
     }
+    context.assessment_request = jsonCopy(args);
     evidence = structuredClone(collection.evidence);
     context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
     context.resource_collection = { status: "complete", evidence: structuredClone(evidence), context: jsonCopy(collection.context) };
@@ -217625,16 +217724,22 @@ async function assessWithBilling(args, transport) {
     validateBillingScope(billed.costs, evidence.accountId, evidence.region, evidence.resources.map((row) => row.resourceId), volumes);
     evidence.resources = jsonCopy(billed.costs.resources);
     context.cost_input = billed.costs;
-    context.cost_basis = "caller_supplied_costs";
     request.status = "complete";
+    context.cost_basis = "ce_account_region_gp2_effective_rate";
     return { evidence, context };
   } catch (error2) {
     const partial2 = error2?.partial;
     if (partial2) ({ evidence, context } = partial2);
     if (error2?.billing_context) context.billing_attempt = error2.billing_context;
+    const inheritedContext = context.resume_source?.files?.context?.document;
+    if (object2(inheritedContext)) {
+      if (inheritedContext.experiment != null) context.experiment = structuredClone(inheritedContext.experiment);
+      if (inheritedContext.configuration !== void 0) context.configuration = structuredClone(inheritedContext.configuration);
+    }
     request.status = "failed";
     context.billing_request = request;
     context.cost_basis = "billing_estimate_unavailable";
+    context.assessment_request = jsonCopy(args);
     if (!context.resource_collection) context.resource_collection = { status: "incomplete", evidence: jsonCopy(evidence), context: jsonCopy(context) };
     evidence = unpricedEvidence(evidence);
     const failure = error2 instanceof Error ? error2 : new Error(String(error2));
@@ -217646,10 +217751,10 @@ var HELP = `GP2 assessment using local evidence. Node 22+.
 
   node gp2.cjs assess --region REGION [--profile PROFILE] [--account EXPECTED]
     [--volume-id ID ...] (--cost-basis public|billing | --costs FILE)
-    [--billing-profile BILLING_PROFILE] --out NEW_DIRECTORY
+    [--billing-profile BILLING_PROFILE] [--experiment-reason REASON] --out NEW_DIRECTORY
   node gp2.cjs assess --cost-basis billing --resume FAILED_DIRECTORY
-    [--billing-profile BILLING_PROFILE] --out NEW_DIRECTORY
-  node gp2.cjs replay --evidence FILE --out NEW_DIRECTORY
+    [--billing-profile BILLING_PROFILE] [--experiment-reason REASON] --out NEW_DIRECTORY
+  node gp2.cjs replay --evidence FILE [--experiment-reason REASON] --out NEW_DIRECTORY
   node gp2.cjs billing --assessment EXISTING_ASSESSMENT_DIRECTORY
     [--profile BILLING_PROFILE] --out NEW_DIRECTORY
   node gp2.cjs --version
@@ -217665,6 +217770,11 @@ Billing failure exits 1 with resource evidence retained and no savings result.
 assessment time; it does not refresh resource state. Scope overrides are forbidden.
 No GP2 volumes is a successful no-op and makes no Cost Explorer calls.
 replay accepts raw evidence or {evidence, run_context} fixtures; it makes no AWS calls.
+Mark experiments explicitly with --experiment-reason or run_context.experiment:{reason,...}.
+Markers and configuration overrides persist in summary/context across replay and resume.
+Replay or configuration overrides alone do not classify a run as experimental.
+Identity is checked first; required Pricing reads precede inventory. Scoped EC2 DryRun
+checks cover needed reads only, not future requests. There is no additional paid CE probe.
 billing uses read-only STS and Cost Explorer calls in us-east-1. It derives an
 account/region GP2 effective-rate estimate, not per-volume billed cost, from the
 31-day UTC window ending yesterday (exclusive). It needs existing billing visibility,
@@ -217681,7 +217791,7 @@ function argumentsFor(argv) {
   const mode = argv[0];
   requireInput(["assess", "replay", "billing"].includes(mode), "Choose assess, replay or billing; use --help");
   const options = { mode, volumeIds: [] };
-  const allowed = mode === "assess" ? ["region", "profile", "account", "volume-id", "cost-basis", "costs", "billing-profile", "resume", "out"] : mode === "billing" ? ["assessment", "profile", "out"] : ["evidence", "out"];
+  const allowed = mode === "assess" ? ["region", "profile", "account", "volume-id", "cost-basis", "costs", "billing-profile", "resume", "experiment-reason", "out"] : mode === "billing" ? ["assessment", "profile", "out"] : ["evidence", "experiment-reason", "out"];
   for (let i5 = 1; i5 < argv.length; i5 += 2) {
     const key = argv[i5].replace(/^--/, "");
     requireInput(argv[i5].startsWith("--") && allowed.includes(key), `Unknown option ${argv[i5]}`);
@@ -217722,19 +217832,23 @@ async function cli(argv = process.argv.slice(2), transport) {
   let evidence = null;
   let context = { pricing_lookups: [] };
   let rawResult;
+  let invocation;
   try {
     requireInput(Number(process.versions.node.split(".")[0]) >= 22, "Node 22 or later is required");
     const args = argumentsFor(argv);
+    invocation = jsonCopy(args);
     const output = (0, import_node_path6.resolve)(args.out);
     (0, import_node_fs3.mkdirSync)(output, { mode: 448 });
     directory = output;
+    context = contextFor(args.mode, jsonCopy(args));
+    applyExperiment(context, void 0, args["experiment-reason"]);
     if (args.mode === "billing") return await billingCli({ assessment: args.assessment, profile: args.profile }, directory, transport);
     if (args.mode === "replay") {
       const text = (0, import_node_fs3.readFileSync)((0, import_node_path6.resolve)(args.evidence), "utf8");
-      context = contextFor("replay", null);
+      context.original_input = null;
       context.original_input_text = text;
       const original = JSON.parse(text);
-      ({ evidence, context } = replayInput(original));
+      ({ evidence, context } = replayInput(original, args["experiment-reason"]));
     } else if (args["cost-basis"] === "billing") {
       ({ evidence, context } = await assessWithBilling(args, transport));
     } else {
@@ -217744,11 +217858,14 @@ async function cli(argv = process.argv.slice(2), transport) {
         account: args.account,
         volumeIds: args.volumeIds,
         costBasis: args["cost-basis"],
-        costs: args.costs ? JSON.parse((0, import_node_fs3.readFileSync)((0, import_node_path6.resolve)(args.costs), "utf8")) : void 0
+        costs: args.costs ? JSON.parse((0, import_node_fs3.readFileSync)((0, import_node_path6.resolve)(args.costs), "utf8")) : void 0,
+        experiment: args["experiment-reason"] === void 0 ? void 0 : { reason: args["experiment-reason"] }
       };
       ({ evidence, context } = await collect(options, transport));
     }
-    context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
+    context.invocation = invocation;
+    if (args.mode === "assess") context.assessment_request = invocation;
+    context.configuration = evidence.configuration ?? DEFAULT_CONFIGURATION;
     let native = { result: [], raw: "[]\n", exitCode: 0 };
     if (context.no_candidates) validateEmptyScope(evidence, context);
     if (!context.no_candidates) native = await runNative(evidence);
@@ -217761,6 +217878,9 @@ async function cli(argv = process.argv.slice(2), transport) {
   } catch (error2) {
     const partial2 = error2?.partial;
     if (partial2) ({ evidence, context } = partial2);
+    context.invocation = invocation;
+    if (invocation?.mode === "assess") context.assessment_request = invocation;
+    context.cost_basis = effectiveCostBasis(context);
     if (billingPending(context)) {
       evidence = unpricedEvidence(evidence);
       rawResult = void 0;
@@ -217947,8 +218067,10 @@ function customerSummary(result2, evidence, context, artifacts) {
   }
   const lookups = context.pricing_lookups ?? [];
   const nativeFailure = object2(result2) ? result2 : {};
-  const ceRate = context.cost_basis === "caller_supplied_costs" && !billingPending(context) && context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate" && context.cost_input.billing_evidence.status === "complete";
+  const basis = effectiveCostBasis(context);
+  const ceRate = basis === "ce_account_region_gp2_effective_rate" && context.status === "complete";
   return {
+    ...runMetadata(context),
     status: context.status,
     mode: context.mode ?? null,
     assessed_at: input.asOf ?? context.started_at ?? null,
@@ -217958,7 +218080,7 @@ function customerSummary(result2, evidence, context, artifacts) {
       selected_volume_ids: selectedIds
     },
     cost_basis: {
-      kind: ceRate ? "ce_account_region_gp2_effective_rate" : context.cost_basis ?? "unknown",
+      kind: basis,
       currency: "USD",
       ...ceRate ? { label: "Cost Explorer effective-rate estimate" } : {},
       source: context.cost_input?.source ?? null,
@@ -218006,6 +218128,8 @@ function customerSummary(result2, evidence, context, artifacts) {
   };
 }
 function save(directory, evidence, context, rawResult, code) {
+  context.cost_basis = effectiveCostBasis(context);
+  Object.assign(context, runMetadata(context));
   const result_file = (0, import_node_path6.join)(directory, "result.json");
   const evidence_file = (0, import_node_path6.join)(directory, "evidence.json");
   const context_file = (0, import_node_path6.join)(directory, "context.json");

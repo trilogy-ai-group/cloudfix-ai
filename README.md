@@ -2,11 +2,11 @@
 
 AWS cost optimization skills and tools for your agent. **Public preview: EBS GP2 to GP3.**
 
-Give your agent this repository URL. It can read the skill and fetch the executable without a GitHub login or permanent skill installation. Implementation source, build tooling, tests and customer run data are maintained separately.
+Give your agent this repository URL. It can select the published release and fetch its skill and executable without a GitHub login or permanent skill installation. Implementation source, build tooling, tests and customer run data are maintained separately.
 
 ## Available skill
 
-[`co-gp2-to-gp3`](skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
+[`co-gp2-to-gp3`](https://github.com/trilogy-ai-group/cloudfix-ai/blob/v0.1.0-preview.1/skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
 
 The skill has two runtime files:
 
@@ -26,18 +26,19 @@ The agent needs **Node.js 22 or later** and your existing AWS credentials in its
 
 For agents:
 
-1. Read [`SKILL.md`](https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/main/skills/co-gp2-to-gp3/SKILL.md), this README, the [preview licence](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.txt).
-2. Fetch this public repository into a new local working directory. No GitHub credentials are needed:
+1. Select [release `v0.1.0-preview.1`](https://github.com/trilogy-ai-group/cloudfix-ai/releases/tag/v0.1.0-preview.1). Fetch that version into a new local working directory and record the exact commit it resolves to. No GitHub credentials are needed:
 
    ```sh
-   git clone https://github.com/trilogy-ai-group/cloudfix-ai.git
+   git clone --branch v0.1.0-preview.1 --single-branch https://github.com/trilogy-ai-group/cloudfix-ai.git
+   git -C cloudfix-ai rev-parse --verify 'HEAD^{commit}'
    ```
 
-   Alternatively, download `SKILL.md` and `scripts/gp2.cjs` with their relative layout, keeping the licence and notices alongside the copy. Fetch all files from the same commit. The executable is [available directly](https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/main/skills/co-gp2-to-gp3/scripts/gp2.cjs).
-3. Verify the executable against the SHA-256 under [Package identity](#package-identity) before running it. Then follow the skill using the authorized account, region and pricing basis. Do not rebuild it or write replacement collectors or calculations.
-4. Keep run output outside the checkout. Report the complete relevant findings and qualifications, with links to private evidence. Assessment and proposal preparation do not authorize AWS writes, deployment or merging.
+2. Read this README, `skills/co-gp2-to-gp3/SKILL.md` and `LICENSE` from that checked-out commit. **Retain** `THIRD_PARTY_NOTICES.txt` with the package; the agent does not need to read the complete notices to perform an assessment.
+3. Verify the executable against the SHA-256 under [Package identity](#package-identity) in the same checked-out README before running it. Record both the commit and executable hash. Follow that release's skill using the authorized account, region and pricing basis. Do not rebuild it or write replacement collectors or calculations.
+4. For HTTP-only fetching, resolve the selected release tag to its full commit SHA first, dereferencing an annotated tag if needed. Fetch the README, licence, notices, skill and executable from `https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/<commit-sha>/`, preserving the skill's relative layout. Verify using that commit's README. Do not mix versions or run files downloaded from a moving branch.
+5. Keep run output outside the checkout. Report the complete relevant findings and qualifications, with links to private evidence. Assessment and proposal preparation do not authorize AWS writes, deployment or merging.
 
-Specify a volume ID for a single-resource assessment. For assessment only, say so; the skill stops after reporting the result. Missing billing access is reported as an error, with collected resource evidence retained. A public-price run requires a separate explicit choice.
+Specify a volume ID for a single-resource assessment. A request for assessment alone ends after the result. A request that also asks how to apply it continues to a proposed change for review; execution still needs explicit authorization. Missing billing access is reported as an error, with collected resource evidence retained. A public-price run requires a separate explicit choice.
 
 ### Optional permanent installation
 
@@ -63,15 +64,16 @@ These commands stop if the destination already exists and include the licence an
 
 ## Access and data
 
-- Live assessment uses STS `GetCallerIdentity`, EC2 `DescribeVolumes` and `DescribeInstances`, and Pricing `GetProducts`. The requested AWS account and region bound the resource reads; Pricing queries use `us-east-1`.
+- State the required actions before running: `sts:GetCallerIdentity`, `ec2:DescribeVolumes`, `ec2:DescribeInstances` when instance evidence is needed, and `pricing:GetProducts`. The requested AWS account and region bound the resource reads; Pricing queries use `us-east-1`.
+- Identity/account verification runs first. The tool performs and reuses its Pricing lookups before volume inventory, so denied Pricing access stops before the account's volumes are collected. It performs a scoped EC2 dry-run immediately before a needed volume or instance read; an unattached volume does not require an unrelated instance probe. Early access checks do not guarantee every later scoped request will succeed. Failures identify the action, profile and region and retain earlier evidence; the tool does not change IAM policies.
 - The executable does not modify workload resources. CloudWatch metrics and GitHub access are not needed for assessment. Repository access is needed only for the optional patch/PR workflow. Direct changes use your harness's normal AWS tools and require the relevant write permissions and execution authorization; the bundled executable never modifies volumes.
-- Optional billing-rate collection uses existing Cost Explorer access (`GetDimensionValues` and `GetCostAndUsage`) and STS identity verification. Your billing profile may belong to a different payer account. CE API requests incur AWS charges; the tool does not enable billing settings, provision infrastructure or require CUR.
+- Optional billing-rate collection uses existing Cost Explorer access (`ce:GetDimensionValues` and `ce:GetCostAndUsage`) and STS identity verification. Your billing profile may belong to a different payer account. Billing mode also needs Pricing access: CE supplies the GP2 effective rate, while the original finder uses the public GP3/GP2 ratio to estimate proposed costs. CE API requests incur AWS charges; the tool does not enable billing settings, provision infrastructure or require CUR.
 - No CloudFix account, CloudFix API token or hosted service is required. There is no CloudFix fee or model call from the bundled executable. Your own harness may use a model under your existing plan.
-- The executable stores evidence and results in the local output directory and sends nothing to CloudFix. Live collection calls AWS; downloading this package contacts GitHub. Your chosen harness may send the data it reads to its own model provider under your settings. Recorded-evidence replay makes no AWS calls. Never put credentials or customer run artifacts in this repository or its issues.
+- The executable stores evidence and results in the local output directory and sends nothing to CloudFix. Outputs can contain account IDs, private IP addresses and key names. Keep the complete files private; redact only excerpts shared publicly. Live collection calls AWS; downloading this package contacts GitHub. Your chosen harness may send the data it reads to its own model provider under your settings. Recorded-evidence replay makes no AWS calls. Never put credentials or customer run artifacts in this repository or its issues.
 
 ## Billing-based estimates without CUR
 
-Run one command with your existing resource access:
+Before using CE, state its approximately $0.02 request cost for a successful unpaginated run. If billing estimates were requested or already authorized, proceed without another approval prompt. If no price basis was specified, resolve billing estimates versus public prices once. Then run one command with your existing resource access:
 
 ```sh
 node skills/co-gp2-to-gp3/scripts/gp2.cjs assess \
@@ -81,7 +83,7 @@ node skills/co-gp2-to-gp3/scripts/gp2.cjs assess \
 
 Add `--billing-profile <billing-profile>` when costs require separate payer access. Without it, billing uses the workload profile; without either profile, both use the default AWS credential chain. Add `--volume-id <id>` to select particular volumes, or omit it to discover GP2 volumes in the region. The tool carries the exact selection through every stage; no manual ID list or second assessment command is required.
 
-The command collects resource evidence once, retrieves a GP2 billing rate, then runs the unchanged finder with the generated cost inputs. No GP2 volumes is a successful result with nothing to optimize, and skips billing calls. Missing billing access, empty cost data for existing volumes and unsupported units remain errors.
+The command checks identity and Pricing, collects resource evidence once, retrieves a GP2 billing rate, then runs the unchanged finder with the generated cost inputs. No GP2 volumes is a successful result with nothing to optimize, and skips billing calls. CE has no dry-run: the tool uses the needed billing queries after inventory, without extra paid permission probes. Missing billing access, empty cost data for existing volumes and unsupported units remain errors.
 
 ### Failure and retry
 
@@ -130,6 +132,8 @@ These amounts are examples. Every selected resource needs a record. Manually sup
 
 Each assessment or replay saves `summary.json`, the unchanged native `result.json`, `evidence.json` and `context.json`. Keep the complete files together. The summary separates the assessment decision, estimated saving, execution status and observed saving; missing evidence and rejected candidates are valid outcomes.
 
+The summary and top-level context identify the final assessment price basis. Public-price collection and the original supplied-cost inputs remain separately labelled provenance. A public-price collection stage within a billed run does not make the final assessment a public-price result. Read the final basis together with the complete billing evidence rather than relabelling or discarding the original input.
+
 The summary includes code-calculated totals for approved candidates with calculated savings, with included, excluded and unknown resource counts. The code sums unrounded amounts before formatting the total; the agent does no savings arithmetic. Public-price and supplied-cost totals remain separate. Partial or unverified results are explicitly labelled. Recorded volume, attachment and instance states are included when available; missing state stays unknown.
 
 The summary shows pricing lookup counts and fallback status. `cost_basis.lookup_evidence` points to the complete lookup records in the referenced `context.json`; read those records when a fallback occurred, provenance is unknown, or pricing details affect a decision. Full queries, units, raw prices and read errors remain available.
@@ -142,6 +146,33 @@ An approved assessment is a recommendation. The executable does not modify a vol
 
 For preview testing, use a dev/test scope approved by its owner and retain the complete transcript and result files privately. Record discovery or setup friction and any human help needed. Share a redacted description of problems in [GitHub issues](https://github.com/trilogy-ai-group/cloudfix-ai/issues), without credentials, account identifiers, resource evidence or billing data. A patch or PR does not establish that a disk changed or that savings were realized.
 
+## Controlled experiments and replay
+
+Ordinary replay reproduces recorded evidence without AWS calls. It does not automatically make a run experimental, and a legitimate nondefault configuration does not imply synthetic data. The original finder's normal minimum volume age remains seven days.
+
+If the user explicitly requests a test that changes evidence or a finder rule, work on a new copy of the replay packet, preserve the original files, and label the experiment in the command:
+
+```sh
+node skills/co-gp2-to-gp3/scripts/gp2.cjs replay \
+  --evidence <copied-test-packet.json> \
+  --experiment-reason "Age-rule-disabled replay for testing only" \
+  --out <new-test-output-directory>
+```
+
+This flag records intent; it does not disable the age rule or change any finder setting. For that particular test, change `volumeAgeThreshold` to `0` only in the copied configuration. Raw evidence supports top-level `configuration`; a saved packet may carry `evidence.configuration` or `run_context.configuration`. If both packet locations are present they must agree. Do not edit the previous run or the tool's output to make the test pass.
+
+`assess`, including billing `--resume`, also accepts `--experiment-reason`. A replay packet can supply the same intent directly:
+
+```json
+{
+  "reason": "Age-rule-disabled replay for testing only"
+}
+```
+
+Place this object at `run_context.experiment` in the packet, retaining any additional caller metadata. The tool preserves it through repeated replay, errors and resume. If a command also supplies a reason, it must agree with an inherited reason; disagreement is an error rather than a silent relabelling.
+
+Read the code-produced `run_classification`, `experiment` and `configuration_overrides` in summary and context. The overrides list settings that differ from the normal defaults. Report experimental results as such, with the stated reason and overrides. The native finder JSON remains unchanged. A test-only result with the age rule disabled does not replace the normal assessment, authorize a change or establish realized savings.
+
 ## Licence
 
 The [CloudFix AI Public Preview License](LICENSE) permits free use to assess and optimize AWS accounts you own or are authorized to manage. Redistribution and offering the package as a hosted service are reserved to the rights holders. This is a source-available preview, not an open-source licence. Bundled third-party components retain their own licences, listed in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
@@ -151,7 +182,7 @@ The [CloudFix AI Public Preview License](LICENSE) permits free use to assess and
 The tested executable's SHA-256 is:
 
 ```text
-639c435b9c835796d31b635ed7d5c943135030977988b7f8da9c849d7d7d57f9
+358da88dd9cee6aa0b2b61578b90b1cd77ec30a8ad53cb6fe02d101e0abbcc80
 ```
 
 Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for its package name and public build identifier. That identifier links to the complete private maintainer build record. The package runs directly; it needs no source checkout, dependency installation or rebuild.
@@ -163,3 +194,7 @@ shasum -a 256 skills/co-gp2-to-gp3/scripts/gp2.cjs
 ```
 
 On Linux, use `sha256sum` with the same path. Compare with the hash above from the same repository revision; stop if it differs.
+
+The hash verifies the downloaded bytes against the selected release. Review and release controls govern who can publish a new version. Record the resolved commit and intentionally select a new release when upgrading; a branch update must not silently change the version used for a run.
+
+For more AWS optimization options, see [CloudFix](https://cloudfix.com/). This local skill requires no CloudFix registration.
