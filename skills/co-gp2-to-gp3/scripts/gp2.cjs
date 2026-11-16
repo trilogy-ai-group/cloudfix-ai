@@ -55,7 +55,7 @@ var __decorateParam = (index, decorator) => (target, key) => decorator(target, k
 var define_CLOUDFIX_BUILD_default;
 var init_define_CLOUDFIX_BUILD = __esm({
   "<define:__CLOUDFIX_BUILD__>"() {
-    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "7cb44151a6f7e7913aaa1730dc2c359dbd23395109a8d644e78380718e4dc9dc" };
+    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "04c681f06be95718d12e2009ddb794a6b2103c78ae442ff9de46b296a4476822" };
   }
 });
 
@@ -216839,6 +216839,66 @@ var errorData = (error2) => ({
   code: error2 instanceof InputError ? "invalid_input" : String(error2?.name || "Error"),
   message: error2 instanceof Error ? error2.message : "The assessment could not complete."
 });
+function readAssessment(directory, record) {
+  const inputs = {};
+  record.directory = (0, import_node_path6.resolve)(directory);
+  record.files = {};
+  for (const name of ["summary", "evidence", "context", "result"]) {
+    const file = (0, import_node_path6.join)(record.directory, `${name}.json`);
+    const raw = (0, import_node_fs3.readFileSync)(file, "utf8");
+    const item = { path: file, sha256: (0, import_node_crypto8.createHash)("sha256").update(raw).digest("hex") };
+    record.files[name] = item;
+    try {
+      item.document = inputs[name] = JSON.parse(raw);
+    } catch (error2) {
+      item.original_text = raw;
+      throw error2;
+    }
+  }
+  return inputs;
+}
+function billingPending(context) {
+  return object2(context.billing_request) && !["complete", "not_needed"].includes(context.billing_request.status);
+}
+function unpricedEvidence(evidence) {
+  if (!object2(evidence)) return evidence;
+  const result2 = structuredClone(evidence);
+  if (Array.isArray(result2.resources)) result2.resources = result2.resources.map((row) => ({ ...row, annualCost: null }));
+  return result2;
+}
+function validateEmptyScope(evidence, context) {
+  requireInput(
+    object2(evidence) && typeof evidence.accountId === "string" && /^\d{12}$/.test(evidence.accountId) && typeof evidence.region === "string" && /^[a-z]{2}(?:-[a-z]+)+-\d$/.test(evidence.region) && Array.isArray(evidence.resources) && evidence.resources.length === 0 && context.scope?.account === evidence.accountId && context.scope?.region === evidence.region && Array.isArray(context.scope?.selected_volume_ids) && context.scope.selected_volume_ids.length === 0,
+    "The no-volumes result conflicts with its recorded resource scope."
+  );
+  const reads = [
+    ...Array.isArray(context.reads) ? context.reads : [],
+    ...Array.isArray(evidence.responses) ? evidence.responses : []
+  ];
+  requireInput(
+    !reads.some((row) => row?.operation === "DescribeVolumes" && row.error === void 0 && Array.isArray(row.output?.Volumes) && row.output.Volumes.length > 0),
+    "The no-volumes result conflicts with recorded volumes."
+  );
+  const inventory = (Array.isArray(context.reads) ? context.reads : []).filter((row) => row?.operation === "DescribeVolumes");
+  requireInput(inventory.length > 0, "No completed GP2 inventory was recorded; absence of evidence is not an empty account.");
+  let token;
+  let finished = false;
+  const tokens = /* @__PURE__ */ new Set();
+  for (const row of inventory) {
+    requireInput(
+      !finished && row.error === void 0 && row.region === evidence.region && (0, import_node_util.isDeepStrictEqual)(row.input?.Filters, [{ Name: "volume-type", Values: ["gp2"] }]) && row.input?.NextToken === token && Array.isArray(row.output?.Volumes) && row.output.Volumes.length === 0,
+      "The GP2 inventory was unavailable, inconsistent or incomplete; it cannot establish that no volumes exist."
+    );
+    const next = row.output.NextToken;
+    requireInput(next === void 0 || typeof next === "string", "Invalid inventory pagination evidence");
+    token = next || void 0;
+    if (token) {
+      requireInput(!tokens.has(token), "Repeated inventory pagination evidence");
+      tokens.add(token);
+    } else finished = true;
+  }
+  requireInput(finished, "GP2 inventory pagination did not finish; more resource evidence is required.");
+}
 function contextFor(mode, original) {
   return {
     mode,
@@ -217197,7 +217257,17 @@ function replayInput(original) {
   }
   const context = contextFor("replay", original);
   if (packet && object2(original.run_context)) {
-    for (const key of ["scope", "reads", "pricing_lookups", "cost_input"]) {
+    for (const key of [
+      "scope",
+      "reads",
+      "pricing_lookups",
+      "cost_input",
+      "no_candidates",
+      "billing_request",
+      "billing_attempt",
+      "resource_collection",
+      "resume_source"
+    ]) {
       if (original.run_context[key] !== void 0) context[key] = structuredClone(original.run_context[key]);
     }
     context.reads_origin = "supplied_run_context";
@@ -217206,6 +217276,13 @@ function replayInput(original) {
   context.assessment_clock_basis = (packet ? original.evidence.asOf : original.asOf) === void 0 ? "recorded_at_invocation" : "caller_supplied";
   context.cost_basis = packet && object2(original.run_context) ? original.run_context.cost_basis ?? "supplied_evidence" : "supplied_evidence";
   context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
+  if (billingPending(context)) {
+    const previousError = packet && object2(original.run_context) ? original.run_context.error : void 0;
+    const failure = new Error(previousError?.message ?? "Billing did not complete; resume billing or start an explicit public-price assessment.");
+    failure.name = previousError?.code ?? "BillingUnavailable";
+    Object.assign(failure, { partial: { evidence, context } });
+    throw failure;
+  }
   if (context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate") {
     try {
       const volumes = Array.isArray(evidence.responses) ? evidence.responses.flatMap((response) => response?.operation === "DescribeVolumes" && Array.isArray(response.output?.Volumes) ? response.output.Volumes : []) : [];
@@ -217224,7 +217301,7 @@ function replayInput(original) {
   }
   return { evidence, context };
 }
-async function collectBilling(options, transport, now = /* @__PURE__ */ new Date()) {
+async function collectBilling(options, transport, now = /* @__PURE__ */ new Date(), collection) {
   const context = {
     status: "collecting",
     method: "ce_account_region_gp2_effective_rate",
@@ -217248,30 +217325,35 @@ async function collectBilling(options, transport, now = /* @__PURE__ */ new Date
   };
   try {
     requireInput(Number.isFinite(now.getTime()), "Billing clock must be valid");
-    requireInput(typeof options.assessment === "string" && options.assessment.length > 0, "A saved assessment directory is required");
-    const inputs = {};
-    for (const name of ["summary", "evidence", "context", "result"]) {
-      const file = (0, import_node_path6.join)(context.assessment.directory, `${name}.json`);
-      const raw = (0, import_node_fs3.readFileSync)(file, "utf8");
-      const record = { path: file, sha256: (0, import_node_crypto8.createHash)("sha256").update(raw).digest("hex") };
-      context.assessment.files[name] = record;
-      try {
-        record.document = inputs[name] = JSON.parse(raw);
-      } catch (error2) {
-        record.original_text = raw;
-        throw error2;
-      }
+    let inputs;
+    if (collection) {
+      context.assessment.collection = jsonCopy(collection);
+      inputs = { evidence: collection.evidence, context: collection.context, result: [] };
+      requireInput(inputs.context.cost_basis === "public_price_estimate", "Billing needs the original resource collection");
+    } else {
+      requireInput(typeof options.assessment === "string" && options.assessment.length > 0, "A saved assessment directory is required");
+      inputs = readAssessment(options.assessment, context.assessment);
+      requireInput(inputs.summary?.status === "complete" && inputs.context?.status === "complete", "Billing needs a completed saved assessment");
     }
-    requireInput(inputs.summary?.status === "complete" && inputs.context?.status === "complete", "Billing needs a completed saved assessment");
+    if (inputs.context.no_candidates === true) {
+      validateEmptyScope(inputs.evidence, inputs.context);
+      requireInput(collection || inputs.summary.no_candidates === true && Array.isArray(inputs.summary.resources) && inputs.summary.resources.length === 0 && Array.isArray(inputs.result) && inputs.result.length === 0 && (0, import_node_util.isDeepStrictEqual)(inputs.summary.scope, inputs.context.scope), "The saved no-volumes assessment is inconsistent");
+      context.scope = jsonCopy(inputs.context.scope);
+      context.status = "complete";
+      context.no_candidates = true;
+      context.message = "No GP2 volumes found; nothing to optimize.";
+      context.completed_at = (/* @__PURE__ */ new Date()).toISOString();
+      return { costs: null, context };
+    }
     const evidence = parseEvidence(inputs.evidence);
-    validateResult(inputs.result, evidence);
+    if (!collection) validateResult(inputs.result, evidence);
     const ids = evidence.resources.map((row) => row.resourceId);
     requireInput(new Set(ids).size === ids.length, "Assessment resource IDs must be unique");
     context.scope = { account: evidence.accountId, region: evidence.region, selected_volume_ids: ids };
-    for (const scope of [inputs.summary.scope, inputs.context.scope].filter((value) => value !== void 0)) {
+    for (const scope of [inputs.summary?.scope, inputs.context.scope].filter((value) => value !== void 0)) {
       requireInput(scope.account === evidence.accountId && scope.region === evidence.region && (0, import_node_util.isDeepStrictEqual)(scope.selected_volume_ids, ids), "Saved assessment scope is inconsistent");
     }
-    requireInput(Array.isArray(inputs.summary.resources) && inputs.summary.resources.length === ids.length && inputs.summary.resources.every((row, i5) => row.resource_id === ids[i5] && row.account === evidence.accountId && row.region === evidence.region), "Saved summary resource scope is inconsistent");
+    if (!collection) requireInput(Array.isArray(inputs.summary.resources) && inputs.summary.resources.length === ids.length && inputs.summary.resources.every((row, i5) => row.resource_id === ids[i5] && row.account === evidence.accountId && row.region === evidence.region), "Saved summary resource scope is inconsistent");
     const volumes = /* @__PURE__ */ new Map();
     for (const response of evidence.responses) {
       if (response.operation === "DescribeVolumes" && Array.isArray(response.output.Volumes)) {
@@ -217282,7 +217364,7 @@ async function collectBilling(options, transport, now = /* @__PURE__ */ new Date
       const volume = volumes.get(resourceId);
       const native = inputs.result[i5];
       const size2 = volume?.Size;
-      const publicBasis = inputs.context.cost_basis === "public_price_estimate" && inputs.summary.cost_basis?.kind === "public_price_estimate";
+      const publicBasis = inputs.context.cost_basis === "public_price_estimate" && (collection !== void 0 || inputs.summary.cost_basis?.kind === "public_price_estimate");
       const publicAnnualCost = native?.finderReportData?.gp2PublicCost ?? (publicBasis ? evidence.resources[i5].publicAnnualCost : void 0);
       if (volume?.VolumeType !== "gp2" || typeof size2 !== "number" || !Number.isFinite(size2) || size2 <= 0 || native?.finderReportData?.volumeSize !== void 0 && native.finderReportData.volumeSize !== size2) {
         issue(resourceId, "A consistent recorded GP2 size is unavailable");
@@ -217470,6 +217552,11 @@ async function billingCli(options, directory, transport) {
     const { costs, context } = await collectBilling(options, transport);
     (0, import_node_fs3.writeFileSync)(context_file, `${JSON.stringify(context, null, 2)}
 `, { mode: 384 });
+    if (costs === null) {
+      process.stdout.write(`${JSON.stringify({ status: "complete", no_candidates: true, message: context.message, billing_context_file: context_file })}
+`);
+      return 0;
+    }
     const costs_file = (0, import_node_path6.join)(directory, "costs.json");
     (0, import_node_fs3.writeFileSync)(costs_file, `${JSON.stringify(costs, null, 2)}
 `, { mode: 384 });
@@ -217485,10 +217572,83 @@ async function billingCli(options, directory, transport) {
     return 1;
   }
 }
+async function assessWithBilling(args, transport) {
+  let evidence = null;
+  let context = contextFor(transport ? "recorded_collection_test" : "live_collection", jsonCopy(args));
+  const request = { status: "collecting_resources", profile: args["billing-profile"] ?? args.profile ?? null };
+  try {
+    let collection;
+    if (args.resume) {
+      const record = {};
+      context.resume_source = record;
+      const previous = readAssessment(args.resume, record);
+      requireInput(
+        previous.context?.status === "error" && previous.summary?.status === "error" && previous.context.billing_request?.status === "failed" && previous.context.resource_collection?.status === "complete",
+        "Resume requires a failed billing run with completed resource collection; otherwise start a new assessment."
+      );
+      collection = structuredClone(previous.context.resource_collection);
+      const expected = unpricedEvidence(collection.evidence);
+      if (previous.evidence?.configuration !== void 0) expected.configuration = collection.context.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
+      requireInput((0, import_node_util.isDeepStrictEqual)(previous.evidence, expected) && (0, import_node_util.isDeepStrictEqual)(previous.context.scope, collection.context.scope), "Saved resource evidence changed; start a new assessment.");
+      context = structuredClone(collection.context);
+      context.mode = "billing_resume";
+      context.started_at = (/* @__PURE__ */ new Date()).toISOString();
+      context.resume_source = record;
+      context.reads_origin = "saved_resource_collection";
+      context.resource_evidence_as_of = collection.evidence.asOf;
+      request.profile = args["billing-profile"] ?? previous.context.billing_request.profile ?? null;
+    } else {
+      collection = await collect({
+        region: args.region,
+        profile: args.profile,
+        account: args.account,
+        volumeIds: args.volumeIds,
+        costBasis: "public"
+      }, transport);
+      context = structuredClone(collection.context);
+    }
+    evidence = structuredClone(collection.evidence);
+    context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
+    context.resource_collection = { status: "complete", evidence: structuredClone(evidence), context: jsonCopy(collection.context) };
+    context.billing_request = request;
+    context.cost_basis = "billing_estimate_unavailable";
+    if (context.no_candidates) {
+      request.status = "not_needed";
+      context.cost_basis = "not_applicable";
+      return { evidence, context };
+    }
+    request.status = "collecting_billing";
+    const billed = await collectBilling({ profile: request.profile ?? void 0 }, transport, /* @__PURE__ */ new Date(), collection);
+    context.billing_attempt = billed.context;
+    requireInput(billed.costs !== null, "Billing returned no costs for the selected GP2 volumes");
+    const volumes = evidence.responses.flatMap((row) => row.operation === "DescribeVolumes" ? row.output.Volumes ?? [] : []);
+    validateBillingScope(billed.costs, evidence.accountId, evidence.region, evidence.resources.map((row) => row.resourceId), volumes);
+    evidence.resources = jsonCopy(billed.costs.resources);
+    context.cost_input = billed.costs;
+    context.cost_basis = "caller_supplied_costs";
+    request.status = "complete";
+    return { evidence, context };
+  } catch (error2) {
+    const partial2 = error2?.partial;
+    if (partial2) ({ evidence, context } = partial2);
+    if (error2?.billing_context) context.billing_attempt = error2.billing_context;
+    request.status = "failed";
+    context.billing_request = request;
+    context.cost_basis = "billing_estimate_unavailable";
+    if (!context.resource_collection) context.resource_collection = { status: "incomplete", evidence: jsonCopy(evidence), context: jsonCopy(context) };
+    evidence = unpricedEvidence(evidence);
+    const failure = error2 instanceof Error ? error2 : new Error(String(error2));
+    Object.assign(failure, { partial: { evidence, context } });
+    throw failure;
+  }
+}
 var HELP = `GP2 assessment using local evidence. Node 22+.
 
   node gp2.cjs assess --region REGION [--profile PROFILE] [--account EXPECTED]
-    [--volume-id ID ...] (--cost-basis public | --costs FILE) --out NEW_DIRECTORY
+    [--volume-id ID ...] (--cost-basis public|billing | --costs FILE)
+    [--billing-profile BILLING_PROFILE] --out NEW_DIRECTORY
+  node gp2.cjs assess --cost-basis billing --resume FAILED_DIRECTORY
+    [--billing-profile BILLING_PROFILE] --out NEW_DIRECTORY
   node gp2.cjs replay --evidence FILE --out NEW_DIRECTORY
   node gp2.cjs billing --assessment EXISTING_ASSESSMENT_DIRECTORY
     [--profile BILLING_PROFILE] --out NEW_DIRECTORY
@@ -217498,6 +217658,12 @@ assess uses read-only STS, EC2 and AWS Pricing calls. public means list-price
 estimates, not billed savings. --costs JSON requires currency=USD, source, period,
 and resources with resourceId, annualCost, publicAnnualCost. Supplied costs are
 preserved; missing entries fail explicitly.
+--cost-basis billing collects resources once, gets the GP2-specific CE effective
+rate, then runs the unchanged finder. --billing-profile defaults to --profile.
+Billing failure exits 1 with resource evidence retained and no savings result.
+--resume retries only billing using the saved resource snapshot and original
+assessment time; it does not refresh resource state. Scope overrides are forbidden.
+No GP2 volumes is a successful no-op and makes no Cost Explorer calls.
 replay accepts raw evidence or {evidence, run_context} fixtures; it makes no AWS calls.
 billing uses read-only STS and Cost Explorer calls in us-east-1. It derives an
 account/region GP2 effective-rate estimate, not per-volume billed cost, from the
@@ -217505,7 +217671,8 @@ account/region GP2 effective-rate estimate, not per-volume billed cost, from the
 not CUR. It saves complete billing-context.json on success/error and costs.json only
 on success. Pass that costs file to assess with the same exact account/region/volume
 selection and the workload profile. Missing/unknown billing data never becomes zero.
-Cost Explorer requests may incur AWS charges; this tool changes no billing settings.
+Cost Explorer normally costs about $0.02 for these two unpaginated requests in
+the primary billing view; additional pages/requests cost more. No billing settings change.
 Read summary.json for the assessment. assess/replay also save complete evidence.json,
 context.json and the unchanged native result.json for review and reproduction.
 Exit codes: 0 complete (including negative decisions), 2 needs evidence, 1 error.
@@ -217514,7 +217681,7 @@ function argumentsFor(argv) {
   const mode = argv[0];
   requireInput(["assess", "replay", "billing"].includes(mode), "Choose assess, replay or billing; use --help");
   const options = { mode, volumeIds: [] };
-  const allowed = mode === "assess" ? ["region", "profile", "account", "volume-id", "cost-basis", "costs", "out"] : mode === "billing" ? ["assessment", "profile", "out"] : ["evidence", "out"];
+  const allowed = mode === "assess" ? ["region", "profile", "account", "volume-id", "cost-basis", "costs", "billing-profile", "resume", "out"] : mode === "billing" ? ["assessment", "profile", "out"] : ["evidence", "out"];
   for (let i5 = 1; i5 < argv.length; i5 += 2) {
     const key = argv[i5].replace(/^--/, "");
     requireInput(argv[i5].startsWith("--") && allowed.includes(key), `Unknown option ${argv[i5]}`);
@@ -217530,9 +217697,13 @@ function argumentsFor(argv) {
   if (mode === "replay") requireInput(typeof options.evidence === "string", "--evidence is required");
   else if (mode === "billing") requireInput(typeof options.assessment === "string", "--assessment is required");
   else {
-    requireInput(typeof options.region === "string", "--region is required");
-    requireInput(options["cost-basis"] === "public" !== (options.costs !== void 0), "Choose --cost-basis public or --costs");
-    if (options["cost-basis"] !== void 0) requireInput(options["cost-basis"] === "public", "Only public is supported by --cost-basis");
+    requireInput(["public", "billing"].includes(options["cost-basis"]) !== (options.costs !== void 0), "Choose --cost-basis public, --cost-basis billing, or --costs");
+    if (options["cost-basis"] !== void 0) requireInput(["public", "billing"].includes(options["cost-basis"]), "Choose public or billing for --cost-basis");
+    requireInput(options["billing-profile"] === void 0 || options["cost-basis"] === "billing", "--billing-profile requires --cost-basis billing");
+    if (options.resume !== void 0) {
+      requireInput(options["cost-basis"] === "billing", "--resume requires --cost-basis billing");
+      requireInput(options.region === void 0 && options.account === void 0 && options.profile === void 0 && options.volumeIds.length === 0 && options.costs === void 0, "Resume uses saved resource scope; do not supply resource profile, account, region, volume IDs or costs");
+    } else requireInput(typeof options.region === "string", "--region is required");
   }
   return options;
 }
@@ -217564,6 +217735,8 @@ async function cli(argv = process.argv.slice(2), transport) {
       context.original_input_text = text;
       const original = JSON.parse(text);
       ({ evidence, context } = replayInput(original));
+    } else if (args["cost-basis"] === "billing") {
+      ({ evidence, context } = await assessWithBilling(args, transport));
     } else {
       const options = {
         region: args.region,
@@ -217577,6 +217750,7 @@ async function cli(argv = process.argv.slice(2), transport) {
     }
     context.configuration = evidence.configuration ?? { volumeAgeThreshold: 7, minimalSavings: 0 };
     let native = { result: [], raw: "[]\n", exitCode: 0 };
+    if (context.no_candidates) validateEmptyScope(evidence, context);
     if (!context.no_candidates) native = await runNative(evidence);
     rawResult = native.raw;
     const status = native.result?.status === "needs_evidence" ? "needs_evidence" : native.exitCode || native.result?.status === "error" ? "error" : "complete";
@@ -217587,6 +217761,10 @@ async function cli(argv = process.argv.slice(2), transport) {
   } catch (error2) {
     const partial2 = error2?.partial;
     if (partial2) ({ evidence, context } = partial2);
+    if (billingPending(context)) {
+      evidence = unpricedEvidence(evidence);
+      rawResult = void 0;
+    }
     context.status = "error";
     context.error = errorData(error2);
     context.completed_at = (/* @__PURE__ */ new Date()).toISOString();
@@ -217686,7 +217864,7 @@ function customerSummary(result2, evidence, context, artifacts) {
   const input = object2(evidence) ? evidence : {};
   const volumeContext = recordedVolumeContext(input, context);
   const complete = context.status === "complete";
-  const nativeRows = Array.isArray(result2) ? result2 : [];
+  const nativeRows = !billingPending(context) && Array.isArray(result2) ? result2 : [];
   const inputs = Array.isArray(input.resources) ? input.resources : [];
   const selectedIds = Array.isArray(context.scope?.selected_volume_ids) ? context.scope.selected_volume_ids : inputs.flatMap((row) => object2(row) && typeof row.resourceId === "string" ? [row.resourceId] : []);
   const resources = nativeRows.map((value, index) => {
@@ -217783,7 +217961,7 @@ function customerSummary(result2, evidence, context, artifacts) {
       currency: "USD",
       source: context.cost_input?.source ?? null,
       period: context.cost_input?.period ?? null,
-      pricing_verification: lookups.length ? context.mode === "live_collection" ? "AWS reads recorded" : context.mode === "replay" ? "recorded responses; no AWS reads performed during replay" : "recorded test responses" : "Price lookup provenance was not supplied or no price lookup was completed.",
+      pricing_verification: lookups.length ? context.mode === "live_collection" ? "AWS reads recorded" : context.mode === "replay" ? "recorded responses; no AWS reads performed during replay" : context.mode === "billing_resume" ? "saved resource/pricing responses; resource state was not refreshed" : "recorded test responses" : "Price lookup provenance was not supplied or no price lookup was completed.",
       fallback_used: lookups.length ? lookups.some((lookup) => lookup.fallback_used) : null,
       lookup_count: lookups.length,
       fallback_count: lookups.filter((lookup) => lookup.fallback_used).length,
@@ -217793,10 +217971,18 @@ function customerSummary(result2, evidence, context, artifacts) {
         estimate: true,
         qualifications: context.cost_input.billing_evidence.qualifications ?? [],
         evidence: { artifact: "context", json_pointer: "/cost_input/billing_evidence" }
+      } } : object2(context.billing_attempt) ? { billing: {
+        method: context.billing_attempt.method ?? "unknown",
+        estimate: true,
+        status: context.billing_attempt.status,
+        qualifications: context.billing_attempt.qualifications ?? [],
+        evidence: { artifact: "context", json_pointer: "/billing_attempt" }
       } } : {}
     },
     configuration: context.configuration ?? null,
-    no_candidates: context.no_candidates === true,
+    no_candidates: complete && context.no_candidates === true,
+    ...complete && context.no_candidates === true ? { message: "No GP2 volumes found; nothing to optimize." } : {},
+    ...context.billing_request ? { billing_request: context.billing_request } : {},
     totals: summaryTotals(resources, complete),
     resources,
     ...context.status === "needs_evidence" ? { missing_evidence: nativeFailure } : {},
@@ -217822,20 +218008,40 @@ function save(directory, evidence, context, rawResult, code) {
   const evidence_file = (0, import_node_path6.join)(directory, "evidence.json");
   const context_file = (0, import_node_path6.join)(directory, "context.json");
   const summary_file = (0, import_node_path6.join)(directory, "summary.json");
+  const billing_context_file = context.billing_attempt ? (0, import_node_path6.join)(directory, "billing-context.json") : void 0;
+  const costs_file = context.billing_request?.status === "complete" && context.cost_input ? (0, import_node_path6.join)(directory, "costs.json") : void 0;
   (0, import_node_fs3.writeFileSync)(result_file, rawResult, { mode: 384 });
   (0, import_node_fs3.writeFileSync)(evidence_file, `${JSON.stringify(evidence, null, 2)}
 `, { mode: 384 });
   (0, import_node_fs3.writeFileSync)(context_file, `${JSON.stringify(context, null, 2)}
 `, { mode: 384 });
+  if (billing_context_file) (0, import_node_fs3.writeFileSync)(billing_context_file, `${JSON.stringify(context.billing_attempt, null, 2)}
+`, { mode: 384 });
+  if (costs_file) (0, import_node_fs3.writeFileSync)(costs_file, `${JSON.stringify(context.cost_input, null, 2)}
+`, { mode: 384 });
   const summary = customerSummary(
     JSON.parse(rawResult),
     evidence,
     context,
-    { native_result: result_file, evidence: evidence_file, context: context_file }
+    {
+      native_result: result_file,
+      evidence: evidence_file,
+      context: context_file,
+      ...billing_context_file ? { billing_context: billing_context_file } : {},
+      ...costs_file ? { costs: costs_file } : {}
+    }
   );
   (0, import_node_fs3.writeFileSync)(summary_file, `${JSON.stringify(summary, null, 2)}
 `, { mode: 384 });
-  process.stdout.write(`${JSON.stringify({ status: context.status, summary_file, result_file, evidence_file, context_file })}
+  process.stdout.write(`${JSON.stringify({
+    status: context.status,
+    summary_file,
+    result_file,
+    evidence_file,
+    context_file,
+    ...billing_context_file ? { billing_context_file } : {},
+    ...costs_file ? { costs_file } : {}
+  })}
 `);
   return code;
 }

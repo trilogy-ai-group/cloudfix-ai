@@ -1,96 +1,55 @@
 ---
 name: co-gp2-to-gp3
-description: Assess AWS EBS gp2-to-gp3 opportunities locally, derive billing-based estimates from Cost Explorer, or replay evidence. When requested, prepare an infrastructure PR or direct AWS procedure and carry out an authorized change.
+description: Assess AWS EBS gp2-to-gp3 opportunities locally with public prices or Cost Explorer estimates, or replay evidence. When requested, prepare an infrastructure PR or direct AWS procedure and carry out an authorized change.
 ---
 
 # Assess GP2 volumes
 
-## 1. Confirm the scope and access
+## 1. Confirm scope and access
 
-Use the requested AWS account, region and optional volume IDs. Use existing AWS authentication and the customer's chosen AWS profile, if any. No skill profile file is required. Do not ask for credentials in chat or save them in evidence.
+Use the requested AWS account, region and optional volume IDs with existing credentials. Never request credentials in chat or save them as evidence. The executable is `scripts/gp2.cjs` relative to this directory and requires **Node 22+**. Run it directly; do not rebuild it or write collectors, checks or calculations. No skill profile file is required.
 
-The supplied executable is `scripts/gp2.cjs` relative to this skill directory. It requires **Node 22+**. Run it directly; do not rebuild it or write replacement collectors, checks or calculations.
+Resource assessment reads STS, EC2 and AWS Pricing. Billing estimates also read Cost Explorer using existing billing access. No CUR, CloudWatch metrics, GitHub access or service registration is needed for assessment. Do not enable billing settings or change permissions. CE requests cost roughly $0.02 for a successful run without pagination; extra requests cost more. The tool never modifies volumes or sends data to its publisher.
 
-Live resource assessment uses STS `GetCallerIdentity`, EC2 `DescribeVolumes`/`DescribeInstances`, and Pricing `GetProducts`. It needs no CloudWatch metrics, GitHub access or service registration. Optional billing-rate collection uses STS and Cost Explorer `GetDimensionValues`/`GetCostAndUsage` through the customer's existing billing access, which may be in a different payer account/profile. It needs no CUR table. CE must already be enabled and visible to that identity; do not enable paid data settings or alter billing permissions. These API calls incur AWS Cost Explorer request charges. No data goes back to the tool's publisher. Replay makes no AWS calls.
+## 2. Run one assessment
 
-## 2. Run the tool
-
-Choose a new output directory and create its parent first. For a live assessment using AWS public prices:
+Choose a new output directory and create its parent. For billing-based estimates:
 
 ```sh
-node <skill-dir>/scripts/gp2.cjs assess --profile <existing-profile> --region <requested-region> --account <expected-account-id> --cost-basis public --out <new-output-directory>
+node <skill-dir>/scripts/gp2.cjs assess --profile <workload-profile> --account <expected-account-id> --region <region> --cost-basis billing --out <new-output-directory>
 ```
 
-Add `--volume-id <volume-id>` for each selected volume. Without a selection, the tool discovers GP2 volumes in that region. Do not expand to other accounts or regions.
+Add `--billing-profile <billing-profile>` when costs require separate access; otherwise billing uses the workload profile. Omit profiles to use the default credential chain. Use `--account` whenever known; an identity mismatch stops the run. If unknown, confirm the returned account before interpreting results.
 
-Omit `--profile` to use the default AWS credential chain. Use `--account` whenever the expected account is known; a mismatch stops the run. If the account was unknown, confirm the returned identity before interpreting the assessment.
+Add `--volume-id <id>` for each selected volume. Otherwise the tool discovers GP2 volumes in that region and carries the exact selection through billing and assessment. Do not expand the account or region.
 
-For billing-based estimates without CUR, run `billing` after the initial resource assessment:
+For an explicitly requested public-price assessment, use `--cost-basis public`. For verified supplied costs, use `--costs <file.json>` instead; preserve the supplied amounts and provenance. `--help` documents all commands, including separate billing collection. The agent performs no cost arithmetic.
+
+## 3. Handle completion and failures
+
+Read the returned `summary.json`, `result.json`, `evidence.json` and `context.json` on every outcome. Exit **0** means complete, including rejected candidates or **No GP2 volumes found**; empty discovery needs no billing query. Exit **2** means evidence is missing. Exit **1** means failure: report the complete relevant error or requested evidence, never an empty result.
+
+A billing failure preserves collected resource evidence and returns no calculated savings. After resolving billing access or data, retry against that saved snapshot without collecting resources again:
 
 ```sh
-node <skill-dir>/scripts/gp2.cjs billing --assessment <initial-output-directory> --profile <existing-billing-profile> --out <new-billing-output-directory>
+node <skill-dir>/scripts/gp2.cjs assess --cost-basis billing --resume <failed-output-directory> --billing-profile <billing-profile> --out <new-output-directory>
 ```
 
-Omit `--profile` for the customer's default credential chain. Use existing billing access; the resource profile alone may not expose costs. The tool queries CE for GP2 storage usage in the original account and resource region, using the finder's 31-day UTC window excluding today and yesterday. It discovers and verifies usage units, sums matching net storage cost and usage, and derives the effective monthly rate in code. It then estimates each selected volume's annual cost from its current GiB size. The agent must not calculate or edit these amounts.
+The profile override is optional. Resume retains the original account, region, volumes, configuration and observation time. Describe it as a saved snapshot; recheck live state before an authorized change. A failed billing request must never be presented as public-price savings. Public pricing requires a separate, explicit run.
 
-**This is an account-and-region effective-rate estimate, not an observed per-volume bill.** Applying the rate assumes comparable GP2 pricing across those volumes. It cannot reconstruct individual billing adjustments, past size changes or resource lifetimes. CE-visible rates may also depend on payer discount visibility or Billing Conductor configuration. Preserve the returned estimate label, source, period, estimated-data flags and any net-to-unblended fallback.
+For offline reproduction, run `replay --evidence <packet.json> --out <new-output-directory>`. Preserve both `evidence` and `run_context` from a saved run so pricing provenance and failures survive replay. Raw evidence is also accepted but does not establish missing provenance. Replay makes no AWS calls. Keep prior output unchanged; obtain missing evidence and rerun into a new directory.
 
-Read `billing-context.json` on success or failure. A successful run also writes `costs.json`, including complete billing evidence. Missing access, empty data, unknown or incompatible units, and unusable costs are not zero costs. Do not silently substitute public prices. If billing-based costs were requested, obtain the missing access or evidence rather than presenting the public-price run as completion.
+## 4. Read and explain the result
 
-Rerun `assess` into a new output directory using the original workload account, region and profile, **the exact selected volume IDs**, and `--costs <billing-output-directory>/costs.json` instead of `--cost-basis public`. Read the new assessment and retain both runs. The unchanged finder estimates GP3 using the current public GP3-to-GP2 price ratio. This preserves the original finder calculation, but the CE effective-rate input is different from its historical per-volume CUR baseline; neither establishes a negotiated future GP3 rate or realized savings.
+Read the **complete summary**, including every resource, failed check, outstanding evidence request and pricing qualification. Use code-produced decisions, exact GP3 settings, per-resource `estimate.display` and aggregate `totals.display`. Report included, excluded and unknown counts. Do not sum rounded amounts or turn unknown savings into zero; preserve negative savings and partial status.
 
-For costs supplied through another verified source, the same `--costs <file.json>` interface accepts:
+Billing results are **GP2 account-and-region effective-rate estimates**, not individual volume bills or verified final invoices. Preserve the returned source, period, discount-visibility qualifications, estimated-data flags and fallbacks. This method does not apply automatically to EC2 instances or other resource types.
 
-```json
-{
-  "currency": "USD",
-  "source": "Source of the supplied cost evidence",
-  "period": "Observation and annualization period",
-  "resources": [
-    {"resourceId": "vol-example", "annualCost": 36, "publicAnnualCost": 36}
-  ]
-}
-```
+Resolve summary evidence references through `artifacts` and their JSON pointers. Read complete pricing and billing records when checking costs or preparing changes; unavailable evidence is not verified pricing. The native JSON stays unchanged for traceability. Its wording does not prove actual costs, performance, downtime or rollback safety.
 
-The numbers are examples. Preserve supplied values; every selected resource needs a cost record. Manually supplying costs does not verify their billing provenance.
+Use recorded volume/attachment/instance state; absent state is unknown and a stopped instance still incurs EBS storage cost. Use GiB, IOPS and MiB/s. This assessment does not verify instance-type compatibility or application performance. Do not promise equivalent-or-better performance, zero impact or immediate rollback.
 
-For recorded evidence or a simulation:
-
-```sh
-node <skill-dir>/scripts/gp2.cjs replay --evidence <evidence-file.json> --out <new-output-directory>
-```
-
-Replay accepts raw evidence or an `{evidence, run_context}` packet. Preserve supplied configuration and the original input. Use `--help`, `assess --help`, `billing --help` or `replay --help` for command details and `--version` for the package's public build identifier.
-
-## 3. Read the result
-
-The command returns paths to `summary.json`, `result.json`, `evidence.json` and `context.json`. **Read the complete summary**, including every resource, failed check, pricing qualification and outstanding evidence request.
-
-- `summary.json` is generated by code for interpretation. Use its decisions, exact settings, cost basis and execution status.
-- `result.json` preserves the complete native assessment unchanged.
-- `evidence.json` and `context.json` retain inputs, read results, configuration and provenance. Read the complete relevant records when checking a finding or preparing a change; the summary's artifact references must remain retrievable.
-
-Pricing lookup counts and fallback status are in `cost_basis`. Full queries, units and raw prices are at `cost_basis.lookup_evidence`: resolve its `artifact` through `summary.artifacts`, open that file, and read the complete array at its `json_pointer`. Follow this reference whenever a fallback occurred, provenance is unknown, or pricing details matter to the decision. Do not treat an unavailable evidence file as verified pricing.
-
-For a billing-rate run, also read `context.json` at `/cost_input/billing_evidence`: the requests, source, period, complete returned records, usage units, rate calculations and qualifications remain there through saved replay. A public-price lookup succeeding does not verify the separate CE effective-rate estimate. Keep both price bases and their evidence distinct.
-
-The native report is retained for traceability. Its wording about actual costs, downtime, performance and rollback is unverified; use the summary's cost basis and limitations when explaining the result.
-
-Exit **0** means assessment completed, including rejected candidates. Exit **2** means evidence is missing. Exit **1** means the run failed. Read saved artifacts on every outcome. Return the exact requested operation/parameters or full relevant error; do not turn an access failure into an empty response.
-
-The live tool retrieves required follow-up evidence itself. For replay, obtain the missing evidence and rerun with the complete amended packet into a new directory. Do not repair an earlier output.
-
-## 4. Explain the assessment
-
-Report each resource's decision, failed checks, proposed GP3 settings when approved, estimated annual savings and pricing basis. Use `estimate.display` for dollar amounts shown to the customer; exact numeric amounts remain available for comparisons. Use GiB for size, IOPS and MiB/s for throughput. Preserve negative savings. A saving marked `not_calculated` is unknown, not zero potential.
-
-Use the code-calculated `totals` for aggregate costs and savings. Report its status and included, excluded and unknown resource counts, and use `totals.display` for money. Do not recompute totals or sum rounded per-resource amounts. Totals cover approved candidates with calculated savings; public-price and supplied-cost figures remain separate. A partial or unverified result must not be described as a complete account total.
-
-Use each resource's `evidence_context` for recorded volume, attachment and instance states; absent state is unknown. A stopped instance does not prove that its volume is unused, and EBS storage remains billable while the instance is stopped.
-
-Public prices and supplied costs are estimates unless independently verified. Identify any pricing fallback. Online modification depends on instance support; this assessment does not check instance-type compatibility or measure application performance. Do not promise equivalent-or-better performance, zero impact or immediate rollback.
-
-Keep assessment, proposed change, execution and observed savings separate. Return the artifact paths. An assessment-only request ends here.
+Return artifact paths and distinguish estimated savings, proposed change, execution and observed savings. An assessment-only request ends here.
 
 ## 5. Prepare the appropriate change when requested
 

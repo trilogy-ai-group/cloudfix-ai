@@ -6,7 +6,7 @@ This repository holds the packages testers install. Implementation source, build
 
 ## Available skill
 
-[`co-gp2-to-gp3`](skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Its optional `billing` command derives an account-and-region GP2 effective rate from Cost Explorer and feeds labelled per-volume estimates into the same finder. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
+[`co-gp2-to-gp3`](skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
 
 The installable folder contains exactly two files:
 
@@ -58,21 +58,60 @@ Specify a volume ID if you want a single-resource assessment. Follow the skill's
 
 ## Billing-based estimates without CUR
 
-Start with the resource assessment described in the skill. Then retrieve a GP2 effective rate for that account and region using the same executable:
+Run one command with your existing resource access:
 
 ```sh
-node skills/co-gp2-to-gp3/scripts/gp2.cjs billing \
-  --assessment <initial-assessment-directory> \
-  --profile <existing-billing-profile> --out <new-billing-output-directory>
+node skills/co-gp2-to-gp3/scripts/gp2.cjs assess \
+  --profile <workload-profile> --account <expected-account-id> --region <region> \
+  --cost-basis billing --out <new-output-directory>
 ```
 
-Use existing CE access; the resource profile alone may not expose costs. The command writes complete evidence to `billing-context.json` and, on success, writes `costs.json`. It verifies usage units, divides matching net GP2 storage cost by matching storage usage, and estimates each selected volume's current annual cost from its GiB size. The tool performs the arithmetic; the agent does not.
+Add `--billing-profile <billing-profile>` when costs require separate payer access. Without it, billing uses the workload profile; without either profile, both use the default AWS credential chain. Add `--volume-id <id>` to select particular volumes, or omit it to discover GP2 volumes in the region. The tool carries the exact selection through every stage; no manual ID list or second assessment command is required.
 
-Rerun `assess` with the original workload profile, account, region and exact selected volume IDs, replacing `--cost-basis public` with `--costs <billing-output-directory>/costs.json`. Empty data, denied access and unsupported units are reported explicitly; they do not become zero costs or an undisclosed public-price fallback.
+The command collects resource evidence once, retrieves a GP2 billing rate, then runs the unchanged finder with the generated cost inputs. No GP2 volumes is a successful result with nothing to optimize, and skips billing calls. Missing billing access, empty cost data for existing volumes and unsupported units remain errors.
 
-The result is labelled **CE account-and-region effective-rate estimate**, not observed per-volume billing. It assumes comparable GP2 pricing across the selected volumes and cannot reconstruct their individual billing adjustments, size changes or historical lifetimes. The 31-day UTC window excludes today and yesterday. CE's estimated-data flags, cost basis and payer-visibility qualifications remain with the result.
+### Failure and retry
 
-The original finder still calculates GP3 cost using the public GP3-to-GP2 price ratio. This preserves its calculation, but the effective-rate baseline differs from its historical per-volume CUR baseline. Neither guarantees the future negotiated GP3 rate or establishes realized savings.
+If billing fails, the command exits with an error and retains all collected resource evidence and billing diagnostics. It returns no calculated savings and does not substitute a list-price assessment. Preserve the output directory. Once billing access or data is resolved, retry billing against that snapshot:
+
+```sh
+node skills/co-gp2-to-gp3/scripts/gp2.cjs assess --cost-basis billing \
+  --resume <failed-output-directory> --billing-profile <billing-profile> \
+  --out <new-output-directory>
+```
+
+The billing profile override is optional. Resume preserves the original resource scope, observation time, configuration and prior failure evidence; it makes no new resource or pricing reads. Results describe the saved snapshot, so an execution workflow must recheck live resource state. To intentionally obtain public-price savings instead, make a separate `assess --cost-basis public` run. Offline replay of a billing failure remains a failed billing result.
+
+### Rate, permissions and request cost
+
+The tool verifies usage units and computes matching net GP2 storage cost divided by matching GB-month usage in the original account and region. It estimates each selected volume's current annual cost as current GiB × effective monthly rate × 12. Every calculation happens in code. The 31-day UTC window excludes today and yesterday.
+
+This is a **GP2 account-and-region effective-rate estimate**, not observed per-volume billing. It assumes comparable GP2 pricing across the selected volumes and cannot reconstruct individual adjustments, size changes or historical lifetimes. This method is GP2-specific: do not apply one rate to EC2 instances with different reservations or Savings Plans allocations.
+
+The caller needs existing Cost Explorer visibility. An available net-cost field does not prove that all payer discounts are visible. If that field is missing, the tool uses unblended cost and records that qualification; hidden discounts cannot reliably be detected. Billing Conductor can also make the visible rate pro forma. Preserve all returned qualifications and CE estimated-data flags.
+
+[AWS charges $0.01 per Cost Explorer API request using the primary billing view](https://aws.amazon.com/aws-cost-management/aws-cost-explorer/pricing/). A successful run without pagination uses two CE requests, approximately **$0.02**. Additional pages and billable retries can increase this. The tool does not enable paid data settings or change permissions.
+
+The original finder estimates GP3 using the public GP3-to-GP2 price ratio. The CE current-capacity baseline differs from CloudFix's historical per-volume CUR baseline; exact agreement is not guaranteed. Neither establishes negotiated future GP3 pricing or realized savings.
+
+### Separate billing and supplied costs
+
+The existing `billing --assessment <completed-assessment-directory> [--profile <billing-profile>] --out <new-directory>` command remains available. It writes `billing-context.json` on success or failure and `costs.json` when a rate is established; an empty assessment is a successful no-op with no cost file. The cost file can be used with `assess --costs <file>` and the same exact account, region and selected IDs.
+
+For a different verified cost source, `--costs` accepts this shape:
+
+```json
+{
+  "currency": "USD",
+  "source": "Source of the supplied cost evidence",
+  "period": "Observation and annualization period",
+  "resources": [
+    {"resourceId": "vol-example", "annualCost": 36, "publicAnnualCost": 36}
+  ]
+}
+```
+
+These amounts are examples. Every selected resource needs a record. Manually supplied values remain unchanged and do not establish their own billing provenance.
 
 ## Reading the result
 
@@ -95,7 +134,7 @@ For the private pilot, record installation friction and any human help needed. U
 The tested executable's SHA-256 is:
 
 ```text
-9af0782341228dfde1c1c26f087ec13433577bfc4139779800efd2c8684aedaf
+d271d798bffc5b7a0b9c5967571edf56b37bd858f04b8add8076cd5222fbedc1
 ```
 
 Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for its package name and public build identifier. That identifier links to the complete private maintainer build record. The package runs directly; it needs no source checkout, dependency installation or rebuild.
