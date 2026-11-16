@@ -1,7 +1,9 @@
 """Command line entry point: every command prints exactly one JSON line."""
 import argparse
 import json
+import math
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,9 +14,11 @@ from cloudfix.common.output import write_json
 from cloudfix.common.settings import describe
 from cloudfix.finders import gp2_to_gp3
 from cloudfix.finders.gp2_to_gp3.run import run_assess, run_replay
+from cloudfix.fixers.gp2_to_gp3 import apply as fixer_apply
 from cloudfix.fixers.gp2_to_gp3 import plan as fixer_plan
 
 FIX_NAME = "gp2-to-gp3-fix"
+APPLY_EXIT = {"completed": 0, "in_progress": 3, "failed": 1}
 
 
 class CliError(Exception):
@@ -39,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     replay = actions.add_parser("replay", allow_abbrev=False, help="re-run an assessment from recorded evidence")
     replay.add_argument("--evidence", required=True, type=Path, help="evidence.json from an earlier run")
     replay.add_argument("--out", required=True, type=Path, help="new run directory to create")
-    fix = commands.add_parser(FIX_NAME, allow_abbrev=False, help="plan and describe gp2 to gp3 changes")
+    fix = commands.add_parser(FIX_NAME, allow_abbrev=False, help="plan, describe and apply gp2 to gp3 changes")
     fix_actions = fix.add_subparsers(dest="action", metavar="ACTION", required=True)
     plan = fix_actions.add_parser("plan", allow_abbrev=False, help="write an approvable plan from an assessment")
     change = fix_actions.add_parser("change", allow_abbrev=False, help="write change.json for the PR worker")
@@ -54,6 +58,15 @@ def build_parser() -> argparse.ArgumentParser:
     change.add_argument("--repo-hint")
     change.add_argument("--delivery", choices=("draft_pr", "local_patch"), default="draft_pr")
     change.add_argument("--out", required=True, type=Path, help="change.json file to create")
+    apply = fix_actions.add_parser("apply", allow_abbrev=False, help="carry out an approved plan; rerun to resume")
+    apply.add_argument("--plan", required=True, type=Path, help="plan.json written by plan")
+    apply.add_argument("--approve", required=True, metavar="SHA256", help="the plan's SHA-256 as printed by plan")
+    apply.add_argument("--approval-kind", required=True, choices=("after_plan", "prior"))
+    apply.add_argument("--approval-text", required=True, help="the user's exact approval wording")
+    apply.add_argument("--confirm-direct-management", action="store_true",
+                       help="the user confirmed direct management for volumes whose management basis is unknown")
+    apply.add_argument("--wait", type=float, default=fixer_apply.DEFAULT_WAIT_MINUTES, metavar="MINUTES",
+                       help="minutes to wait for completion before reporting in progress")
     return parser
 
 
@@ -113,6 +126,23 @@ def _fix(args: argparse.Namespace, aws=None, now=None) -> int:
     return 0
 
 
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _apply(args: argparse.Namespace) -> int:
+    if not math.isfinite(args.wait) or args.wait < 0:
+        raise InputError(f"--wait must be a non-negative number of minutes, got {args.wait}")
+    plan = fixer_apply.read_plan(args.plan)
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"))
+    result = fixer_apply.apply_plan(args.plan, args.approve,
+                                    fixer_apply.Approval(args.approval_kind, args.approval_text), aws,
+                                    confirm_direct=args.confirm_direct_management, wait_minutes=args.wait,
+                                    now=_utcnow, sleep=time.sleep)
+    _emit(result)
+    return APPLY_EXIT[result["status"]]
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         parser = build_parser()
@@ -123,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == gp2_to_gp3.NAME:
             return _gp2_to_gp3(args)
         if args.command == FIX_NAME:
-            return _fix(args)
+            return _apply(args) if args.action == "apply" else _fix(args)
         parser.print_usage(sys.stdout)
         return 0
     except SystemExit as exc:  # --help prints its text and exits through argparse
