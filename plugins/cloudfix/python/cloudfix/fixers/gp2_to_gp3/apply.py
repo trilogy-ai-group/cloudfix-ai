@@ -21,6 +21,7 @@ TERMINAL = ("verified", "failed")
 ACT_NOW = ("snapshot_completed", "completed")  # states whose next step needs no waiting on AWS
 POLL_SECONDS = 15
 DEFAULT_WAIT_MINUTES = 1  # well inside a harness's 2-minute command timeout; a rerun continues
+CLOCK_SKEW = timedelta(minutes=15)  # tolerated difference between this machine's clock and AWS's
 _PLAN_KEYS = ("plan_id", "created_at", "expires_at", "account", "region", "volumes")
 
 
@@ -153,9 +154,24 @@ class _Run:
     def tagged_snapshot(self, vid: str) -> dict | None:
         out = self.aws.call("ec2", "DescribeSnapshots", {"OwnerIds": ["self"], "Filters": [
             {"Name": "tag:cloudfix-ai:planId", "Values": [self.plan["plan_id"]]},
-            {"Name": "tag:cloudfix-ai:originalResourceId", "Values": [vid]}]})
+            {"Name": "tag:cloudfix-ai:originalResourceId", "Values": [vid]},
+            {"Name": "volume-id", "Values": [vid]}]})
         snaps = out.get("Snapshots") or []
         return max(snaps, key=lambda s: str(s.get("StartTime") or "")) if snaps else None
+
+    def not_recovery_point(self, snap: dict, vid: str, *, adopted: bool) -> str | None:
+        """Why a snapshot cannot be this volume's recovery point. Tags can be written by anyone with CreateTags,
+        so a snapshot found by tag (`adopted`) must also be of this volume and no older than the plan, allowing
+        CLOCK_SKEW between this machine's clock and AWS's."""
+        sid = snap.get("SnapshotId")
+        if snap.get("VolumeId") != vid:
+            return (f"snapshot {sid} carries this plan's tags but is of {snap.get('VolumeId') or 'an unknown volume'}, "
+                    f"not {vid}; refusing to use it as the recovery point")
+        start = snap.get("StartTime")
+        if adopted and (start is None or _when(start) < self.created - CLOCK_SKEW):
+            return (f"snapshot {sid} carries this plan's tags but was started before the plan was made; "
+                    "refusing to use it as the recovery point")
+        return None
 
     def refusal(self, entry: dict, live: dict | None, latest: dict | None) -> str | None:
         if live is None:
@@ -177,6 +193,7 @@ class _Run:
         if reason := self.refusal(entry, live, _latest(self.modifications(vid))):
             return self.move(rec, "failed", reason)
         snap = self.tagged_snapshot(vid)
+        adopted = snap is not None
         if snap is None:
             try:
                 snap = self.aws.call("ec2", "CreateSnapshot", {
@@ -184,8 +201,11 @@ class _Run:
                     "TagSpecifications": [{"ResourceType": "snapshot", "Tags": self.tags(vid)}]})
             except AwsCallError as e:
                 snap = self.tagged_snapshot(vid)  # the snapshot may exist with only the response lost
+                adopted = True
                 if snap is None:
                     return self.move(rec, "failed", f"ec2.CreateSnapshot failed: {e.code}: {e.message}")
+        if problem := self.not_recovery_point(snap, vid, adopted=adopted):
+            return self.move(rec, "failed", problem)
         rec["snapshot_id"] = snap["SnapshotId"]
         self.move(rec, "snapshot_requested")
 
@@ -197,6 +217,9 @@ class _Run:
             if e.code != "InvalidSnapshot.NotFound":
                 raise
             snaps = []  # a new snapshot can take a moment to become visible
+        if snaps and snaps[0].get("VolumeId") != vid:
+            return self.move(rec, "failed", f"recorded snapshot {sid} is of "
+                             f"{snaps[0].get('VolumeId') or 'an unknown volume'}, not {vid}; refusing to modify")
         state = snaps[0].get("State") if snaps else None
         if state == "completed":
             self.move(rec, "snapshot_completed")

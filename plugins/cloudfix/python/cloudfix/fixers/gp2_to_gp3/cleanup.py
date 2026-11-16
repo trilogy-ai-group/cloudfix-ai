@@ -144,6 +144,10 @@ def cleanup(plan_path: Path, approve_sha256: str, approval: Approval, aws: Calle
         if tags.get("cloudfix-ai:planId") != plan["plan_id"]:
             skipped[vid] = f"snapshot {sid} carries a different cloudfix-ai:planId tag (tag mismatch)"
             continue
+        if snaps[0].get("VolumeId") != vid:
+            skipped[vid] = (f"snapshot {sid} is of {snaps[0].get('VolumeId') or 'an unknown volume'}, "
+                            f"not {vid} (volume mismatch)")
+            continue
         try:
             aws.call("ec2", "DeleteSnapshot", {"SnapshotId": sid})
         except AwsCallError as e:

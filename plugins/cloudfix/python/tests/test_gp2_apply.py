@@ -85,7 +85,8 @@ class Aws:
     def tagged(self, vid, *snaps):
         self.stub.add_response("describe_snapshots", {"Snapshots": list(snaps)}, {"OwnerIds": ["self"], "Filters": [
             {"Name": "tag:cloudfix-ai:planId", "Values": [self.plan_id]},
-            {"Name": "tag:cloudfix-ai:originalResourceId", "Values": [vid]}]})
+            {"Name": "tag:cloudfix-ai:originalResourceId", "Values": [vid]},
+            {"Name": "volume-id", "Values": [vid]}]})
 
     def create_snapshot(self, vid, sid, error=None):
         params = {"VolumeId": vid, "Description": f"cloudfix-ai gp2-to-gp3 recovery point {self.plan_id}",
@@ -315,6 +316,49 @@ def test_snapshot_created_before_a_crash_is_found_by_tag(tmp_path, seeded):
     aws.assert_all_used()
     assert "CreateSnapshot" not in aws.operations()
     assert result["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
+
+
+@pytest.mark.parametrize("snap, cause", [
+    ({**_snap("snap-x", "vol-other", "completed")}, "is of vol-other"),
+    ({**_snap("snap-x", "vol-1", "completed"), "StartTime": OLD}, "before the plan was made"),
+])
+def test_a_tagged_snapshot_that_is_not_this_plans_recovery_point_is_refused(tmp_path, snap, cause):
+    """Anyone who can tag snapshots could plant one carrying this plan's tags; apply must not adopt it."""
+    path, digest = _make_plan(tmp_path)
+    aws = Aws(path)
+    aws.volume("vol-1")
+    aws.mods("vol-1")
+    aws.tagged("vol-1", snap)
+    result = _apply(path, digest, aws, wait=0)
+    aws.assert_all_used()
+    assert "CreateSnapshot" not in aws.operations() and "ModifyVolume" not in aws.operations()
+    assert result["volumes"]["vol-1"]["state"] == "failed"
+    assert cause in result["volumes"]["vol-1"]["reason"]
+    assert "snap-x" in result["volumes"]["vol-1"]["reason"]
+
+
+def test_a_snapshot_within_clock_skew_of_the_plan_is_accepted(tmp_path):
+    """AWS's clock and this machine's can differ, so a snapshot started minutes 'before' the plan still counts."""
+    path, digest = _make_plan(tmp_path)
+    aws = Aws(path)
+    aws.volume("vol-1")
+    aws.mods("vol-1")
+    aws.tagged("vol-1", {**_snap("snap-1", "vol-1", "pending"), "StartTime": PLAN_NOW - timedelta(minutes=5)})
+    result = _apply(path, digest, aws, wait=0)
+    aws.assert_all_used()
+    assert result["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
+
+
+def test_a_recorded_snapshot_of_another_volume_stops_before_modifying(tmp_path):
+    path, digest = _make_plan(tmp_path)
+    _seed(path, digest, {"vol-1": "snapshot_requested"})
+    aws = Aws(path)
+    aws.snapshot("snap-1", "vol-other", "completed")
+    result = _apply(path, digest, aws, wait=0)
+    aws.assert_all_used()
+    assert "ModifyVolume" not in aws.operations()
+    assert result["volumes"]["vol-1"]["state"] == "failed"
+    assert "vol-other" in result["volumes"]["vol-1"]["reason"]
 
 
 def test_apply_caller_sends_writes_once_and_keeps_retries_for_reads(tmp_path, monkeypatch):

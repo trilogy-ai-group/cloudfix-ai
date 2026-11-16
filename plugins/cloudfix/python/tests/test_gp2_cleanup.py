@@ -82,6 +82,18 @@ def test_cleanup_deletes_only_verified_tagged_snapshots(tmp_path):
     assert execution["volumes"]["vol-1"]["state"] == "verified"
 
 
+def test_cleanup_never_deletes_a_snapshot_of_another_volume(tmp_path):
+    path, digest = _make_plan(tmp_path)
+    _seed(path, digest, {"vol-1": "verified"})
+    aws = Aws(path)
+    _read_snapshot(aws, "snap-1", "vol-other", aws.plan_id)
+    out = cleanup(path, digest, APPROVAL, aws.aws, now=Clock().now)
+    aws.assert_all_used()
+    assert "DeleteSnapshot" not in aws.operations()
+    assert out["deleted"] == []
+    assert out["skipped"] == {"vol-1": "snapshot snap-1 is of vol-other, not vol-1 (volume mismatch)"}
+
+
 def test_cleanup_skips_already_at_target_and_already_deleted(tmp_path):
     path, digest = _make_plan(tmp_path, extra=("vol-2",))
     _seed(path, digest, {"vol-1": "verified", "vol-2": "verified"})
