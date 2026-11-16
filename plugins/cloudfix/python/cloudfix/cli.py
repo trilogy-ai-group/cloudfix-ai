@@ -15,6 +15,7 @@ from cloudfix.common.settings import describe
 from cloudfix.finders import gp2_to_gp3
 from cloudfix.finders.gp2_to_gp3.run import run_assess, run_replay
 from cloudfix.fixers.gp2_to_gp3 import apply as fixer_apply
+from cloudfix.fixers.gp2_to_gp3 import cleanup as fixer_cleanup
 from cloudfix.fixers.gp2_to_gp3 import plan as fixer_plan
 
 FIX_NAME = "gp2-to-gp3-fix"
@@ -67,6 +68,14 @@ def build_parser() -> argparse.ArgumentParser:
                        help="the user confirmed direct management for volumes whose management basis is unknown")
     apply.add_argument("--wait", type=float, default=fixer_apply.DEFAULT_WAIT_MINUTES, metavar="MINUTES",
                        help="minutes to wait for completion before reporting in progress")
+    status = fix_actions.add_parser("status", allow_abbrev=False, help="report recorded and live state; reads only")
+    status.add_argument("--plan", required=True, type=Path, help="plan.json written by plan")
+    cleanup = fix_actions.add_parser("cleanup", allow_abbrev=False,
+                                     help="delete the recovery snapshots of verified volumes; needs its own approval")
+    cleanup.add_argument("--plan", required=True, type=Path, help="plan.json written by plan")
+    cleanup.add_argument("--approve", required=True, metavar="SHA256", help="the plan's SHA-256 as printed by plan")
+    cleanup.add_argument("--approval-kind", required=True, choices=("after_plan", "prior"))
+    cleanup.add_argument("--approval-text", required=True, help="the user's exact approval wording for the cleanup")
     return parser
 
 
@@ -143,6 +152,21 @@ def _apply(args: argparse.Namespace) -> int:
     return APPLY_EXIT[result["status"]]
 
 
+def _status(args: argparse.Namespace) -> int:
+    plan = fixer_apply.read_plan(args.plan)
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"))
+    _emit(fixer_cleanup.status(args.plan, aws))
+    return 0
+
+
+def _cleanup(args: argparse.Namespace) -> int:
+    plan = fixer_apply.read_plan(args.plan)
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"), retries=False)
+    _emit(fixer_cleanup.cleanup(args.plan, args.approve, fixer_apply.Approval(args.approval_kind, args.approval_text),
+                                aws, now=_utcnow))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         parser = build_parser()
@@ -153,7 +177,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == gp2_to_gp3.NAME:
             return _gp2_to_gp3(args)
         if args.command == FIX_NAME:
-            return _apply(args) if args.action == "apply" else _fix(args)
+            handlers = {"apply": _apply, "status": _status, "cleanup": _cleanup}
+            return handlers.get(args.action, _fix)(args)
         parser.print_usage(sys.stdout)
         return 0
     except SystemExit as exc:  # --help prints its text and exits through argparse

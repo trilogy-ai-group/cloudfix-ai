@@ -8,7 +8,7 @@ import pytest
 from cloudfix.cli import build_parser
 
 PLUGIN = Path(__file__).resolve().parents[2]
-SKILLS = ["co-gp2-to-gp3"]
+SKILLS = ["co-gp2-to-gp3", "co-gp2-to-gp3-fix"]
 
 
 def skill_commands(path: Path) -> list[list[str]]:
