@@ -12,10 +12,10 @@ This skill runs the `cloudfix` command-line tool, reads what it saved and explai
 Every `cloudfix` command in this skill runs as:
 
 ```sh
-uv run --frozen --no-dev --project <plugin>/python cloudfix <args>
+uv run --frozen --no-dev --project "<plugin>/python" cloudfix <args>
 ```
 
-`<plugin>` is the plugin root: two directories up from this skill's own directory (Claude Code also substitutes `${CLAUDE_PLUGIN_ROOT}`). In the rest of this skill, `cloudfix ...` means that full command. The first command builds the tool's environment and takes a few seconds; later ones start immediately.
+`<plugin>` is the plugin root: two directories up from this skill's own directory (Claude Code also substitutes `${CLAUDE_PLUGIN_ROOT}`). In the rest of this skill, `cloudfix ...` means that full command. Pass every path as an absolute path in double quotes, as the commands below show, because paths often contain spaces; inside quotes the shell does not expand `~`, so write the home directory out. The first command builds the tool's environment and takes a few seconds; later ones start immediately.
 
 - If `uv --version` fails, stop and say uv is missing. Give the install options for the user's OS: the Astral installer (`curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows), Homebrew (`brew install uv`), WinGet (`winget install --id=astral-sh.uv -e`) or pipx (`pipx install uv`). Install only if the user asks you to.
 - If uv reports that the plugin folder is not writable, rerun the same command with `UV_PROJECT_ENVIRONMENT` set to a per-user cache directory: `~/.cache/cloudfix-ai/env` on macOS and Linux, `%LOCALAPPDATA%\cloudfix-ai\env` on Windows. Use the shell's own syntax to set the variable for that command (`UV_PROJECT_ENVIRONMENT=~/.cache/cloudfix-ai/env uv run ...` in sh or bash, `$env:UV_PROJECT_ENVIRONMENT = "$env:LOCALAPPDATA\cloudfix-ai\env"` before the command in PowerShell, `set "UV_PROJECT_ENVIRONMENT=%LOCALAPPDATA%\cloudfix-ai\env"` in cmd). Keep using it for every later command.
@@ -39,22 +39,24 @@ cloudfix gp2-to-gp3 describe
 
 It prints the finder's settings as JSON: name, meaning, type, default and allowed values. The settings are `account`, `region`, `profile`, `volume_ids`, `cost_basis` (`public` or `supplied`), `costs_file`, `volume_age_threshold_days` (default 7) and `minimal_savings_usd` (default 0); `describe` is the authority if it differs.
 
-Use the answers already in the request. Ask only for the settings it did not answer, one question at a time, and offer the default where there is one. Never apply a default silently: state the value you are using and that it is the default. If `cost_basis` is `supplied`, `costs_file` is required. Use only the requested account, region and volume IDs; do not widen to other accounts or regions. Use the AWS profile the customer names, or the default credential chain if they name none.
+Use the answers already in the request. Ask only for the settings it did not answer, one question at a time, and offer the default where there is one. Never apply a default silently: state the value you are using and that it is the default. If `cost_basis` is `supplied`, `costs_file` is required; write it as an absolute path, because the tool resolves a relative one against the directory the command runs in. Use only the requested account, region and volume IDs; do not widen to other accounts or regions. Use the AWS profile the customer names, or the default credential chain if they name none.
 
-Write the answers as `config.json`, a JSON object keyed by the setting names, in a new run directory's parent (the run directory itself must not exist yet). Write every setting the user gave, and also every default the user accepted, explicitly with its value, so the state-and-confirm step is recorded in the artifact; the tool fills omitted settings with defaults silently, so omit only optional settings that have no value (for example `profile` when using the default credential chain, `volume_ids` for discovery, `costs_file` for public prices). Do not put credentials in it.
+Choose where the run goes before writing anything. Unless the user names a location, keep runs outside any repository, in `~/cloudfix-runs` on macOS and Linux or `%USERPROFILE%\cloudfix-runs` on Windows; create that folder if it does not exist. Name each run directory after the current time, for example `~/cloudfix-runs/<timestamp>` with a timestamp such as `20261116-143000`, and use its absolute path (the home directory written out).
+
+Write the answers as a config file, a JSON object keyed by the setting names, next to the new run directory (for example `~/cloudfix-runs/<timestamp>-config.json`); the run directory itself must not exist yet. Write every setting the user gave, and also every default the user accepted, explicitly with its value, so the state-and-confirm step is recorded in the artifact; the tool fills omitted settings with defaults silently, so omit only optional settings that have no value (for example `profile` when using the default credential chain, `volume_ids` for discovery, `costs_file` for public prices). Do not put credentials in it.
 
 ## 4. Run
 
 For a live assessment:
 
 ```sh
-cloudfix gp2-to-gp3 assess --config <config.json> --out <new-dir>
+cloudfix gp2-to-gp3 assess --config "<config.json>" --out "<new-dir>"
 ```
 
 For recorded evidence, a simulation or a rerun with amended evidence:
 
 ```sh
-cloudfix gp2-to-gp3 replay --evidence <evidence.json> --out <new-dir>
+cloudfix gp2-to-gp3 replay --evidence "<evidence.json>" --out "<new-dir>"
 ```
 
 `<new-dir>` must be a new directory under an existing parent. Never write into an earlier run directory and never repair an earlier output. `assess` writes `config.json`, `evidence.json`, `context.json`, `result.json` and `summary.json`; `replay` writes all of them except `config.json`. The command prints one JSON line with `status` and the file paths.

@@ -30,6 +30,7 @@ def test_every_documented_command_parses(skill):
         build_parser().parse_args(argv)  # raises SystemExit on unknown subcommands/flags
 
 
-def test_skill_states_the_uv_command_form():
-    text = (PLUGIN / "skills/co-gp2-to-gp3/SKILL.md").read_text()
-    assert "uv run --frozen --no-dev --project" in text
+@pytest.mark.parametrize("skill", SKILLS)
+def test_skill_states_the_uv_command_form_with_a_quoted_project_path(skill):
+    text = (PLUGIN / "skills" / skill / "SKILL.md").read_text()
+    assert 'uv run --frozen --no-dev --project "<plugin>/python" cloudfix <args>' in text

@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     strategy:
@@ -16,3 +19,4 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.3
       - run: uv lock --check --directory plugins/cloudfix/python
       - run: uv run --frozen --directory plugins/cloudfix/python pytest -q
+      - run: uv run --frozen --no-dev --project plugins/cloudfix/python cloudfix --version
