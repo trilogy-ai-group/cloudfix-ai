@@ -51,10 +51,14 @@ def load_assessment(assessment_dir: Path) -> dict:
         raise InputError(f"assessment is not complete (status: {context.get('status')})")
     result = _read_json(root / "result.json")
     config = _read_json(root / "config.json") if (root / "config.json").is_file() else {}
-    tags = {}
+    tags, basis = {}, {}
     if (root / "summary.json").is_file():
-        tags = {r["resource_id"]: r.get("tags") or {} for r in _read_json(root / "summary.json")["resources"]}
-    return {"path": str(root), "result": result, "config": config, "context": context, "tags": tags}
+        summary = _read_json(root / "summary.json")
+        tags = {r["resource_id"]: r.get("tags") or {} for r in summary["resources"]}
+        basis = {k: (summary.get("cost_basis") or {}).get(k) for k in ("kind", "source", "period")}
+    profile = config.get("profile") or (context.get("config") or {}).get("profile")
+    return {"path": str(root), "result": result, "config": config, "context": context, "tags": tags,
+            "profile": profile, "cost_basis": basis}
 
 
 def _when(value: Any) -> datetime:
@@ -150,10 +154,13 @@ def make_plan(assessment: dict, aws: Caller, *, volume_ids: list[str] | None,
               management: Literal["not-managed", "unknown"], iops_overrides: dict[str, int],
               throughput_overrides: dict[str, int], now: datetime) -> dict:
     result = assessment["result"]
-    config = assessment.get("config") or {}
     chosen = list(volume_ids) if volume_ids else [r["resource_id"] for r in result["resources"] if r["approved"]]
     _overrides(chosen, iops_overrides, throughput_overrides)
     candidates, refused = _select(assessment, volume_ids)
+    identity = aws.call("sts", "GetCallerIdentity", {})
+    if identity.get("Account") != result["account"]:
+        raise InputError(f"credentials belong to account {identity.get('Account')}, "
+                         f"but the assessment is for account {result['account']}")
     prices = {t: EbsPrices(**p) for t, p in (result.get("prices") or {}).items()}
     lookups = PricingLookups(aws, result["region"])
     plan_id = uuid.uuid4().hex
@@ -192,7 +199,8 @@ def make_plan(assessment: dict, aws: Caller, *, volume_ids: list[str] | None,
     return {
         "plan_id": plan_id, "created_at": now.isoformat(), "expires_at": (now + PLAN_LIFETIME).isoformat(),
         "assessment": assessment["path"], "account": result["account"], "region": result["region"],
-        "profile": config.get("profile"), "volumes": volumes, "refused": refused,
+        "profile": assessment.get("profile"), "caller_identity": identity,
+        "cost_basis": assessment.get("cost_basis"), "volumes": volumes, "refused": refused,
         "pricing_lookups": lookups.records, "reads": list(aws.reads),
     }
 

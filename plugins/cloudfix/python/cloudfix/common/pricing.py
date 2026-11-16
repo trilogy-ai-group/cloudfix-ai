@@ -58,6 +58,12 @@ def _query(*filters: tuple[str, str]) -> dict:
     }
 
 
+def _extract_max(price_list: list, unit: str) -> float | None:
+    """The highest OnDemand price in `unit` across all rows (a conservative bound)."""
+    values = [v for r in price_list if (v := _extract([r], unit)) is not None]
+    return max(values) if values else None
+
+
 def _extract(price_list: list, unit: str) -> float | None:
     row = next((r for r in price_list if unit in (r if isinstance(r, str) else json.dumps(r))), None)
     if row is None:
@@ -81,9 +87,9 @@ class PricingLookups:
         self._snapshot: float | None = None
         self.records: list[dict] = []
 
-    def _lookup(self, query: dict, unit: str, default: float, divisor: float = 1.0) -> float:
+    def _lookup(self, query: dict, unit: str, default: float, divisor: float = 1.0, highest: bool = False) -> float:
         out = self._aws.call("pricing", "GetProducts", query)
-        raw = _extract(out.get("PriceList", []), unit)
+        raw = (_extract_max if highest else _extract)(out.get("PriceList", []), unit)
         value = default if raw is None else raw / divisor
         self.records.append({
             "query": query,
@@ -118,5 +124,5 @@ class PricingLookups:
         if self._snapshot is None:
             self._snapshot = self._lookup(
                 _query(("productFamily", "Storage Snapshot"), ("regionCode", self._region)),
-                "GB-Mo", SNAPSHOT_DEFAULT_GB_MONTH)
+                "GB-Mo", SNAPSHOT_DEFAULT_GB_MONTH, highest=True)
         return self._snapshot

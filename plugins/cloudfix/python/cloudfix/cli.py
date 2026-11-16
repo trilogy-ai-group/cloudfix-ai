@@ -100,7 +100,7 @@ def _fix(args: argparse.Namespace, aws=None, now=None) -> int:
                "volumes": [r["id"] for r in change["resources"]]})
         return 0
     aws = aws or RecordingAws(assessment["result"]["region"], fixer_plan.FIXER_OPS,
-                              profile=assessment["config"].get("profile"))
+                              profile=assessment["profile"])
     plan = fixer_plan.make_plan(assessment, aws, volume_ids=ids, management=args.management,
                                 iops_overrides=iops, throughput_overrides=throughput,
                                 now=now or datetime.now(timezone.utc))
@@ -128,8 +128,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     except SystemExit as exc:  # --help prints its text and exits through argparse
         return exc.code if isinstance(exc.code, int) else 0 if exc.code is None else 1
-    except (InputError, AwsCallError) as exc:
-        return _error("input", str(exc))
+    except InputError as exc:
+        return _error("invalid_input", str(exc))
+    except AwsCallError as exc:
+        _emit({"status": "error", "error": {"code": exc.code, "message": str(exc), "service": exc.service,
+                                            "operation": exc.operation}})
+        return 1
     except CliError as exc:
         return _error("usage", str(exc))
     except Exception as exc:  # noqa: BLE001 - the contract is one JSON error line

@@ -53,3 +53,10 @@ def test_gp2_makes_only_the_storage_lookup():
     aws = ReplayAws([_resp(STORAGE_GP2, [price_row("GB-Mo", "0.11")])])
     p = PricingLookups(aws, R).ebs("gp2")
     assert (p.storage_gb_month, p.iops_month, p.throughput_mibps_month) == (0.11, 0.0, 0.0) and len(aws.reads) == 1
+
+
+def test_snapshot_uses_highest_price_row():
+    aws = ReplayAws([_resp(SNAPSHOT, [price_row("GB-Mo", "0.0125"), price_row("GB-Mo", "0.05")])])
+    lookups = PricingLookups(aws, R)
+    assert lookups.snapshot_gb_month() == 0.05
+    assert lookups.records[0]["raw_price"] == 0.05 and lookups.records[0]["fallback_used"] is False

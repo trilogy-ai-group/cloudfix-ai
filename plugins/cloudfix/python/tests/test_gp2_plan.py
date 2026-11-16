@@ -31,10 +31,13 @@ def _assess(tmp_path, tags=None):
 
 
 class Fixer:
-    def __init__(self, live=None, mods=None, mods_error=None, snapshot="0.05"):
+    def __init__(self, live=None, mods=None, mods_error=None, snapshot="0.05", account=ACCOUNT):
+        self.sts, self.sts_stub = stubbed_client("sts", REGION)
+        self.sts_stub.add_response("get_caller_identity", {"Account": account, "Arn": "arn:aws:iam::1:user/t",
+                                                           "UserId": "t"}, {})
         self.ec2, self.ec2_stub = stubbed_client("ec2", REGION)
         self.pricing, self.pricing_stub = stubbed_client("pricing", "us-east-1")
-        self.aws = RecordingAws(REGION, FIXER_OPS, clients={"ec2": self.ec2, "pricing": self.pricing})
+        self.aws = RecordingAws(REGION, FIXER_OPS, clients={"sts": self.sts, "ec2": self.ec2, "pricing": self.pricing})
         self.ec2_stub.add_response("describe_volumes", {"Volumes": [live or volume("vol-1", size=100, state="available")]},
                                    FILTER)
         if mods_error:
@@ -166,3 +169,45 @@ def test_change_json_has_change_note_and_iac_evidence(tmp_path, capsys):
     assert cli.main(["gp2-to-gp3-fix", "change", "--assessment", str(run_dir), "--out", str(out)]) == 0
     assert json.loads(out.read_text())["finder"] == "gp2-to-gp3"
     assert fixer.FIXER_OPS >= {"ec2.ModifyVolume", "ec2.DeleteSnapshot"}
+
+
+def test_plan_records_identity_and_cost_basis(tmp_path):
+    plan = _plan(_assess(tmp_path), Fixer())
+    assert plan["caller_identity"]["Account"] == ACCOUNT
+    assert plan["cost_basis"] == {"kind": "public_price_estimate", "source": None, "period": None}
+
+
+def test_account_mismatch_is_an_input_error(tmp_path):
+    with pytest.raises(InputError, match="account"):
+        _plan(_assess(tmp_path), Fixer(account="999999999999"))
+
+
+def test_profile_falls_back_to_context_config(tmp_path):
+    run_dir = _assess(tmp_path)
+    (run_dir / "config.json").unlink()
+    ctx = json.loads((run_dir / "context.json").read_text())
+    ctx["config"] = {**(ctx["config"] or {}), "profile": "audit"}
+    (run_dir / "context.json").write_text(json.dumps(ctx))
+    assert load_assessment(run_dir)["profile"] == "audit"
+    assert _plan(run_dir, Fixer())["profile"] == "audit"
+
+
+def test_cli_error_codes(tmp_path, monkeypatch, capsys):
+    run_dir = _assess(tmp_path)
+    capsys.readouterr()
+    args = ["gp2-to-gp3-fix", "plan", "--assessment", str(run_dir), "--management", "unknown",
+            "--out", str(tmp_path / "p")]
+    assert cli.main(args + ["--iops", "bad"]) == 1
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "invalid_input"
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: _Denied())
+    assert cli.main(args) == 1
+    err = json.loads(capsys.readouterr().out)["error"]
+    assert (err["code"], err["service"], err["operation"]) == ("UnauthorizedOperation", "sts", "GetCallerIdentity")
+
+
+class _Denied:
+    reads: list = []
+
+    def call(self, service, operation, params):
+        from cloudfix.common.errors import AwsCallError
+        raise AwsCallError(service, operation, "UnauthorizedOperation", "denied")
