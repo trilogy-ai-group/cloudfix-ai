@@ -2,11 +2,9 @@
 
 AWS cost optimization skills for your agent. **Preview.**
 
-`cloudfix` is a plugin served from the `cloudfix-ai` marketplace in this repository. It carries two skills today.
+`cloudfix` is a plugin served from the `cloudfix-ai` marketplace in this repository. It carries one skill today.
 
 ## What it does
-
-`cloudfix-aws-savings` is the way in. It is used when someone asks, in any words, to save money on AWS or lower their bill. It runs the check below first, then explains what else CloudFix covers and what needs the hosted product. It contains no checks of its own.
 
 `co-gp2-to-gp3-guided` assesses EBS GP2 volumes for conversion to GP3. It is one instruction file with no code. Your agent follows it with its own AWS tools and a calculator, and an independent reviewer where your harness has one. It prepares a change when you ask for one and carries out only what you explicitly authorize.
 
@@ -23,7 +21,7 @@ In Claude Code:
 /plugin install cloudfix@cloudfix-ai
 ```
 
-Then ask your agent in your own words, for example "save me money on AWS, account ACCOUNT_ID, region REGION". Or name the check, replacing the account and region:
+Then ask your agent, replacing the account and region:
 
 > Use the co-gp2-to-gp3-guided skill to assess GP2 volumes in AWS account ACCOUNT_ID, region REGION, using my existing AWS access. Do not apply changes.
 
