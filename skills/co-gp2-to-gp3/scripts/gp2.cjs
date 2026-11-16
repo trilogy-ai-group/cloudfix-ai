@@ -55,7 +55,7 @@ var __decorateParam = (index, decorator) => (target, key) => decorator(target, k
 var define_CLOUDFIX_BUILD_default;
 var init_define_CLOUDFIX_BUILD = __esm({
   "<define:__CLOUDFIX_BUILD__>"() {
-    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "04c681f06be95718d12e2009ddb794a6b2103c78ae442ff9de46b296a4476822" };
+    define_CLOUDFIX_BUILD_default = { package: "co-gp2-to-gp3", buildId: "52ab4264f0be0f7fb2533d2e9be60febfb5a243e01821b949049bd62e3462c04" };
   }
 });
 
@@ -217947,6 +217947,7 @@ function customerSummary(result2, evidence, context, artifacts) {
   }
   const lookups = context.pricing_lookups ?? [];
   const nativeFailure = object2(result2) ? result2 : {};
+  const ceRate = context.cost_basis === "caller_supplied_costs" && !billingPending(context) && context.cost_input?.billing_evidence?.method === "ce_account_region_gp2_effective_rate" && context.cost_input.billing_evidence.status === "complete";
   return {
     status: context.status,
     mode: context.mode ?? null,
@@ -217957,8 +217958,9 @@ function customerSummary(result2, evidence, context, artifacts) {
       selected_volume_ids: selectedIds
     },
     cost_basis: {
-      kind: context.cost_basis ?? "unknown",
+      kind: ceRate ? "ce_account_region_gp2_effective_rate" : context.cost_basis ?? "unknown",
       currency: "USD",
+      ...ceRate ? { label: "Cost Explorer effective-rate estimate" } : {},
       source: context.cost_input?.source ?? null,
       period: context.cost_input?.period ?? null,
       pricing_verification: lookups.length ? context.mode === "live_collection" ? "AWS reads recorded" : context.mode === "replay" ? "recorded responses; no AWS reads performed during replay" : context.mode === "billing_resume" ? "saved resource/pricing responses; resource state was not refreshed" : "recorded test responses" : "Price lookup provenance was not supplied or no price lookup was completed.",

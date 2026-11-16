@@ -134,7 +134,7 @@ For the private pilot, record installation friction and any human help needed. U
 The tested executable's SHA-256 is:
 
 ```text
-d271d798bffc5b7a0b9c5967571edf56b37bd858f04b8add8076cd5222fbedc1
+639c435b9c835796d31b635ed7d5c943135030977988b7f8da9c849d7d7d57f9
 ```
 
 Run `node skills/co-gp2-to-gp3/scripts/gp2.cjs --version` for its package name and public build identifier. That identifier links to the complete private maintainer build record. The package runs directly; it needs no source checkout, dependency installation or rebuild.
