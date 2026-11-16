@@ -205,7 +205,7 @@ def test_change_json_has_change_note_and_iac_evidence(tmp_path, capsys):
     run_dir = _assess(tmp_path, tags={"ManagedBy": "terraform"})
     change = make_change(load_assessment(run_dir), volume_ids=None, iops_overrides={}, throughput_overrides={},
                          repo_hint="/repo", delivery="draft_pr")
-    assert change["change_note"].endswith("skills/co-gp2-to-gp3-fix/iac.md")
+    assert Path(change["change_note"]).as_posix().endswith("skills/co-gp2-to-gp3-fix/iac.md")
     assert Path(change["change_note"]).is_file()
     r = change["resources"][0]
     assert r["id"] == "vol-1" and r["iac_evidence"] and r["deviates_from_assessment"] is False
