@@ -19,5 +19,6 @@ def test_both_marketplaces_point_at_the_plugin():
     assert claude["name"] == codex["name"] == "cloudfix-ai"
 
 
-def test_old_bundle_is_gone():
-    assert not (REPO / "skills/co-gp2-to-gp3").exists()
+def test_plugin_carries_the_repository_licence():
+    # A marketplace install copies only plugins/cloudfix/, and the licence must travel with every copy.
+    assert (REPO / "plugins/cloudfix/LICENSE").read_bytes() == (REPO / "LICENSE").read_bytes()
