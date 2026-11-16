@@ -17,7 +17,7 @@ uv run --frozen --no-dev --project <plugin>/python cloudfix <args>
 
 `<plugin>` is the plugin root: two directories up from this skill's own directory (Claude Code also substitutes `${CLAUDE_PLUGIN_ROOT}`). In the rest of this skill, `cloudfix ...` means that full command. The first command builds the tool's environment and takes a few seconds; later ones start immediately.
 
-- If `uv --version` fails, stop and say uv is missing. Give the install options for the user's OS: the Astral installer (`curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows), Homebrew (`brew install uv`), WinGet (`winget install --id=astral-sh.uv -e`) or pipx (`pipx install uv`). Install only if the user asks you to.
+- If `uv --version` fails, stop and say uv is missing. Give the install options for the user's OS: the Astral installer (`curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows), Homebrew (`brew install uv`), WinGet (`winget install --id=astral-sh.uv -e`) or pipx (`pipx install uv`). Install only if the user asks you to.
 - If uv reports that the plugin folder is not writable, rerun the same command with `UV_PROJECT_ENVIRONMENT` set to a per-user cache directory: `~/.cache/cloudfix-ai/env` on macOS and Linux, `%LOCALAPPDATA%\cloudfix-ai\env` on Windows. Use the shell's own syntax to set the variable for that command (`UV_PROJECT_ENVIRONMENT=~/.cache/cloudfix-ai/env uv run ...` in sh or bash, `$env:UV_PROJECT_ENVIRONMENT = "$env:LOCALAPPDATA\cloudfix-ai\env"` before the command in PowerShell, `set "UV_PROJECT_ENVIRONMENT=%LOCALAPPDATA%\cloudfix-ai\env"` in cmd). Keep using it for every later command.
 - Any other uv failure (no network, blocked package index): report uv's own message and stop.
 
@@ -41,7 +41,7 @@ It prints the finder's settings as JSON: name, meaning, type, default and allowe
 
 Use the answers already in the request. Ask only for the settings it did not answer, one question at a time, and offer the default where there is one. Never apply a default silently: state the value you are using and that it is the default. If `cost_basis` is `supplied`, `costs_file` is required. Use only the requested account, region and volume IDs; do not widen to other accounts or regions. Use the AWS profile the customer names, or the default credential chain if they name none.
 
-Write the answers as `config.json`, a JSON object keyed by the setting names, in a new run directory's parent (the run directory itself must not exist yet). Omit settings that were not given. Do not put credentials in it.
+Write the answers as `config.json`, a JSON object keyed by the setting names, in a new run directory's parent (the run directory itself must not exist yet). Write every setting the user gave, and also every default the user accepted, explicitly with its value, so the state-and-confirm step is recorded in the artifact; the tool fills omitted settings with defaults silently, so omit only optional settings that have no value (for example `profile` when using the default credential chain, `volume_ids` for discovery, `costs_file` for public prices). Do not put credentials in it.
 
 ## 4. Run
 
