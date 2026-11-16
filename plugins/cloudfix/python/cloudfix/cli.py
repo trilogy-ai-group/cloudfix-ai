@@ -2,12 +2,19 @@
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from cloudfix import __version__
+from cloudfix.common.aws import RecordingAws
+from cloudfix.common.errors import AwsCallError, InputError
+from cloudfix.common.output import write_json
 from cloudfix.common.settings import describe
 from cloudfix.finders import gp2_to_gp3
 from cloudfix.finders.gp2_to_gp3.run import run_assess, run_replay
+from cloudfix.fixers.gp2_to_gp3 import plan as fixer_plan
+
+FIX_NAME = "gp2-to-gp3-fix"
 
 
 class CliError(Exception):
@@ -32,6 +39,21 @@ def build_parser() -> argparse.ArgumentParser:
     replay = actions.add_parser("replay", allow_abbrev=False, help="re-run an assessment from recorded evidence")
     replay.add_argument("--evidence", required=True, type=Path, help="evidence.json from an earlier run")
     replay.add_argument("--out", required=True, type=Path, help="new run directory to create")
+    fix = commands.add_parser(FIX_NAME, allow_abbrev=False, help="plan and describe gp2 to gp3 changes")
+    fix_actions = fix.add_subparsers(dest="action", metavar="ACTION", required=True)
+    plan = fix_actions.add_parser("plan", allow_abbrev=False, help="write an approvable plan from an assessment")
+    change = fix_actions.add_parser("change", allow_abbrev=False, help="write change.json for the PR worker")
+    for p in (plan, change):
+        p.add_argument("--assessment", required=True, type=Path, help="run directory of a complete assessment")
+        p.add_argument("--volume-id", action="append", default=[], help="volume to include (repeatable)")
+        p.add_argument("--iops", action="append", default=[], metavar="VOL=N", help="IOPS override (repeatable)")
+        p.add_argument("--throughput", action="append", default=[], metavar="VOL=N",
+                       help="throughput override in MiB/s (repeatable)")
+    plan.add_argument("--management", required=True, choices=("not-managed", "unknown"))
+    plan.add_argument("--out", required=True, type=Path, help="new directory to hold plan.json")
+    change.add_argument("--repo-hint")
+    change.add_argument("--delivery", choices=("draft_pr", "local_patch"), default="draft_pr")
+    change.add_argument("--out", required=True, type=Path, help="change.json file to create")
     return parser
 
 
@@ -53,6 +75,44 @@ def _gp2_to_gp3(args: argparse.Namespace) -> int:
     return run_replay(args.evidence, args.out)
 
 
+def _overrides(values: list[str], flag: str) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for value in values:
+        vol, sep, number = value.partition("=")
+        if not sep or not vol or not number.isdigit():
+            raise InputError(f"{flag} expects VOL=N with a whole number, got {value!r}")
+        out[vol] = int(number)
+    return out
+
+
+def _fix(args: argparse.Namespace, aws=None, now=None) -> int:
+    iops, throughput = _overrides(args.iops, "--iops"), _overrides(args.throughput, "--throughput")
+    assessment = fixer_plan.load_assessment(args.assessment)
+    ids = args.volume_id or None
+    if args.action == "change":
+        if args.out.exists():
+            raise InputError(f"output file already exists: {args.out}")
+        change = fixer_plan.make_change(assessment, volume_ids=ids, iops_overrides=iops,
+                                        throughput_overrides=throughput, repo_hint=args.repo_hint,
+                                        delivery=args.delivery)
+        write_json(args.out, change)
+        _emit({"status": "written", "change_file": str(args.out.resolve()),
+               "volumes": [r["id"] for r in change["resources"]]})
+        return 0
+    aws = aws or RecordingAws(assessment["result"]["region"], fixer_plan.FIXER_OPS,
+                              profile=assessment["config"].get("profile"))
+    plan = fixer_plan.make_plan(assessment, aws, volume_ids=ids, management=args.management,
+                                iops_overrides=iops, throughput_overrides=throughput,
+                                now=now or datetime.now(timezone.utc))
+    if not plan["volumes"]:
+        _emit({"status": "refused", "volumes": [], "refused": plan["refused"]})
+        return 1
+    path, digest = fixer_plan.write_plan(args.out, plan)
+    _emit({"status": "planned", "plan_file": str(path), "sha256": digest,
+           "volumes": [v["volume_id"] for v in plan["volumes"]], "refused": plan["refused"]})
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         parser = build_parser()
@@ -62,10 +122,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == gp2_to_gp3.NAME:
             return _gp2_to_gp3(args)
+        if args.command == FIX_NAME:
+            return _fix(args)
         parser.print_usage(sys.stdout)
         return 0
     except SystemExit as exc:  # --help prints its text and exits through argparse
         return exc.code if isinstance(exc.code, int) else 0 if exc.code is None else 1
+    except (InputError, AwsCallError) as exc:
+        return _error("input", str(exc))
     except CliError as exc:
         return _error("usage", str(exc))
     except Exception as exc:  # noqa: BLE001 - the contract is one JSON error line
