@@ -6,7 +6,9 @@ from cloudfix import cli
 from cloudfix.common.errors import InputError
 from cloudfix.fixers.gp2_to_gp3.apply import Approval
 from cloudfix.fixers.gp2_to_gp3.cleanup import cleanup, status
-from tests.test_gp2_apply import APPLY_NOW, OLD, Aws, Clock, _execution, _make_plan, _mod, _seed, _snap
+from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, FIXER_READS, FIXER_WRITES
+from tests.test_gp2_apply import APPLY_NOW, OLD, Aws, Clock, _apply, _execution, _make_plan, _mod, _seed, _snap
+from tests.test_gp2_run import REGION
 
 APPROVAL = Approval("after_plan", "yes, delete the recovery snapshots")
 
@@ -27,14 +29,15 @@ def _delete(aws, sid):
 def test_status_makes_no_writes(tmp_path):
     path, digest = _make_plan(tmp_path, extra=("vol-2",))
     _seed(path, digest, {"vol-1": "verified", "vol-2": "optimizing"})
-    aws = Aws(path, identity=False)
+    aws = Aws(path)
     aws.volume("vol-1", vtype="gp3", iops=3000, throughput=125)
     aws.mods("vol-1", _mod("vol-1", "completed", APPLY_NOW))
     aws.volume("vol-2", vtype="gp3", iops=3000, throughput=125)
     aws.mods("vol-2", _mod("vol-2", "optimizing", APPLY_NOW, "Optimization in progress"))
     out = status(path, aws.aws)
     aws.assert_all_used()
-    assert aws.operations() and all(op.startswith("Describe") for op in aws.operations())
+    assert aws.operations()[0] == "GetCallerIdentity"
+    assert {f"{r['service']}.{r['operation']}" for r in aws.aws.reads} <= FIXER_READS
     assert out["volumes"]["vol-1"] == {
         "state": "verified", "snapshot_id": "snap-1", "snapshot_deleted": False,
         "live": {"type": "gp3", "size_gib": 100, "iops": 3000, "throughput": 125},
@@ -46,7 +49,7 @@ def test_status_makes_no_writes(tmp_path):
 
 def test_status_before_apply_reports_not_started(tmp_path):
     path, _ = _make_plan(tmp_path)
-    aws = Aws(path, identity=False)
+    aws = Aws(path)
     aws.volume("vol-1")
     aws.mods("vol-1")
     out = status(path, aws.aws)
@@ -126,19 +129,19 @@ def test_cleanup_refuses_other_account(tmp_path):
 def test_cli_status_and_cleanup(tmp_path, monkeypatch, capsys):
     path, digest = _make_plan(tmp_path)
     _seed(path, digest, {"vol-1": "verified"})
-    aws = Aws(path, identity=False)
+    aws = Aws(path)
     aws.volume("vol-1", vtype="gp3", iops=3000, throughput=125)
     aws.mods("vol-1", _mod("vol-1", "completed", OLD))
     seen = []
-    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: (seen.append(k), aws.aws)[1])
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: (seen.append((a, k)), aws.aws)[1])
     capsys.readouterr()
     assert cli.main(["gp2-to-gp3-fix", "status", "--plan", str(path)]) == 0
     assert json.loads(capsys.readouterr().out)["volumes"]["vol-1"]["state"] == "verified"
-    assert seen[-1].get("retries", True) is True
+    assert seen[-1] == ((REGION, FIXER_READS), {"profile": None})  # read-only operations, default retries
     aws2 = Aws(path)
     _read_snapshot(aws2, "snap-1", "vol-1", aws2.plan_id)
     _delete(aws2, "snap-1")
-    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: (seen.append(k), aws2.aws)[1])
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: (seen.append((a, k)), aws2.aws)[1])
     monkeypatch.setattr(cli, "_utcnow", Clock().now)
     args = ["gp2-to-gp3-fix", "cleanup", "--plan", str(path), "--approval-kind", "after_plan",
             "--approval-text", "yes"]
@@ -146,7 +149,7 @@ def test_cli_status_and_cleanup(tmp_path, monkeypatch, capsys):
     assert json.loads(capsys.readouterr().out)["error"]["code"] == "invalid_input"
     assert cli.main(args + ["--approve", digest]) == 0
     assert json.loads(capsys.readouterr().out)["deleted"] == ["vol-1"]
-    assert seen[-1]["retries"] is False
+    assert seen[-1] == ((REGION, FIXER_OPS), {"profile": None, "no_retry": FIXER_WRITES})
 
 
 def test_cleanup_rerun_keeps_each_runs_record(tmp_path):
@@ -170,3 +173,48 @@ def test_cleanup_rerun_keeps_each_runs_record(tmp_path):
     assert [r["approval"]["kind"] for r in runs] == ["after_plan", "prior"]
     assert runs[0]["approval"]["wording"] == APPROVAL.wording
     assert runs[1]["approval"]["recorded_at"] != runs[0]["approval"]["recorded_at"]
+
+
+def test_status_refuses_other_account(tmp_path, monkeypatch, capsys):
+    path, _ = _make_plan(tmp_path)
+    aws = Aws(path, account="999999999999")
+    with pytest.raises(InputError, match="account"):
+        status(path, aws.aws)
+    assert aws.operations() == ["GetCallerIdentity"]
+    other = Aws(path, account="999999999999")
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: other.aws)
+    capsys.readouterr()
+    assert cli.main(["gp2-to-gp3-fix", "status", "--plan", str(path)]) == 1
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "invalid_input"
+
+
+def test_cleanup_deletes_a_snapshot_taken_before_the_volume_reached_the_target(tmp_path):
+    """apply verified the volume from snapshot_completed without a modification of ours; its snapshot is real
+    and cleanup must delete it."""
+    path, digest = _make_plan(tmp_path)
+    _seed(path, digest, {"vol-1": "snapshot_completed"})
+    applied = Aws(path)
+    applied.mods("vol-1", _mod("vol-1", "completed", OLD))
+    applied.volume("vol-1", vtype="gp3", iops=3000, throughput=125)
+    assert _apply(path, digest, applied)["status"] == "completed"
+    aws = Aws(path)
+    _read_snapshot(aws, "snap-1", "vol-1", aws.plan_id)
+    _delete(aws, "snap-1")
+    out = cleanup(path, digest, APPROVAL, aws.aws, now=Clock().now)
+    aws.assert_all_used()
+    assert out["deleted"] == ["vol-1"] and out["skipped"] == {}
+
+
+def test_cleanup_decides_by_recorded_snapshot_not_already_at_target(tmp_path):
+    """An execution.json from an earlier version may say already_at_target next to a real snapshot."""
+    path, digest = _make_plan(tmp_path)
+    _seed(path, digest, {"vol-1": "verified"})
+    execution = _execution(path)
+    execution["volumes"]["vol-1"]["already_at_target"] = True  # snapshot_id stays snap-1
+    (path.parent / "execution.json").write_text(json.dumps(execution))
+    aws = Aws(path)
+    _read_snapshot(aws, "snap-1", "vol-1", aws.plan_id)
+    _delete(aws, "snap-1")
+    out = cleanup(path, digest, APPROVAL, aws.aws, now=Clock().now)
+    aws.assert_all_used()
+    assert out["deleted"] == ["vol-1"]

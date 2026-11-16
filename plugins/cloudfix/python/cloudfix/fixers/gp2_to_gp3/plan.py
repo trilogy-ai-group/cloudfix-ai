@@ -17,11 +17,14 @@ from cloudfix.common.output import new_run_dir, write_json
 from cloudfix.common.pricing import EbsPrices, PricingLookups
 from cloudfix.finders.gp2_to_gp3.decide import estimate_savings
 
-FIXER_OPS = frozenset({
+FIXER_READS = frozenset({  # plan and status use only these
     "sts.GetCallerIdentity", "ec2.DescribeVolumes", "ec2.DescribeVolumesModifications",
-    "ec2.DescribeSnapshots", "ec2.CreateSnapshot", "ec2.CreateTags", "ec2.ModifyVolume",
-    "ec2.DeleteSnapshot", "pricing.GetProducts",
+    "ec2.DescribeSnapshots", "pricing.GetProducts",
 })
+FIXER_WRITES = frozenset({  # apply and cleanup send each of these exactly once (no botocore retries)
+    "ec2.CreateSnapshot", "ec2.CreateTags", "ec2.ModifyVolume", "ec2.DeleteSnapshot",
+})
+FIXER_OPS = FIXER_READS | FIXER_WRITES
 PLAN_LIFETIME = timedelta(hours=24)
 COOLDOWN = timedelta(hours=6)
 

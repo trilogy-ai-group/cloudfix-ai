@@ -122,7 +122,7 @@ def _fix(args: argparse.Namespace, aws=None, now=None) -> int:
         _emit({"status": "written", "change_file": str(args.out.resolve()),
                "volumes": [r["id"] for r in change["resources"]]})
         return 0
-    aws = aws or RecordingAws(assessment["result"]["region"], fixer_plan.FIXER_OPS,
+    aws = aws or RecordingAws(assessment["result"]["region"], fixer_plan.FIXER_READS,
                               profile=assessment["profile"])
     plan = fixer_plan.make_plan(assessment, aws, volume_ids=ids, management=args.management,
                                 iops_overrides=iops, throughput_overrides=throughput,
@@ -144,7 +144,8 @@ def _apply(args: argparse.Namespace) -> int:
     if not math.isfinite(args.wait) or args.wait < 0:
         raise InputError(f"--wait must be a non-negative number of minutes, got {args.wait}")
     plan = fixer_apply.read_plan(args.plan)
-    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"), retries=False)
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"),
+                       no_retry=fixer_plan.FIXER_WRITES)
     result = fixer_apply.apply_plan(args.plan, args.approve,
                                     fixer_apply.Approval(args.approval_kind, args.approval_text), aws,
                                     confirm_direct=args.confirm_direct_management, wait_minutes=args.wait,
@@ -155,14 +156,15 @@ def _apply(args: argparse.Namespace) -> int:
 
 def _status(args: argparse.Namespace) -> int:
     plan = fixer_apply.read_plan(args.plan)
-    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"))
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_READS, profile=plan.get("profile"))
     _emit(fixer_cleanup.status(args.plan, aws))
     return 0
 
 
 def _cleanup(args: argparse.Namespace) -> int:
     plan = fixer_apply.read_plan(args.plan)
-    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"), retries=False)
+    aws = RecordingAws(plan["region"], fixer_plan.FIXER_OPS, profile=plan.get("profile"),
+                       no_retry=fixer_plan.FIXER_WRITES)
     _emit(fixer_cleanup.cleanup(args.plan, args.approve, fixer_apply.Approval(args.approval_kind, args.approval_text),
                                 aws, now=_utcnow))
     return 0

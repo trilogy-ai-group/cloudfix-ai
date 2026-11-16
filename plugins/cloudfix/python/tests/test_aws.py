@@ -9,27 +9,48 @@ from cloudfix.common.errors import InputError, MissingEvidence, AwsCallError
 from tests.factories import offline_aws_env, stubbed_client
 
 
-@pytest.mark.parametrize("retries", [True, False])
-def test_retries_off_sends_a_write_with_a_lost_response_once(tmp_path, monkeypatch, retries):
-    """EC2 accepted CreateSnapshot but the response was lost: only `retries=False` stops botocore re-sending it."""
-    offline_aws_env(monkeypatch, tmp_path)
-    monkeypatch.setattr(time, "sleep", lambda seconds: None)  # botocore's retry backoff
-    aws = RecordingAws("eu-west-1", frozenset({"ec2.CreateSnapshot"}), retries=retries)
-    sent = []
-
+def _lose_responses(aws, operation, sent):
+    """Every request for `operation` reaches AWS (recorded in `sent`) but its response is lost."""
     def lost_response(request, **kwargs):
         sent.append(request.url)
         raise ReadTimeoutError(endpoint_url=request.url)
 
-    aws._client("ec2").meta.events.register("before-send.ec2.CreateSnapshot", lost_response)
+    aws._client("ec2", operation).meta.events.register(f"before-send.ec2.{operation}", lost_response)
+
+
+@pytest.mark.parametrize("no_retry", [frozenset(), frozenset({"ec2.CreateSnapshot"})])
+def test_a_write_named_in_no_retry_is_sent_once_when_its_response_is_lost(tmp_path, monkeypatch, no_retry):
+    """EC2 accepted CreateSnapshot but the response was lost: only naming it in `no_retry` stops botocore
+    re-sending it."""
+    offline_aws_env(monkeypatch, tmp_path)
+    monkeypatch.setattr(time, "sleep", lambda seconds: None)  # botocore's retry backoff
+    aws = RecordingAws("eu-west-1", frozenset({"ec2.CreateSnapshot"}), no_retry=no_retry)
+    sent = []
+    _lose_responses(aws, "CreateSnapshot", sent)
     with pytest.raises(AwsCallError) as e:
         aws.call("ec2", "CreateSnapshot", {"VolumeId": "vol-1"})
     assert e.value.code == "ReadTimeoutError"
-    if retries:
-        assert len(sent) > 1  # the hazard: the default client re-sends the write by itself
-    else:
+    if no_retry:
         assert len(sent) == 1
-        assert aws._client("ec2").meta.config.retries["total_max_attempts"] == 1
+        assert aws._client("ec2", "CreateSnapshot").meta.config.retries["total_max_attempts"] == 1
+    else:
+        assert len(sent) > 1  # the hazard: the default client re-sends the write by itself
+
+
+def test_reads_keep_default_retries_while_writes_are_sent_once(tmp_path, monkeypatch):
+    offline_aws_env(monkeypatch, tmp_path)
+    monkeypatch.setattr(time, "sleep", lambda seconds: None)
+    aws = RecordingAws("eu-west-1", frozenset({"ec2.CreateSnapshot", "ec2.DescribeSnapshots"}),
+                       no_retry=frozenset({"ec2.CreateSnapshot"}))
+    write, read = aws._client("ec2", "CreateSnapshot"), aws._client("ec2", "DescribeSnapshots")
+    assert write is not read and aws._client("ec2", "DescribeSnapshots") is read  # each built once
+    assert write.meta.config.retries["total_max_attempts"] == 1
+    assert read.meta.config.retries.get("total_max_attempts") is None  # botocore's default (standard) retries
+    sent = []
+    _lose_responses(aws, "DescribeSnapshots", sent)
+    with pytest.raises(AwsCallError):
+        aws.call("ec2", "DescribeSnapshots", {"SnapshotIds": ["snap-1"]})
+    assert len(sent) > 1  # a read whose response was lost is retried by botocore
 
 
 def test_recording_records_input_output_and_converts_datetimes():

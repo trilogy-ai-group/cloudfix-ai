@@ -8,7 +8,7 @@ from cloudfix import cli
 from cloudfix.common.aws import RecordingAws
 from cloudfix.common.errors import InputError
 from cloudfix.fixers.gp2_to_gp3 import plan as fixer
-from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, load_assessment, make_change, make_plan, write_plan
+from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, FIXER_READS, load_assessment, make_change, make_plan, write_plan
 from tests.factories import price_row, stubbed_client, volume
 from tests.test_gp2_run import ACCOUNT, NOW, REGION, Stubs, _config
 
@@ -108,7 +108,8 @@ def test_all_refused_exits_1_and_writes_no_plan(tmp_path, monkeypatch, capsys):
 def test_cli_plan_writes_plan(tmp_path, monkeypatch, capsys):
     assessment = _assess(tmp_path)
     fx = Fixer(mods_error="InvalidVolumeModification.NotFound")
-    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: fx.aws)
+    made = []
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: made.append((a, k)) or fx.aws)
     out = tmp_path / "plan"
     capsys.readouterr()
     assert cli.main(["gp2-to-gp3-fix", "plan", "--assessment", str(assessment), "--management", "unknown",
@@ -116,6 +117,7 @@ def test_cli_plan_writes_plan(tmp_path, monkeypatch, capsys):
     line = json.loads(capsys.readouterr().out)
     assert line["status"] == "planned" and line["volumes"] == ["vol-1"]
     assert line["sha256"] == hashlib.sha256((out / "plan.json").read_bytes()).hexdigest()
+    assert made == [((REGION, FIXER_READS), {"profile": None})]  # plan reads only: no write is allowed
 
 
 def test_throughput_override_recomputes_estimate_and_marks_deviation(tmp_path):

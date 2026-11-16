@@ -32,12 +32,20 @@ def _volume_ids(plan: dict) -> list[str]:
     return list(dict.fromkeys(v["volume_id"] for v in plan["volumes"]))
 
 
+def _check_account(aws: Caller, plan: dict) -> None:
+    identity = aws.call("sts", "GetCallerIdentity", {})
+    if identity.get("Account") != plan["account"]:
+        raise InputError(f"credentials belong to account {identity.get('Account')}, "
+                         f"but the plan is for account {plan['account']}")
+
+
 def status(plan_path: Path, aws: Caller) -> dict:
-    """Recorded and live state per volume. Only Describe* operations; nothing is written."""
+    """Recorded and live state per volume. Only reads (STS and Describe*); nothing is written."""
     plan_path = Path(plan_path).resolve()
     plan = _parse_plan(_read_bytes(plan_path), plan_path)
     path = plan_path.with_name("execution.json")
     execution = _load_execution(path, plan, None)
+    _check_account(aws, plan)
     volumes = {}
     for vid in _volume_ids(plan):
         rec = (execution or {"volumes": {}})["volumes"].get(vid)
@@ -68,13 +76,14 @@ def status(plan_path: Path, aws: Caller) -> dict:
 
 
 def _skip_reason(rec: dict) -> str | None:
+    """Eligible: verified, with a recorded snapshot that was not deleted yet."""
     if rec["state"] != "verified":
         return f"not verified (state {rec['state']})"
-    if rec.get("already_at_target"):
-        return "no recovery snapshot was taken (the volume was already at the target)"
     if rec.get("snapshot_deleted"):
         return "the snapshot was already deleted"
     if not rec.get("snapshot_id"):
+        if rec.get("already_at_target"):
+            return "no recovery snapshot was taken (the volume was already at the target)"
         return "no recovery snapshot is recorded"
     return None
 
@@ -97,10 +106,7 @@ def cleanup(plan_path: Path, approve_sha256: str, approval: Approval, aws: Calle
     if execution is None:
         raise InputError(f"there is no execution.json next to {plan_path}; nothing was applied, so there is "
                          "nothing to clean up")
-    identity = aws.call("sts", "GetCallerIdentity", {})
-    if identity.get("Account") != plan["account"]:
-        raise InputError(f"credentials belong to account {identity.get('Account')}, "
-                         f"but the plan is for account {plan['account']}")
+    _check_account(aws, plan)
     prior_calls, base = list(execution["calls"]), len(aws.reads)
 
     def save() -> None:

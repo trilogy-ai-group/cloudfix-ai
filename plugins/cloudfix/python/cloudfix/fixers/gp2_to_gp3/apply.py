@@ -20,7 +20,7 @@ STATES = ("planned", "snapshot_requested", "snapshot_completed", "modification_s
 TERMINAL = ("verified", "failed")
 ACT_NOW = ("snapshot_completed", "completed")  # states whose next step needs no waiting on AWS
 POLL_SECONDS = 15
-DEFAULT_WAIT_MINUTES = 15
+DEFAULT_WAIT_MINUTES = 1  # well inside a harness's 2-minute command timeout; a rerun continues
 _PLAN_KEYS = ("plan_id", "created_at", "expires_at", "account", "region", "volumes")
 
 
@@ -163,15 +163,17 @@ class _Run:
         reason = plan_refusal(live, {"sizing": {"size_gib": entry["current"]["size_gib"]}}, latest, self.now())
         return f"live state no longer matches the plan: {reason}" if reason else None
 
-    def as_is(self, rec: dict, live: dict) -> None:
-        rec["already_at_target"], rec["final"] = True, _setting(live)
+    def as_is(self, rec: dict, live: dict, *, before_snapshot: bool) -> None:
+        """Verified without a modification of ours. `already_at_target` means no recovery snapshot was taken,
+        so it is set only in `planned`, before any snapshot exists."""
+        rec["already_at_target"], rec["final"] = before_snapshot, _setting(live)
         self.move(rec, "verified")
 
     # One step per state: reconcile with AWS, then act only if AWS shows the step has not happened.
     def _planned(self, vid: str, entry: dict, rec: dict) -> None:
         live = self.volume(vid)
         if live is not None and _at_target(live, entry["target"]):
-            return self.as_is(rec, live)
+            return self.as_is(rec, live, before_snapshot=True)
         if reason := self.refusal(entry, live, _latest(self.modifications(vid))):
             return self.move(rec, "failed", reason)
         snap = self.tagged_snapshot(vid)
@@ -207,7 +209,7 @@ class _Run:
         if self.ours(mods, target) is None:
             live = self.volume(vid)
             if live is not None and _at_target(live, target):
-                return self.as_is(rec, live)
+                return self.as_is(rec, live, before_snapshot=False)
             if reason := self.refusal(entry, live, _latest(mods)):
                 return self.move(rec, "failed", reason)
             try:

@@ -7,8 +7,8 @@ import pytest
 from cloudfix import cli
 from cloudfix.common.aws import RecordingAws
 from cloudfix.common.errors import InputError
-from cloudfix.fixers.gp2_to_gp3.apply import POLL_SECONDS, STATES, Approval, apply_plan
-from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, load_assessment, make_plan, write_plan
+from cloudfix.fixers.gp2_to_gp3.apply import DEFAULT_WAIT_MINUTES, POLL_SECONDS, STATES, Approval, apply_plan
+from cloudfix.fixers.gp2_to_gp3.plan import FIXER_OPS, FIXER_READS, FIXER_WRITES, load_assessment, make_plan, write_plan
 from tests.factories import offline_aws_env, stubbed_client, volume
 from tests.test_gp2_plan import PLAN_NOW, Fixer, _assess
 from tests.test_gp2_run import ACCOUNT, REGION
@@ -271,7 +271,7 @@ def test_in_progress_then_resume(tmp_path, monkeypatch, capsys):
     assert line["status"] == "in_progress"
     assert line["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
     assert line["execution_file"] == str(path.parent / "execution.json")
-    assert made == [((REGION, FIXER_OPS), {"profile": None, "retries": False})]
+    assert made == [((REGION, FIXER_OPS), {"profile": None, "no_retry": FIXER_WRITES})]
     second = Aws(path)
     second.snapshot("snap-1", "vol-1", "completed")
     second.submit("vol-1")
@@ -317,7 +317,7 @@ def test_snapshot_created_before_a_crash_is_found_by_tag(tmp_path, seeded):
     assert result["volumes"]["vol-1"] == {"state": "snapshot_requested", "snapshot_id": "snap-1"}
 
 
-def test_apply_caller_is_built_without_retries(tmp_path, monkeypatch):
+def test_apply_caller_sends_writes_once_and_keeps_retries_for_reads(tmp_path, monkeypatch):
     offline_aws_env(monkeypatch, tmp_path)
     path, _ = _make_plan(tmp_path)
     built = []
@@ -330,8 +330,47 @@ def test_apply_caller_is_built_without_retries(tmp_path, monkeypatch):
     code = cli.main(["gp2-to-gp3-fix", "apply", "--plan", str(path), "--approve", "0" * 64,
                      "--approval-kind", "after_plan", "--approval-text", "yes"])
     assert code == 1 and built[0].reads == []  # refused on the hash, before any request
-    for service in ("ec2", "sts"):
-        assert built[0]._client(service).meta.config.retries["total_max_attempts"] == 1
+    assert FIXER_WRITES == {"ec2.CreateSnapshot", "ec2.ModifyVolume", "ec2.CreateTags", "ec2.DeleteSnapshot"}
+    for op in FIXER_WRITES:
+        assert built[0]._client(*op.split(".")).meta.config.retries["total_max_attempts"] == 1
+    for op in FIXER_READS:
+        assert built[0]._client(*op.split(".")).meta.config.retries.get("total_max_attempts") is None
+
+
+def test_default_wait_returns_in_progress_within_about_a_minute(tmp_path, monkeypatch, capsys):
+    """The default --wait must end well inside a 2-minute harness command timeout."""
+    assert DEFAULT_WAIT_MINUTES == 1
+    path, digest = _make_plan(tmp_path)
+    aws = Aws(path)
+    aws.start("vol-1", "snap-1")
+    for _ in range(4):  # one poll at the start of each 15-second interval of the minute
+        aws.snapshot("snap-1", "vol-1", "pending")
+    clock = Clock()
+    monkeypatch.setattr(cli, "RecordingAws", lambda *a, **k: aws.aws)
+    monkeypatch.setattr(cli, "_utcnow", clock.now)
+    monkeypatch.setattr(cli.time, "sleep", clock.sleep)
+    capsys.readouterr()
+    code = cli.main(["gp2-to-gp3-fix", "apply", "--plan", str(path), "--approve", digest,
+                     "--approval-kind", "after_plan", "--approval-text", "yes"])
+    aws.assert_all_used()
+    assert code == 3 and json.loads(capsys.readouterr().out)["status"] == "in_progress"
+    assert sum(clock.sleeps) == 60
+
+
+def test_target_reached_after_the_snapshot_is_not_already_at_target(tmp_path):
+    """The volume reached the target without a modification of ours after the snapshot was taken: the
+    snapshot exists, so the record must not claim that none was taken."""
+    path, digest = _make_plan(tmp_path)
+    _seed(path, digest, {"vol-1": "snapshot_completed"})
+    aws = Aws(path)
+    aws.mods("vol-1", _mod("vol-1", "completed", OLD))  # older than the plan: not ours
+    aws.volume("vol-1", vtype="gp3", iops=3000, throughput=125)
+    result = _apply(path, digest, aws)
+    aws.assert_all_used()
+    assert result["volumes"]["vol-1"] == {"state": "verified", "snapshot_id": "snap-1"}
+    assert not set(aws.operations()) & WRITES
+    record = _execution(path)["volumes"]["vol-1"]
+    assert record["already_at_target"] is False and record["snapshot_id"] == "snap-1"
 
 
 def test_create_snapshot_error_without_tagged_snapshot_fails_volume(tmp_path):

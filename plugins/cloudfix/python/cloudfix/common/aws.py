@@ -32,30 +32,36 @@ def _now() -> str:
 
 
 class RecordingAws:
-    """Calls AWS and records each request. With `retries=False` every request is sent exactly once: botocore
-    would otherwise re-send a write (CreateSnapshot, ModifyVolume) whose response was lost, so callers that
-    write turn retries off and reconcile a lost response themselves."""
+    """Calls AWS and records each request. Reads keep botocore's default retries. An operation named in
+    `no_retry` ("service.Operation") is sent exactly once, through a second client per service built with
+    `total_max_attempts: 1`: botocore would otherwise re-send a write (CreateSnapshot, ModifyVolume) whose
+    response was lost, so callers that write name their writes there and reconcile a lost response themselves.
+    Clients passed in `clients` (test stubs) serve every operation of their service."""
 
     def __init__(self, region: str, allowed: frozenset[str], *, profile: str | None = None,
-                 clients: Mapping[str, Any] | None = None, retries: bool = True):
+                 clients: Mapping[str, Any] | None = None, no_retry: frozenset[str] = frozenset()):
         self.region = region
         self.allowed = allowed
         self.profile = profile
-        self.retries = retries
-        self._clients: dict[str, Any] = dict(clients) if clients is not None else {}
+        self.no_retry = frozenset(no_retry)
+        self._given: dict[str, Any] = dict(clients) if clients is not None else {}
+        self._clients: dict[tuple[str, bool], Any] = {}
         self._session = None
         self.reads: list[dict] = []
 
-    def _client(self, service: str):
-        if service not in self._clients:
+    def _client(self, service: str, operation: str | None = None):
+        if service in self._given:
+            return self._given[service]
+        once = f"{service}.{operation}" in self.no_retry
+        if (service, once) not in self._clients:
             if self._session is None:
                 import boto3
 
                 self._session = boto3.Session(profile_name=self.profile)
             region = "us-east-1" if service == "pricing" else self.region
-            config = None if self.retries else Config(retries={"total_max_attempts": 1})
-            self._clients[service] = self._session.client(service, region_name=region, config=config)
-        return self._clients[service]
+            config = Config(retries={"total_max_attempts": 1}) if once else None
+            self._clients[service, once] = self._session.client(service, region_name=region, config=config)
+        return self._clients[service, once]
 
     def call(self, service: str, operation: str, params: dict) -> dict:
         if f"{service}.{operation}" not in self.allowed:
@@ -68,7 +74,7 @@ class RecordingAws:
             "observed_at": _now(),
         }
         try:
-            output = getattr(self._client(service), xform_name(operation))(**params)
+            output = getattr(self._client(service, operation), xform_name(operation))(**params)
         except ClientError as e:
             err = e.response.get("Error", {})
             code, message = err.get("Code", "ClientError"), err.get("Message", str(e))
