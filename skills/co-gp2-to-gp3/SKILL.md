@@ -17,6 +17,8 @@ The executable never modifies volumes or sends evidence to its publisher. Its ou
 
 ## 2. Run one assessment
 
+Set `AWS_SDK_UA_APP_ID=cloudfix-co-gp2-to-gp3` in the environment of every `gp2.cjs` command (export it once, or prefix each command). The tool's AWS calls then show `app/cloudfix-co-gp2-to-gp3` in their user agent, which CloudTrail records as `userAgent`, so the customer's security team can find them. It adds no permission and changes no request.
+
 Choose a new output directory and create its parent. For billing-based estimates:
 
 ```sh
