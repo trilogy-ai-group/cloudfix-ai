@@ -1,0 +1,3 @@
+plugins/cloudfix/python/.venv/
+__pycache__/
+.pytest_cache/

@@ -35,6 +35,17 @@ skills/co-gp2-to-gp3/
   scripts/gp2.cjs
 ```
 
+## Plugin preview for Claude Code and Codex
+
+This repository also offers [`cloudfix`](plugins/cloudfix/README.md), an installable plugin for Claude Code and Codex. It carries the same GP2 assessment as a small, reviewable Python tool run through [uv](https://docs.astral.sh/uv/), a fixer that carries out an approved conversion plan itself, and a generic infrastructure-code PR worker. It is an early preview alongside the skill above: it assesses with public prices or a supplied cost file, and Cost Explorer billing estimates remain available only in the skill above for now.
+
+```text
+/plugin marketplace add trilogy-ai-group/cloudfix-ai
+/plugin install cloudfix@cloudfix-ai
+```
+
+In Codex, run `codex plugin marketplace add trilogy-ai-group/cloudfix-ai` and enable `cloudfix@cloudfix-ai`. Install either the plugin or the standalone skill in a harness, not both, so your agent sees a single `co-gp2-to-gp3` skill. The [plugin README](plugins/cloudfix/README.md) covers its prerequisites, access and data, results and changes.
+
 ## Try it with your agent
 
 Start a fresh conversation with an agent that can read web pages, download files and run local commands. Give it this instruction, replacing the account and region:
