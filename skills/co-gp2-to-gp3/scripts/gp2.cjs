@@ -217347,7 +217347,7 @@ function replayInput(original, experimentReason) {
       if (suppliedContext[key] !== void 0) context[key] = structuredClone(suppliedContext[key]);
     }
     applyExperiment(context, suppliedContext.experiment, experimentReason);
-    if (packet && object2(original.run_context)) context.reads_origin = "supplied_run_context";
+    if (packet) context.reads_origin = "supplied_run_context";
     context.cost_basis = suppliedContext.cost_basis ?? "supplied_evidence";
     evidence = structuredClone(packet ? original.evidence : original);
     requireInput(object2(evidence), "Packet evidence must be an object");
