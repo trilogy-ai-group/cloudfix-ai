@@ -165,7 +165,29 @@ Live public/billing collection first requires a finite positive GP2 Size to esta
 
 Use explicit supplied price records when available, preserving their values and provenance. That substitutes the **pricing retrieval**, not its arithmetic. Otherwise retrieve the applicable regional AWS EBS prices and retain the query, currency, units and date. The source uses monthly storage per GiB, IOPS per IOPS-month and throughput per MiB/s-month. [LOOKUP]
 
-To reproduce the source lookup, use AWS Pricing `GetProducts`, `ServiceCode=AmazonEC2`, `MaxResults=1`, and `TERM_MATCH` filters. The source adds the AWS Pricing `location` name mapped from the requested region; supply a verified matching location rather than guessing the name. Storage filters are `volumeType=General Purpose`, `volumeApiName=gp2` or `gp3`, and `regionCode=<region>`, with unit `GB-Mo`. gp3 IOPS filters are `volumeApiName=gp3` and `group=EBS IOPS`, with unit `IOPS-Mo`; throughput uses `volumeApiName=gp3` and `group=EBS Throughput`, with unit `GiBps-mo`. The mapped location filter applies to all three. [LOOKUP]
+To reproduce the source lookup, use AWS Pricing `GetProducts`, `ServiceCode=AmazonEC2`, `MaxResults=1`, and `TERM_MATCH` filters. The source adds a `location` filter whose value is the exact string pinned for the requested region in the table below. Do not derive it from SDK, console or SSM region names: several differ from the Pricing names, for example `Europe (Frankfurt)` where Pricing uses `EU (Frankfurt)`. A region absent from the table is an input error before any Pricing call; the source throws `Region <region> is not supported`. It is not an empty lookup, so the fallback prices below never apply to it. [LOOKUP, REGIONS] Storage filters are `volumeType=General Purpose`, `volumeApiName=gp2` or `gp3`, and `regionCode=<region>`, with unit `GB-Mo`. gp3 IOPS filters are `volumeApiName=gp3` and `group=EBS IOPS`, with unit `IOPS-Mo`; throughput uses `volumeApiName=gp3` and `group=EBS Throughput`, with unit `GiBps-mo`. The mapped location filter applies to all three. [LOOKUP]
+
+| Region | Pricing `location` | Region | Pricing `location` |
+| --- | --- | --- | --- |
+| `us-east-2` | `US East (Ohio)` | `ca-central-1` | `Canada (Central)` |
+| `us-east-1` | `US East (N. Virginia)` | `ca-west-1` | `Canada West (Calgary)` |
+| `us-west-1` | `US West (N. California)` | `cn-north-1` | `China (Beijing)` |
+| `us-west-2` | `US West (Oregon)` | `cn-northwest-1` | `China (Ningxia)` |
+| `af-south-1` | `Africa (Cape Town)` | `eu-central-1` | `EU (Frankfurt)` |
+| `ap-east-1` | `Asia Pacific (Hong Kong)` | `eu-central-2` | `Europe (Zurich)` |
+| `ap-east-2` | `Asia Pacific (Taipei)` | `eu-west-1` | `EU (Ireland)` |
+| `ap-south-1` | `Asia Pacific (Mumbai)` | `eu-west-2` | `EU (London)` |
+| `ap-south-2` | `Asia Pacific (Hyderabad)` | `eu-south-1` | `EU (Milan)` |
+| `ap-northeast-3` | `Asia Pacific (Osaka)` | `eu-south-2` | `Europe (Spain)` |
+| `ap-northeast-2` | `Asia Pacific (Seoul)` | `eu-west-3` | `EU (Paris)` |
+| `ap-southeast-1` | `Asia Pacific (Singapore)` | `eu-north-1` | `EU (Stockholm)` |
+| `ap-southeast-2` | `Asia Pacific (Sydney)` | `il-central-1` | `Israel (Tel Aviv)` |
+| `ap-southeast-3` | `Asia Pacific (Jakarta)` | `me-central-1` | `Middle East (UAE)` |
+| `ap-southeast-4` | `Asia Pacific (Melbourne)` | `me-south-1` | `Middle East (Bahrain)` |
+| `ap-southeast-5` | `Asia Pacific (Malaysia)` | `mx-central-1` | `Mexico (Central)` |
+| `ap-southeast-6` | `Asia Pacific (New Zealand)` | `sa-east-1` | `South America (Sao Paulo)` |
+| `ap-southeast-7` | `Asia Pacific (Thailand)` | `us-gov-west-1` | `AWS GovCloud (US-West)` |
+| `ap-northeast-1` | `Asia Pacific (Tokyo)` | `us-gov-east-1` | `AWS GovCloud (US-East)` |
 
 The original lookup does not paginate these price queries. It takes the first `PriceList` string containing the requested unit, decodes it, and selects the first matching exact-unit USD dimension under `OnDemand`, excluding dimensions whose description contains `(free tier)`. Record the selected SKU/dimension and fallback provenance. This is the source's selection behavior, not a guarantee that an underspecified query always selects the intended price. Do not silently substitute a different selection algorithm and claim exact source parity. [LOOKUP]
 
@@ -227,7 +249,7 @@ item.annualSavings = currentAnnualCost - gp3TargetCost;
 
 Do not subtract the public-price difference directly from a discounted annual cost. `publicAnnualCost` supplies a separate report ratio: when both annual cost inputs are positive finite numbers, `Math.min(annualCost / publicAnnualCost, 1)`; otherwise `1`. **Do not apply this ratio a second time** to the target cost. Do not repeat the code comment about RIs/Savings Plans as a claim that they cover EBS. [BASE, GP]
 
-Keep supplied annual costs unchanged. If billed annual cost is unavailable, identify that gap and apply the billing-failure rule above; do not populate a billed estimate. A public-price-only illustration may explicitly use `annualCost=publicAnnualCost=gp2Public.finalPrice`; this is a disclosed input substitution by the harness, not a CUR measurement or a new finder rule. Label the resulting estimate accordingly. Do not quietly replace a supplied cost with this illustration.
+Keep supplied annual costs unchanged. If billed annual cost is unavailable, identify that gap and apply the billing-failure rule above; do not populate a billed estimate. For an explicitly requested public-price basis, set `annualCost = publicAnnualCost` for every selected resource, where `publicAnnualCost` is the `Size * gp2.storagePrice * 12` baseline from Access, cost and confidentiality (equal to `gp2Public.finalPrice`). This is the local adapter's public-mode input, not a CUR measurement or a new finder rule; label the resulting estimate as public list price. [LOCAL] It belongs to that basis only: it never replaces a supplied cost or a failed or unavailable billing cost.
 
 Preserve full precision until display and validation. Apply the two savings checks from the table. Annotate non-finite savings as `annual-savings-not-finite` and non-finite annual cost as `annual-cost-not-finite`, as the source does; missing or zero-denominator inputs do not justify a meaningful saving. [BASE]
 
@@ -388,6 +410,7 @@ These are provenance references. A consuming harness need not fetch private sour
 - **EC2:** [response parsing, filters, batching and pagination](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-core/src/common/services/aws/AwsEc2Service.ts).
 - **PRICE:** [annual volume-price arithmetic](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-ff/src/services/aws/AwsEbsService.ts).
 - **LOOKUP:** [pricing requests, units and effective fallback values](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-ff/src/services/aws/AwsPricingService.ts).
+- **REGIONS:** [region-to-Pricing-location table and unmapped-region error](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-ff/src/services/aws/AwsRegionsService.ts).
 - **MAIN:** [permissions, parameter mapping and report template](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-ff/src/ff/Ebs/Retype/Gp2Volumes/Main.ts).
 - **CUR:** [gp2 selection](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-ff/src/ff/Ebs/Retype/Gp2Volumes/finder/AthenaCUR.ts) and [shared EBS discovery filters](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-ff/src/ff/Ebs/common/EbsVolumesAthenaCUR.ts).
 - **HELPERS:** [report formatting helpers](https://github.com/trilogy-group/cloudfix-aws/blob/772885c459da80478c62aaeca84bd30a77e0e4ca/cloudfix-core/src/common/utils/HandlebarsHelpers.ts).
