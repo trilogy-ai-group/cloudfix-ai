@@ -11,7 +11,7 @@ This skill is one Markdown file. Use the customer harness's existing AWS read to
 
 ## Optional profile and scope
 
-If present, read the local `.claude/skills/_profile.json` for an existing AWS profile/region; the repository installer adjusts this path for the selected harness. A profile is optional. User-supplied account, region and tools take precedence. Keep credentials in the customer's existing harness. No data is sent to CloudFix by this skill.
+No skill profile file is required. A named AWS profile is optional; use the account, region, profile and tools the user supplies. Keep credentials in the customer's existing harness. No data is sent to CloudFix by this skill.
 
 Confirm the requested account and region from the user's scope and the existing authenticated tool context. Use read-only AWS access for assessment; simulations use only their supplied evidence. Do not expand to other accounts or create resources for a demonstration. Preserve raw responses, timestamps, configuration and price provenance in a local evidence record. Do not record credentials.
 
