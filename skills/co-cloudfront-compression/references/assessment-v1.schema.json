@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CloudFix assessment v1.0",
+  "description": "Saved result of a customer-run assessment. An omitted or null amount means unknown, never zero. Schema validity does not establish finder correctness or authorize infrastructure changes.",
+  "type": "object",
+  "required": ["schema_version", "skill", "run", "scope", "coverage", "findings", "totals", "issues", "verification", "execution_status"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "skill": {
+      "type": "object",
+      "required": ["id", "revision"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1, "description": "The skill's frontmatter metadata.version."},
+        "source_ref": {"type": ["string", "null"], "minLength": 1, "description": "Fetched commit or file hash, when known. Never invented."}
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["observed_at", "mode", "status"],
+      "additionalProperties": true,
+      "properties": {
+        "observed_at": {"type": "string", "format": "date-time"},
+        "mode": {"enum": ["guided", "local_code", "api"], "description": "What actually produced this result."},
+        "status": {"enum": ["complete", "partial", "failed"], "description": "complete: every requested resource has a final decision. partial: something requested is still unresolved. failed: an error prevented the assessment."},
+        "evidence_root": {"type": "string", "minLength": 1, "description": "Folder or URL that evidence references resolve from. Default: the folder holding this file."}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["account_id", "regions", "resource_ids", "pricing_mode"],
+      "additionalProperties": true,
+      "properties": {
+        "account_id": {"type": ["string", "null"], "pattern": "^[0-9]{12}$", "description": "Null when identity could not be established."},
+        "regions": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "Requested regions, or global. Empty only when unresolved."},
+        "resource_ids": {"type": ["array", "null"], "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Explicit selection, or null to discover everything in scope."},
+        "pricing_mode": {"enum": ["technical_only", "public_prices", "billing", "supplied"]}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "description": "Counts of distinct resources in the requested scope or selection, not of rows.",
+      "required": ["inventory_complete", "discovered_count", "assessed_count", "unassessed_ids"],
+      "additionalProperties": true,
+      "properties": {
+        "inventory_complete": {"type": "boolean"},
+        "discovered_count": {"type": ["integer", "null"], "minimum": 0, "description": "Null when unknown; unknown is not zero."},
+        "assessed_count": {"type": ["integer", "null"], "minimum": 0, "description": "Resources whose rows are all recommended or not_recommended."},
+        "unassessed_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Resources in scope without a final decision: not examined, needs_evidence or error."}
+      }
+    },
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "totals": {"$ref": "#/$defs/totals"},
+    "issues": {"type": "array", "items": {"$ref": "#/$defs/issue"}},
+    "qualifications": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "Limits that apply to the whole run. State them once here instead of repeating them on every row."},
+    "verification": {"$ref": "#/$defs/verification"},
+    "evidence_refs": {"$ref": "#/$defs/evidence_refs"},
+    "execution_status": {"const": "not_executed"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"run": {"properties": {"status": {"const": "complete"}}}}},
+      "then": {
+        "properties": {
+          "scope": {"properties": {"account_id": {"type": "string"}, "regions": {"minItems": 1}}},
+          "coverage": {"properties": {"inventory_complete": {"const": true}, "discovered_count": {"type": "integer"}, "assessed_count": {"type": "integer"}, "unassessed_ids": {"maxItems": 0}}},
+          "findings": {"items": {"properties": {"decision": {"enum": ["recommended", "not_recommended"]}}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"scope": {"properties": {"pricing_mode": {"const": "billing"}}}}},
+      "then": {"properties": {"findings": {"items": {"properties": {"costs": {"properties": {"basis": {"enum": ["resource_billed", "account_effective_rate", null]}}}}}}}}
+    },
+    {
+      "if": {"properties": {"scope": {"properties": {"pricing_mode": {"enum": ["public_prices", "billing", "supplied"]}}}}},
+      "then": {
+        "properties": {
+          "findings": {
+            "items": {
+              "if": {"properties": {"decision": {"const": "recommended"}}},
+              "then": {"properties": {"costs": {"properties": {"status": {"const": "calculated"}}}}}
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "amount": {"type": ["number", "null"]},
+    "evidence_refs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "description": "Each entry is path#/json/pointer (pointer optional), relative to run.evidence_root."
+    },
+    "check": {
+      "type": "object",
+      "required": ["name", "status"],
+      "additionalProperties": true,
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pass", "fail", "not_evaluated"], "description": "not_evaluated covers a check skipped after an earlier rejection and one that could not run."},
+        "value": {"description": "The observed value the check used, when there is one."},
+        "reason": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {"if": {"properties": {"status": {"enum": ["fail", "not_evaluated"]}}}, "then": {"required": ["reason"]}}
+      ]
+    },
+    "costs": {
+      "type": "object",
+      "required": ["status"],
+      "additionalProperties": true,
+      "properties": {
+        "status": {"enum": ["calculated", "not_calculated"], "description": "calculated: annual_savings is an established number. Otherwise not_calculated, with the reason in qualifications, checks or issues."},
+        "basis": {"enum": ["public_price", "resource_billed", "account_effective_rate", "caller_supplied", null], "description": "Where the current price came from."},
+        "estimation_method": {"enum": ["configuration_projection", "model_estimate", null], "description": "configuration_projection: prices applied to the proposed configuration. model_estimate: relies on assumed behavior, ratios or mix. Neither is realized savings."},
+        "currency": {"type": ["string", "null"], "pattern": "^[A-Z]{3}$"},
+        "source_period": {
+          "type": ["object", "null"],
+          "required": ["start", "end"],
+          "additionalProperties": true,
+          "properties": {"start": {"type": "string", "format": "date-time"}, "end": {"type": "string", "format": "date-time"}},
+          "description": "Billing or observation interval behind the price; end is exclusive."
+        },
+        "current_annual": {"$ref": "#/$defs/amount"},
+        "target_annual": {"$ref": "#/$defs/amount"},
+        "annual_savings": {"$ref": "#/$defs/amount"},
+        "one_time_cost": {"$ref": "#/$defs/amount"},
+        "first_year_savings": {"$ref": "#/$defs/amount"},
+        "qualifications": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "Limits specific to this row's amounts."}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "calculated"}}},
+          "then": {
+            "required": ["basis", "estimation_method", "currency", "annual_savings"],
+            "properties": {"basis": {"type": "string"}, "estimation_method": {"type": "string"}, "currency": {"type": "string"}, "annual_savings": {"type": "number"}}
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "not_calculated"}}},
+          "then": {"properties": {"annual_savings": {"type": "null"}, "first_year_savings": {"type": "null"}}}
+        },
+        {
+          "if": {
+            "anyOf": [
+              {"required": ["current_annual"], "properties": {"current_annual": {"type": "number"}}},
+              {"required": ["target_annual"], "properties": {"target_annual": {"type": "number"}}},
+              {"required": ["annual_savings"], "properties": {"annual_savings": {"type": "number"}}},
+              {"required": ["one_time_cost"], "properties": {"one_time_cost": {"type": "number"}}},
+              {"required": ["first_year_savings"], "properties": {"first_year_savings": {"type": "number"}}}
+            ]
+          },
+          "then": {"required": ["basis", "currency"], "properties": {"basis": {"type": "string"}, "currency": {"type": "string"}}}
+        }
+      ]
+    },
+    "finding": {
+      "type": "object",
+      "description": "One result row. A resource usually has one row; genuinely separate billing rows each get their own.",
+      "required": ["id", "resource", "decision", "checks", "costs"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "description": "Unique within this file. Use the resource ID when a resource has one row."},
+        "resource": {
+          "type": "object",
+          "required": ["id", "type", "region"],
+          "additionalProperties": true,
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "type": {"type": "string", "minLength": 1, "description": "The literal value fixed by the skill's guide."},
+            "region": {"type": ["string", "null"], "minLength": 1, "description": "Region or global; null if unresolved."}
+          }
+        },
+        "decision": {"enum": ["recommended", "not_recommended", "needs_evidence", "error"]},
+        "technical_eligibility": {"enum": ["eligible", "ineligible", "unknown"], "description": "Optional. Add it when it says more than the decision, for example eligible but rejected on savings."},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+        "recommendation": {
+          "type": ["object", "null"],
+          "required": ["action", "parameters"],
+          "additionalProperties": true,
+          "properties": {
+            "action": {"type": "string", "minLength": 1, "description": "The literal value fixed by the skill's guide."},
+            "parameters": {"type": "object"},
+            "reason": {"type": "string", "minLength": 1}
+          }
+        },
+        "costs": {"$ref": "#/$defs/costs"},
+        "qualifications": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"$ref": "#/$defs/evidence_refs"},
+        "details": {"type": "object", "description": "Finder-specific facts and provisional settings that have no common field."},
+        "source_output": {
+          "type": "object",
+          "required": ["kind", "evidence_ref"],
+          "additionalProperties": true,
+          "properties": {"kind": {"enum": ["native", "guided_projection"]}, "evidence_ref": {"type": "string", "minLength": 1}},
+          "description": "Optional pointer to unchanged finder output (native) or an agent's reconstruction of it (guided_projection)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"decision": {"const": "recommended"}}},
+          "then": {
+            "required": ["recommendation", "evidence_refs"],
+            "properties": {
+              "recommendation": {"type": "object"},
+              "checks": {"minItems": 1},
+              "evidence_refs": {"minItems": 1},
+              "technical_eligibility": {"const": "eligible"}
+            }
+          },
+          "else": {"properties": {"recommendation": {"type": "null"}}}
+        },
+        {
+          "if": {"required": ["technical_eligibility"], "properties": {"technical_eligibility": {"const": "ineligible"}}},
+          "then": {"properties": {"decision": {"const": "not_recommended"}}}
+        }
+      ]
+    },
+    "totals": {
+      "type": "object",
+      "description": "Row counts and a total over all compatible recommended rows, excluding only resources with several recommended rows. Null when the remaining rows cannot be added.",
+      "required": ["decision_counts", "annual_savings"],
+      "additionalProperties": true,
+      "properties": {
+        "decision_counts": {
+          "type": "object",
+          "required": ["recommended", "not_recommended", "needs_evidence", "error"],
+          "additionalProperties": true,
+          "properties": {
+            "recommended": {"type": "integer", "minimum": 0},
+            "not_recommended": {"type": "integer", "minimum": 0},
+            "needs_evidence": {"type": "integer", "minimum": 0},
+            "error": {"type": "integer", "minimum": 0}
+          }
+        },
+        "currency": {"type": ["string", "null"], "pattern": "^[A-Z]{3}$"},
+        "basis": {"enum": ["public_price", "resource_billed", "account_effective_rate", "caller_supplied", null]},
+        "estimation_method": {"enum": ["configuration_projection", "model_estimate", null]},
+        "current_annual": {"$ref": "#/$defs/amount"},
+        "target_annual": {"$ref": "#/$defs/amount"},
+        "annual_savings": {"$ref": "#/$defs/amount"},
+        "reason_not_totaled": {"type": "string", "minLength": 1},
+        "excluded_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Exactly the resource IDs with several recommended rows, which cannot safely be added. Keep all their rows and explain each exclusion in reason_not_totaled. No ordinary row may be excluded, including a negative saving or a different price basis."}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"annual_savings": {"type": "number"}}},
+          "then": {
+            "required": ["currency", "basis", "estimation_method"],
+            "properties": {"currency": {"type": "string"}, "basis": {"type": "string"}, "estimation_method": {"type": "string"}}
+          }
+        }
+      ]
+    },
+    "issue": {
+      "type": "object",
+      "description": "Something missing, failed or worth flagging. Every needs_evidence or error row has one.",
+      "required": ["kind", "message"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": {"enum": ["missing_evidence", "read_error", "calculation_error", "qualification"]},
+        "stage": {"enum": ["scope", "collection", "analysis", "costing", "verification", "report"]},
+        "resource_id": {"type": ["string", "null"], "description": "The affected resource; null or omitted when it concerns the whole run."},
+        "message": {"type": "string", "minLength": 1},
+        "evidence_refs": {"$ref": "#/$defs/evidence_refs"},
+        "request": {
+          "type": "object",
+          "description": "The exact read or input needed next to resolve this issue.",
+          "required": ["kind", "name"],
+          "additionalProperties": true,
+          "properties": {
+            "kind": {"enum": ["aws_read", "input"]},
+            "name": {"type": "string", "minLength": 1},
+            "service": {"type": ["string", "null"]},
+            "region": {"type": ["string", "null"]},
+            "parameters": {"type": "object"}
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["method"],
+      "additionalProperties": true,
+      "properties": {
+        "method": {"enum": ["none", "self_check", "independent_review"], "description": "self_check: the assessing agent rechecked its own work. independent_review: a separate reviewer examined the evidence."},
+        "summary": {"type": "string", "minLength": 1, "description": "What was checked and what was not. Problems found go in issues."}
+      },
+      "allOf": [
+        {"if": {"properties": {"method": {"enum": ["self_check", "independent_review"]}}}, "then": {"required": ["summary"]}}
+      ]
+    }
+  }
+}

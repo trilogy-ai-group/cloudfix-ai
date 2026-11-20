@@ -1,31 +1,46 @@
 # CloudFix AI
 
-AWS cost optimization skills and tools for your agent. **Public preview: EBS GP2 to GP3.**
+AWS cost optimization skills for your agent. **Public preview: five guided assessments.**
 
-Give your agent this repository URL and choose the instruction-only or executable variant. It can select a commit or published release and fetch that package without a GitHub login or permanent skill installation. Implementation source, build tooling, tests and customer run data are maintained separately.
+Give your agent this repository URL and name the assessment you want. It can select a full commit SHA and fetch the complete skill package without a GitHub login or permanent installation. Use your existing AWS access; no CloudFix account, service, token or new AWS infrastructure is required. Implementation source, build tooling, tests and customer run data are maintained separately.
 
-## Available skills
+## Available guided skills
 
-The executable preview and a separately named instruction-only comparison follow the same pinned GP2 algorithm:
+Each guided package contains `SKILL.md` and its complete `references/` folder. Your agent follows the documented finder rules with its existing AWS tools and calculator; no executable or particular language runtime is bundled. Results include saved evidence, `assessment.json` and a customer report. An assessment does not authorize resource changes.
 
-| Skill | How it runs | Package |
+| Skill | Assessment | Preview qualification |
 | --- | --- | --- |
-| `co-gp2-to-gp3` | Executes the original TypeScript finder locally | `SKILL.md` plus `scripts/gp2.cjs`; Node 22+ |
-| `co-gp2-to-gp3-guided` | Your agent follows the same rules using its AWS tools and calculator | One `SKILL.md`; no bundled executable or required language runtime |
+| [GP2 to GP3](skills/co-gp2-to-gp3-guided/SKILL.md) | Identify EBS GP2 conversions and calculate proposed settings | Effective-rate estimates can differ from historical per-volume bills; sizing does not establish application performance. |
+| [Unattached EBS volumes](skills/co-ebs-unattached/SKILL.md) | Assess detached volumes for a snapshot, archive and removal proposal | Current cost and modeled archive cost have different evidence; a fallback archive price must remain labelled. |
+| [S3 Intelligent-Tiering](skills/co-s3-intelligent-tiering/SKILL.md) | Assess transitions from Standard and Standard-IA storage | Future tier mix and savings are modeled; missing size or billing history can leave an assessment partial. |
+| [CloudFront compression](skills/co-cloudfront-compression/SKILL.md) | Identify cache behaviors with compression disabled | Technical recommendations only. No monetary savings are claimed, and a configuration finding does not establish traffic or economic relevance. |
+| [QuickSight idle users](skills/co-quicksight-idle-users/SKILL.md) | Assess recorded activity, user eligibility and subscription costs | Activity coverage can be incomplete. An effective subscription rate does not prove the saving from removing one user. |
 
-### Instruction-only variant
+These are public previews for feedback and iteration. Trial assessments found pricing differences that are still being investigated; independent comparison against AWS MCP is not yet complete. Passing the result schema does not establish the accuracy of the underlying evidence or guarantee savings. Keep every result's qualifications visible. Never treat missing information as zero or add overlapping savings together.
 
-Read [`co-gp2-to-gp3-guided`](skills/co-gp2-to-gp3-guided/SKILL.md) when you want the skill-only version. It includes the same validation order, local defaults, sizing/pricing formulas, CE effective-rate calculation, failure handling and requested change workflow. It produces a labelled harness assessment, not JSON emitted by the native finder. Calculations must use the harness's calculator or execution tools; a language model must not invent or mentally estimate the numbers.
+### Try a guided skill
 
-Fetch only `skills/co-gp2-to-gp3-guided/SKILL.md` and `LICENSE` from one full commit SHA. You do not need to clone the repository, download the sibling executable or install a skill permanently. Record the selected commit; a future release containing this variant can be selected and resolved to a commit in the same way. This instruction-only comparison is delivered separately from the executable release candidate `v0.1.0-preview.1` described below; use a commit containing this file. It is not part of that draft release target.
+Start a fresh conversation with an agent that can read the package, access your AWS account and run calculations. For example:
 
-> Follow the co-gp2-to-gp3-guided skill at COMMIT_PINNED_SKILL_URL. Assess GP2 volumes in AWS account ACCOUNT_ID, region REGION, using my existing AWS tools and billing estimates. Use the skill's exact algorithm and a calculator. Prepare the appropriate proposed change; do not apply changes or merge a PR.
+> Read https://github.com/trilogy-ai-group/cloudfix-ai and follow its unattached EBS volumes guided skill for AWS account ACCOUNT_ID, region REGION, using my existing AWS access. Assess the opportunities and explain estimated savings and limitations. Use billing estimates if my existing billing access permits; report missing access instead of silently switching to public prices. Prepare any proposed change for review, but do not apply changes or merge a PR.
 
-Billing uses the same read actions and disclosed CE request charges described below. Use the selected skill's instructions for its result format and workflow; the executable commands, Node requirement, artifact filenames and checksum below apply to `co-gp2-to-gp3`.
+Replace the skill name, account, region and pricing preference. CloudFront defaults to a technical assessment with no savings claim. Read the chosen skill's access and billing requirements before collection; Cost Explorer requests incur AWS charges. Never paste credentials into a conversation.
 
-### Original-finder executable variant
+For agents:
 
-[`co-gp2-to-gp3`](https://github.com/trilogy-ai-group/cloudfix-ai/blob/v0.1.0-preview.1/skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
+1. Resolve this repository's selected revision to one full commit SHA. Record it and fetch `README.md`, `LICENSE` and **every file in the chosen `skills/<skill-name>/` folder** from that same commit. Preserve the `references/` hierarchy. Fetching only `SKILL.md` is insufficient.
+2. With Git, clone the repository into a new directory, record `git rev-parse HEAD`, and keep that checkout unchanged for the run. With HTTP, enumerate the selected folder at the pinned commit and fetch its complete contents from `https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/<commit-sha>/`. Do not mix files from a moving branch.
+3. Read the whole `SKILL.md`, then read each reference at the stage that names it. Use the skill's exact rules and a calculator or existing execution tool for calculations; do not invent or mentally estimate numbers. A guided result is a **skill assessment**, not JSON emitted by the original finder.
+4. Save complete evidence, the assessment and the report outside the package checkout. The six stages cover scope/access, collection, analysis, costing, verification and reporting, with the exact order and prerequisites stated in each skill. Incomplete evidence and rejected candidates are valid outcomes.
+5. Assessment and proposal preparation do not authorize AWS writes, deployment or merging. Follow the selected skill's change limitations and require explicit authorization for any later execution.
+
+The files can be used directly. Permanent installation is optional; if your harness supports skill discovery, copy the complete selected folder and licence to its skill directory. No product profile is required. Your harness may send data to its model provider under your settings; keep customer evidence and billing data private. Report problems using a redacted description in [GitHub issues](https://github.com/trilogy-ai-group/cloudfix-ai/issues).
+
+## Existing GP2 executable
+
+The original-finder executable remains available separately. The instructions below, including the Node requirement, output filenames and executable checksum, apply only to `co-gp2-to-gp3`.
+
+[`co-gp2-to-gp3`](skills/co-gp2-to-gp3/SKILL.md) assesses EBS GP2 volumes for conversion to GP3. Your harness runs the bundled tool locally using your existing AWS access. The tool gathers evidence, invokes the original finder code and saves its result with a readable summary. Use `assess --cost-basis billing` to collect resources, derive a GP2 effective rate from Cost Explorer and run the finder in one command. The tool carries the volume selection forward automatically and labels the resulting per-volume estimates. No CUR setup is required. When requested, the skill also guides your harness through an infrastructure patch/PR or a direct AWS change procedure for a volume managed outside code. It distinguishes confirmed direct management from unknown ownership and carries out only explicitly authorized changes.
 
 The skill has two runtime files:
 
@@ -35,26 +50,26 @@ skills/co-gp2-to-gp3/
   scripts/gp2.cjs
 ```
 
-## Try it with your agent
+### Try the executable with your agent
 
 Start a fresh conversation with an agent that can read web pages, download files and run local commands. Give it this instruction, replacing the account and region:
 
-> Read https://github.com/trilogy-ai-group/cloudfix-ai and follow its GP2-to-GP3 skill for AWS account ACCOUNT_ID, region REGION, using my existing AWS access. Assess the opportunities and explain the estimated savings and any limitations. Prepare the appropriate proposed change for review. Do not apply changes or merge a PR.
+> Read https://github.com/trilogy-ai-group/cloudfix-ai and follow its co-gp2-to-gp3 executable skill for AWS account ACCOUNT_ID, region REGION, using my existing AWS access. Assess the opportunities and explain the estimated savings and any limitations. Prepare the appropriate proposed change for review. Do not apply changes or merge a PR.
 
 The agent needs **Node.js 22 or later** and your existing AWS credentials in its execution environment. If it cannot execute code or access AWS, it should explain what is missing. Never paste credentials into a conversation.
 
 For agents:
 
-1. Select [release `v0.1.0-preview.1`](https://github.com/trilogy-ai-group/cloudfix-ai/releases/tag/v0.1.0-preview.1). Fetch that version into a new local working directory and record the exact commit it resolves to. No GitHub credentials are needed:
+1. Fetch the repository into a new local working directory and record the exact commit. Keep that checkout unchanged for the run. No GitHub credentials are needed:
 
    ```sh
-   git clone --branch v0.1.0-preview.1 --single-branch https://github.com/trilogy-ai-group/cloudfix-ai.git
+   git clone --single-branch https://github.com/trilogy-ai-group/cloudfix-ai.git
    git -C cloudfix-ai rev-parse --verify 'HEAD^{commit}'
    ```
 
 2. Read this README, `skills/co-gp2-to-gp3/SKILL.md` and `LICENSE` from that checked-out commit. **Retain** `THIRD_PARTY_NOTICES.txt` with the package; the agent does not need to read the complete notices to perform an assessment.
-3. Verify the executable against the SHA-256 under [Package identity](#package-identity) in the same checked-out README before running it. Record both the commit and executable hash. Follow that release's skill using the authorized account, region and pricing basis. Do not rebuild it or write replacement collectors or calculations.
-4. For HTTP-only fetching, resolve the selected release tag to its full commit SHA first, dereferencing an annotated tag if needed. Fetch the README, licence, notices, skill and executable from `https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/<commit-sha>/`, preserving the skill's relative layout. Verify using that commit's README. Do not mix versions or run files downloaded from a moving branch.
+3. Verify the executable against the SHA-256 under [Package identity](#package-identity) in the same checked-out README before running it. Record both the commit and executable hash. Follow that commit's skill using the authorized account, region and pricing basis. Do not rebuild it or write replacement collectors or calculations.
+4. For HTTP-only fetching, resolve the selected repository revision to its full commit SHA first. Fetch the README, licence, notices, skill and executable from `https://raw.githubusercontent.com/trilogy-ai-group/cloudfix-ai/<commit-sha>/`, preserving the skill's relative layout. Verify using that commit's README. Do not mix versions or run files downloaded from a moving branch.
 5. Keep run output outside the checkout. Report the complete relevant findings and qualifications, with links to private evidence. Assessment and proposal preparation do not authorize AWS writes, deployment or merging.
 
 Specify a volume ID for a single-resource assessment. A request for assessment alone ends after the result. A request that also asks how to apply it continues to a proposed change for review; execution still needs explicit authorization. Missing billing access is reported as an error, with collected resource evidence retained. A public-price run requires a separate explicit choice.
@@ -214,6 +229,6 @@ shasum -a 256 skills/co-gp2-to-gp3/scripts/gp2.cjs
 
 On Linux, use `sha256sum` with the same path. Compare with the hash above from the same repository revision; stop if it differs.
 
-The hash verifies the downloaded bytes against the selected release. Review and release controls govern who can publish a new version. Record the resolved commit and intentionally select a new release when upgrading; a branch update must not silently change the version used for a run.
+The hash verifies the downloaded bytes against the selected commit. Review and release controls govern who can publish a new version. Record the resolved commit and intentionally select a new revision when upgrading; a branch update must not silently change the version used for a run.
 
 For more AWS optimization options, see [CloudFix](https://cloudfix.com/). This local skill requires no CloudFix registration.
