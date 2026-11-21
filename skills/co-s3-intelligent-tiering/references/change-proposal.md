@@ -1,0 +1,15 @@
+# Change proposal
+
+Read this only when the user asks for a change proposal, procedure or PR. The assessment itself never creates the lifecycle rule and never writes tags. Prepare the proposal as a separate document and do not execute it.
+
+**Change proposal, only when requested.** Assessment-only requests end with the report. The native action adds the following rule only if no rule with the same ID exists, then replaces the complete lifecycle configuration. Existing rules are rewritten as detailed below:
+
+```json
+{"ID":"CloudFix-Standard-To-Sit","Status":"Enabled","Filter":{"Prefix":""},"Transitions":[{"Days":0,"StorageClass":"INTELLIGENT_TIERING"}],"NoncurrentVersionTransitions":[{"NoncurrentDays":0,"StorageClass":"INTELLIGENT_TIERING"}]}
+```
+
+It is bucket-wide, including noncurrent versions, and does not enable optional Archive Access/Deep Archive Access tiers. It is not a universal conversion of every current storage class: the source treats Standard/Standard-IA as transitionable, and existing GIR/Glacier/Deep Archive objects remain outside its storage-savings base. The native runbook reads current configuration with `ExpectedBucketOwner` equal to the executing account. It serializes dates and rewrites existing `Filter.And`: more than one dictionary key becomes `{And: originalAnd}`; zero or one key becomes `originalAnd` directly. It converts a non-null deprecated rule-level `Prefix` to `Filter:{Prefix:…}`, replacing any existing Filter on that rule. It does not forward `TransitionDefaultMinimumObjectSize` on the complete lifecycle write.
+
+After adding the rule, a separate step reads and writes the full bucket tag set, adding or overwriting `cloudfix:fixerId=StandardToSIT`, `cloudfix:originalResourceId=<bucket>`, and `cloudfix:executionDate=<automation date>`. A same-ID rule skips both lifecycle and tag writes regardless of its contents. The steps are not atomic: tagging failure can leave the lifecycle rule installed. Do not describe this as simply appending a rule or preserving every rule unchanged.
+
+If a procedure or PR is requested, prepare the complete proposed lifecycle configuration/diff from freshly read evidence and show every change to legacy representation, Filter.And, scope, version behavior, transition-default handling and the three tag keys. Applying lifecycle configuration replaces the whole configuration; inspect existing rules and any small-object transition default before proposing that write. Identify current-resource versus future-provisioning effects and list unresolved prerequisites. Do not execute a write without explicit authorization. Source eligibility alone does not review all prefix/tag/noncurrent rules, object churn, application retrieval requirements, inherited optional archive settings, preservation of custom small-object transition defaults, or new-object transition charges. Keep these application/change-review questions separate from native checks and obtain missing facts rather than calling them native pass/fail rules.
