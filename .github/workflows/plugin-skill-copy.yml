@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: The plugin's guided skill and licence match the originals
+      - name: The plugin's skills, licence and notices match the originals
         run: |
-          cmp skills/co-gp2-to-gp3-guided/SKILL.md plugins/cloudfix/skills/co-gp2-to-gp3-guided/SKILL.md
+          # Every skill folder under skills/ must have an identical copy under
+          # plugins/cloudfix/skills/, and the plugin must carry no other skill.
+          diff -r skills plugins/cloudfix/skills
           cmp LICENSE plugins/cloudfix/LICENSE
+          cmp THIRD_PARTY_NOTICES.txt plugins/cloudfix/THIRD_PARTY_NOTICES.txt

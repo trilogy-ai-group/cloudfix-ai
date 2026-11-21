@@ -1,0 +1,5 @@
+# Change proposal
+
+Read this only when the user also asked for a change proposal. The assessment never needs it. A proposal is a separate document; it is not part of `assessment.json`, and nothing in it is executed.
+
+Default outcome is assessment only. If the user also requests a change proposal, prepare it after collection and include it in the stage 5 self-check. Describe the exact volume/account/region, source-defined snapshot/deletion/archival proposal, estimated cost basis and unresolved prerequisites. Independently establish ownership and intended use, retention/compliance requirements, a recoverable snapshot/restore plan, snapshot/KMS access, infrastructure management and current attachment state. These are **change prerequisites**, not added finder validations. Metrics absence and `available` state alone do not establish owner intent or recovery readiness. Identify current-resource versus future-provisioning effects. Do not execute deletion, snapshot creation or archival through this assessment workflow. Explicitly authorized execution belongs to a separately reviewed, concrete operation with fresh state and recovery evidence.
