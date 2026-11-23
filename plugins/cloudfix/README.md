@@ -2,7 +2,7 @@
 
 AWS cost optimization skills for your agent. **Preview.**
 
-`cloudfix` is a plugin served from the `cloudfix-ai` marketplace in this repository. It carries six skills.
+`cloudfix` is a plugin served from the `cloudfix-ai` marketplace in this repository. It carries five skills.
 
 ## What it does
 
@@ -13,9 +13,8 @@ AWS cost optimization skills for your agent. **Preview.**
 | `co-s3-intelligent-tiering` | Assess transitions from Standard and Standard-IA storage |
 | `co-cloudfront-compression` | Identify cache behaviors with compression disabled (technical findings only, no savings claim) |
 | `co-quicksight-idle-users` | Assess recorded activity, user eligibility and subscription costs |
-| `co-gp2-to-gp3` | Assess GP2 volumes with the bundled original-finder executable (`scripts/gp2.cjs`, needs Node.js 22 or later) |
 
-The five guided skills are instruction files with a `references/` folder and no code. Your agent follows them with its own AWS tools and a calculator. Each skill prepares a change only when you ask for one and carries out only what you explicitly authorize. The preview qualifications for each skill are in the [repository README](../../README.md#available-guided-skills); keep them visible with every result.
+All five are guided skills: instruction files with a `references/` folder and no code. Your agent follows them with its own AWS tools and a calculator. Each skill prepares a change only when you ask for one and carries out only what you explicitly authorize. The preview qualifications for each skill are in the [repository README](../../README.md#available-guided-skills); keep them visible with every result.
 
 - **No CloudFix account, token or connection is needed.**
 - **Assessment is read-only.** Each skill states the AWS read actions it needs before collection. Cost Explorer requests, where a skill uses them, incur AWS charges.
@@ -38,8 +37,8 @@ You need AWS credentials from your normal local setup. Never paste credentials i
 
 ## Same skills, two places
 
-Each skill folder here is an exact copy of the matching folder under [`skills/`](../../skills), which agents can also fetch directly without installing anything. `LICENSE` and `THIRD_PARTY_NOTICES.txt` are exact copies of the repository's. A check on every pull request fails if any copy differs, or if a skill exists in one place and not the other. Edit the original, then copy the whole folder here.
+Each skill folder here is an exact copy of the matching folder under [`skills/`](../../skills), which agents can also fetch directly without installing anything. `LICENSE` is an exact copy of the repository's. The plugin carries no code: the `co-gp2-to-gp3` executable skill stays in `skills/` only. A check on every pull request fails if any copy differs, if a guided skill exists in one place and not the other, or if the plugin contains any file other than Markdown and JSON. Edit the original, then copy the whole folder here.
 
 ## Licence
 
-See [LICENSE](LICENSE). The `co-gp2-to-gp3` executable bundles third-party components, listed with their licences in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
+See [LICENSE](LICENSE).

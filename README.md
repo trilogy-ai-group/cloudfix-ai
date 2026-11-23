@@ -38,14 +38,14 @@ The files can be used directly. Permanent installation is optional; if your harn
 
 ## Plugin preview
 
-All six skills are also packaged as [`cloudfix`](plugins/cloudfix/README.md), an installable plugin. In Claude Code:
+The five guided skills are also packaged as [`cloudfix`](plugins/cloudfix/README.md), an installable plugin. In Claude Code:
 
 ```text
 /plugin marketplace add trilogy-ai-group/cloudfix-ai
 /plugin install cloudfix@cloudfix-ai
 ```
 
-The plugin carries exact copies of the five guided skills above and of the `co-gp2-to-gp3` executable skill below, with their `references/` and `scripts/` folders. Fetching a skill directly, as described above, works the same and needs no installation.
+The plugin carries exact copies of the five guided skills above, with their `references/` folders, and no code. The `co-gp2-to-gp3` executable skill below is not in the plugin; fetch it from this repository. Fetching a skill directly, as described above, works the same and needs no installation.
 
 ## Existing GP2 executable
 
