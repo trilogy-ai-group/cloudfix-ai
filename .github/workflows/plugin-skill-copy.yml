@@ -1,0 +1,24 @@
+name: Plugin skill copy
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  identical:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: The plugin's skills and licence match the originals
+        run: |
+          # Every guided skill folder under skills/ must have an identical copy
+          # under plugins/cloudfix/skills/, and the plugin must carry no other
+          # skill. The co-gp2-to-gp3 executable skill stays out of the plugin.
+          diff -r -x co-gp2-to-gp3 skills plugins/cloudfix/skills
+          cmp LICENSE plugins/cloudfix/LICENSE
+      - name: The plugin carries no code
+        run: |
+          # Only Markdown, JSON and the licence: no scripts or executables.
+          extra=$(find plugins/cloudfix -type f ! -name '*.md' ! -name '*.json' ! -path plugins/cloudfix/LICENSE)
+          if [ -n "$extra" ]; then echo "Files other than Markdown/JSON in the plugin:"; echo "$extra"; exit 1; fi

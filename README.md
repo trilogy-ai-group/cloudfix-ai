@@ -36,6 +36,17 @@ For agents:
 
 The files can be used directly. Permanent installation is optional; if your harness supports skill discovery, copy the complete selected folder and licence to its skill directory. No product profile is required. Your harness may send data to its model provider under your settings; keep customer evidence and billing data private. Report problems using a redacted description in [GitHub issues](https://github.com/trilogy-ai-group/cloudfix-ai/issues).
 
+## Plugin preview
+
+The five guided skills are also packaged as [`cloudfix`](plugins/cloudfix/README.md), an installable plugin. In Claude Code:
+
+```text
+/plugin marketplace add trilogy-ai-group/cloudfix-ai
+/plugin install cloudfix@cloudfix-ai
+```
+
+The plugin carries exact copies of the five guided skills above, with their `references/` folders, and no code. The `co-gp2-to-gp3` executable skill below is not in the plugin; fetch it from this repository. Fetching a skill directly, as described above, works the same and needs no installation.
+
 ## Existing GP2 executable
 
 The original-finder executable remains available separately. The instructions below, including the Node requirement, output filenames and executable checksum, apply only to `co-gp2-to-gp3`.

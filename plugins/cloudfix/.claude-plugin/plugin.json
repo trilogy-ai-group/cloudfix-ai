@@ -1,0 +1,6 @@
+{
+  "name": "cloudfix",
+  "version": "0.1.0",
+  "description": "Assess and fix AWS cost optimization opportunities from your agent.",
+  "author": {"name": "CloudFix"}
+}

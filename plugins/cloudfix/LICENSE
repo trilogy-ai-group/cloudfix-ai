@@ -1,0 +1,50 @@
+CloudFix AI Public Preview License 1.0
+
+Copyright (c) 2026 CloudFix. All rights reserved except as expressly granted below.
+
+1. Permission for customer use
+
+The copyright holders grant you a worldwide, non-exclusive, royalty-free licence
+to download, copy, inspect, run and modify this software and its documentation
+(the "Software") to assess and optimize AWS accounts that you own or are
+authorized to manage. This includes use for your organization's internal business
+purposes and through an AI agent or contractor acting on your behalf. You remain
+responsible for authorizing access to those accounts and any resulting changes.
+
+You may make copies and modifications for those purposes, including copies in
+your agent's execution environment. Keep this licence and the applicable
+copyright and third-party notices with those copies. No fee is payable to
+CloudFix under this licence. AWS, model-provider and other third-party charges
+remain your responsibility.
+
+2. Reserved rights
+
+This licence does not grant permission to publish, distribute, sublicense or
+sell the Software or modified versions, or to offer the Software as a hosted
+service to third parties. Those uses require separate written permission from
+the relevant rights holders. All rights not expressly granted are reserved.
+This licence grants no rights to trademarks, logos or product names beyond
+identifying the Software and preserving notices. Public availability of the
+repository does not expand these permissions.
+
+3. Third-party components
+
+Third-party components are governed by their respective licences, reproduced in
+THIRD_PARTY_NOTICES.txt and any retained notices in the Software. Nothing in this
+licence restricts rights those licences independently grant, or replaces their
+conditions. The restrictions above apply only to rights in the Software that
+the CloudFix copyright holders can license.
+
+4. No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. Estimates and recommendations are
+not guarantees of savings, compatibility, performance, availability or recovery.
+
+5. Limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE COPYRIGHT
+HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
