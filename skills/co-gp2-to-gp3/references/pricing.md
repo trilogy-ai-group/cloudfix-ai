@@ -1,6 +1,6 @@
 # Price lookup and annual price arithmetic
 
-Read this at stage 1 of `SKILL.md`, before the four Pricing lookups, and use it again at stage 4. It holds the finder's exact price requests, selection rules, fallbacks and the annual price formula.
+Read this at stage 1 of `guided.md`, before the four Pricing lookups, and use it again at stage 4. It holds the finder's exact price requests, selection rules, fallbacks and the annual price formula.
 
 ## Price lookup and fallbacks
 

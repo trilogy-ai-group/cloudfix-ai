@@ -1,8 +1,8 @@
 # Change proposal
 
-Read this only when the user asks for a change proposal, procedure or PR. The assessment itself never creates the lifecycle rule and never writes tags. Prepare the proposal as a separate document and do not execute it.
+Read this when the customer accepts the offer at the end of the assessment, or asks for a change proposal, procedure or PR. The assessment itself never creates the lifecycle rule and never writes tags.
 
-**Change proposal, only when requested.** Assessment-only requests end with the report. The native action adds the following rule only if no rule with the same ID exists, then replaces the complete lifecycle configuration. Existing rules are rewritten as detailed below:
+The native action adds the following rule only if no rule with the same ID exists, then replaces the complete lifecycle configuration. Existing rules are rewritten as detailed below:
 
 ```json
 {"ID":"CloudFix-Standard-To-Sit","Status":"Enabled","Filter":{"Prefix":""},"Transitions":[{"Days":0,"StorageClass":"INTELLIGENT_TIERING"}],"NoncurrentVersionTransitions":[{"NoncurrentDays":0,"StorageClass":"INTELLIGENT_TIERING"}]}

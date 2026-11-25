@@ -1,16 +1,14 @@
 # Historical cost illustration and requested economics
 
-Read this only when the customer asks for the historical cost illustration, for savings priced from billing (CUR) or for an assessment of supplied resource cost facts. A technical assessment never needs it. "Native" and "the source" mean the CloudFix finder whose rules this skill reproduces.
+Read this only when the customer asks for the historical cost illustration, for savings priced from billing (CUR) or for an assessment of supplied resource cost facts. A technical assessment never needs it.
 
 Nothing here produces an established saving. The finder's own savings output is zero because savings tracking is disabled; the 65% figure is a model over one billing week. Both go in `details.historical_cur_illustration`, never in `costs.annual_savings`, `first_year_savings` or `totals`. `references/assessment-guide.md` ("Pricing modes and costs") fixes the field names. Save the query evidence as `evidence/cur-query.json` and the arithmetic as `evidence/calculations.json`, keyed by distribution ID.
 
 ## Modes
 
-- **Supplied resource:** trust caller-supplied `resourceId`, `awsAccount`, `awsRegion`, `resourceName`, `annualCost`, `publicAnnualCost`, `annualSavings`, `dataTransferred` with their currency, period and provenance. These are input-owned facts. Do not recompute an already supplied estimate from rounded annual cost or overwrite it to force 65%. Explain any supplied qualifications.
+- **Supplied resource:** trust caller-supplied `resourceId`, `awsAccount`, `awsRegion`, `resourceName`, `annualCost`, `publicAnnualCost`, `annualSavings`, `dataTransferred` with their currency, period and provenance. These are input-owned facts. Do not recompute an already supplied estimate from rounded annual cost or overwrite it to force 65%. Explain any supplied qualifications. In the script's costs file, `finalized_recommendations` needs `lookup_complete` (true or false) beside it, and each record is `{resourceId, finderId, savingsFinalizedAt}`: two required strings and an ISO 8601 time, which is null or absent for a recommendation that is not finalized. A malformed record is refused, also when `lookup_complete` is false.
 - **CUR:** derive those resource fields from existing customer resource-level billing evidence using the exact rules below. Use the authorized query tools, workgroup and output location already available. Athena scans may incur charges; use the user's applicable authorization. Save exact SQL/table mapping, query ID, reported scan size/cost, every result page and errors. Do not create a billing export or query infrastructure.
 - **Incomplete economics:** evaluate supported technical checks, leave missing financial facts unknown, and identify what is needed for a complete assessment. Do not substitute account-wide Cost Explorer charges, public pricing, bytes times a guessed rate, or a remembered discount.
-
-Every request keeps `scope.pricing_mode:"technical_only"`; the requested mode (`billing` for CUR, or `supplied`) goes in `run_metadata.economics_mode`. An otherwise eligible distribution stays `recommended`: this finder estimates no savings, so a price request never turns it into `needs_evidence`.
 
 ## The two savings values
 
@@ -47,7 +45,7 @@ SQL ROUND here rounds to two decimal places, with half values away from zero; re
 
 ## CUR result
 
-Select groups with **`annualized_amortized_cost > resourceCostThreshold`**, strictly; sort descending. For native-discovery comparison this is the supplied tenant threshold described in stage 1 of `SKILL.md`, not a catalogue or invented fixed threshold. Map the two annualized fields to `annualCost`/`publicAnnualCost`, `estimated_savings` to resource `annualSavings`, `data_transferred` to `dataTransferred`, and identity fields to the camel-case resource fields of the supplied-resource mode above. Native parsing uses unary numeric conversion (`+`), not additional rounding. Preserve raw missing/malformed values and any resulting zero/nonfinite projection as a data-quality issue; never present a coerced missing input as a measured zero.
+Select groups with **`annualized_amortized_cost > resourceCostThreshold`**, strictly; sort descending. For native-discovery comparison this is the supplied tenant threshold described in stage 1 of `guided.md`, not a catalogue or invented fixed threshold. Map the two annualized fields to `annualCost`/`publicAnnualCost`, `estimated_savings` to resource `annualSavings`, `data_transferred` to `dataTransferred`, and identity fields to the camel-case resource fields of the supplied-resource mode above. Native parsing uses unary numeric conversion (`+`), not additional rounding. Preserve raw missing/malformed values and any resulting zero/nonfinite projection as a data-quality issue; never present a coerced missing input as a measured zero.
 
 The native CUR base also keeps only regions in its environment's `AVAILABLE_REGIONS` plus literal `global`; its default is `us-east-1` plus `global`. Blank region is not automatically global. Unknown platform region configuration stays unknown; apply the user's scope without claiming identical catalogue discovery. Complete explicit resource input does not require reproducing the platform's discovery gate.
 
@@ -57,7 +55,7 @@ Once `annualCost` is established, evaluate `MaximumSavings` as `references/check
 
 Record per resource, in `details.historical_cur_illustration`: justified current annual cost, separately named `source_cur_estimated_annual_savings` (resource.annualSavings) and `native_final_annual_savings` (zero), cost basis/currency/window, public cost and monthly projected usage when supplied, and complete expressions/provenance.
 
-Missing source estimate cannot be reconstructed exactly from rounded annual cost. If requested economics lack the source estimate or annual cost, financial assessment is incomplete even when technical eligibility is known. In technical-only mode a missing estimate is not a blocker or an invented financial pass. Preserve missing context fields as unknown. There is no native new-cost result; an optional arithmetic illustration must identify which savings value it subtracts.
+Missing source estimate cannot be reconstructed exactly from rounded annual cost. If requested economics lack the source estimate or annual cost, financial assessment is incomplete even when technical eligibility is known. In `technical_only` mode a missing estimate is not a blocker or an invented financial pass. Preserve missing context fields as unknown. There is no native new-cost result; an optional arithmetic illustration must identify which savings value it subtracts.
 
 ## Totals
 

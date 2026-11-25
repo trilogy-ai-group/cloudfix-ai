@@ -1,6 +1,6 @@
 # Checks, control flow and proposed settings
 
-Read this at stage 3 of `SKILL.md`, before evaluating any volume. It holds the finder's ordered checks, their exact value shapes, the elastic-volume decision tree, fail-fast and exception behavior, and the sizing calculation.
+Read this at stage 3 of `guided.md`, before evaluating any volume. It holds the finder's ordered checks, their exact value shapes, the elastic-volume decision tree, fail-fast and exception behavior, and the sizing calculation.
 
 ## Check ledger
 
@@ -70,4 +70,4 @@ const provisionedThroughput = Math.max(0, gp3Throughput - 125);
 
 Use a calculator or existing local execution tool with JavaScript-compatible numeric and `toFixed` semantics for the arithmetic. Keep all six outputs and the calculation trace; do not substitute a remembered AWS sizing rule. Throughput is MiB/s. Size is unchanged. The source target class is `gp3`, with `resourceId`, `gp3Iops` and `gp3Throughput`. Monitoring tenant/account identifiers, recommendation IDs and SNS ARNs belong to the CloudFix pipeline; do not invent them for a customer harness.
 
-Live public/billing collection first requires a finite positive GP2 Size to establish its baseline. Supplied replay can reach the finder with missing/zero Size; do not add the live-only guard to replay. Missing Size skips parameter population in the source. Missing/zero/falsy report size skips the savings calculation. The sizing helper's ability to calculate 3,000/125 for zero does not mean the full finder approves a zero-sized resource. Report the missing/invalid input and do not invent a cost or usable conversion proposal.
+Live `public_prices`/`billing` collection first requires a finite positive GP2 Size to establish its baseline. Supplied replay can reach the finder with missing/zero Size; do not add the live-only guard to replay. Missing Size skips parameter population in the source. Missing/zero/falsy report size skips the savings calculation. The sizing helper's ability to calculate 3,000/125 for zero does not mean the full finder approves a zero-sized resource. Report the missing/invalid input and do not invent a cost or usable conversion proposal.

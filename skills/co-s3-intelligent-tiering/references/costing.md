@@ -1,6 +1,6 @@
 # Costing: metric coverage, object fees and savings
 
-Read this in stage 4 of `SKILL.md`, for every row that reaches order 9. It defines the inputs, the fee function, the `HasObjectMetrics` coverage reasons, both value objects and which figure feeds orders 11–12. Copy the function into the calculator or script byte for byte. `resource` is the row's economic row (`references/economics-inputs.md`). Save inputs, expressions and unrounded results in the evidence folder.
+Read this in stage 4 of `guided.md`, for every row that reaches order 9. It defines the inputs, the fee function, the `HasObjectMetrics` coverage reasons, both value objects and which figure feeds orders 11–12. Copy the function into the calculator or script byte for byte. `resource` is the row's economic row (`references/economics-inputs.md`). Save inputs, expressions and unrounded results in the evidence folder.
 
 Use the normalized values from `references/collection.md`. Let `N` be the latest object count (undefined becomes 0 for the formula), `A` archived count, `T=standardGb+standardIaGb`, `I=intelligentTieringGb`, `G=resource.totalSavings`, and `E=resource.intMonitoringCosts` if finite, otherwise 0. Preserve missing-input flags beside the fallback. Constants are source USD rates, **not live price lookups**.
 

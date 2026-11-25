@@ -1,10 +1,10 @@
 # Preparing a change proposal
 
-Read this only when the user asks how to apply the change, or asks for a patch, pull request or AWS procedure. It never authorizes or performs an AWS change; the assessment files stay unchanged.
+Read this when the customer accepts the offer at the end of the assessment, or asks how to apply the change, or for a patch, pull request or AWS procedure. It never authorizes or performs an AWS change; the assessment files stay unchanged.
 
 The fixer is separate TypeScript/runbook work: it snapshots, waits, changes the volume, checks results and handles cleanup/notifications. This skill does not execute that runbook. For requested implementation, use the harness workflow below; do not infer authorization to run `ModifyVolume`, snapshots or cleanup from a successful assessment.
 
-## Prepare the appropriate change when requested
+## Prepare the appropriate change
 
 Read the complete saved skill assessment, raw evidence and calculation records. Identify the workload owner and what manages the selected volume using tags, stack/launch configuration, provisioning code and owner-supplied facts. Missing tags or an unsuccessful repository search do not prove direct management.
 

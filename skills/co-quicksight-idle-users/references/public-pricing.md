@@ -1,10 +1,10 @@
-# Public-price mode: subscription pricing evidence and quotation
+# `public_prices` mode: subscription pricing evidence and quotation
 
-Read this at stages 2 and 4 of `SKILL.md` only when the customer explicitly asked for a public-price estimate (`scope.pricing_mode:"public_prices"`). A failed billing read never brings you here, also when the request offered public prices as a fallback. Then read `savings.md`, which holds the savings formula and the limits of this per-user model.
+Read this at stages 2 and 4 of `guided.md` only when the customer explicitly asked for a public-price estimate (`scope.pricing_mode:"public_prices"`). A failed billing read never brings you here, also when the request offered public prices as a fallback. `savings.md` holds the savings formula and the limits of this per-user model.
 
 If the pricing page cannot be fetched, or it does not establish the rate for the confirmed edition, plan and role, the quotation is unknown: the row is `error` for a failed fetch and `needs_evidence` otherwise, `costs` is `not_calculated`, and the issue names the page. The reference rates below are a check against the fetched page, never a substitute for it.
 
-For an explicitly chosen **public-price-subscription** mode, establish role, edition, monthly/annual plan or term, currency, applicable region/offer and independently billable subscription quantity. ListUsers alone establishes none of the pricing/entitlement facts. DescribeAccountSubscription or supplied account records can establish edition/authentication, but not every term, commitment or cross-account license. Fetch the [official pricing page](https://aws.amazon.com/quicksight/pricing/), retain the relevant complete pricing evidence, URL and retrieval date, and verify applicability. Reference USD monthly unit rates checked 2026-11-17 are:
+For an explicitly chosen **`public_prices`** mode, establish role, edition, monthly/annual plan or term, currency, applicable region/offer and independently billable subscription quantity. ListUsers alone establishes none of the pricing/entitlement facts. DescribeAccountSubscription or supplied account records can establish edition/authentication, but not every term, commitment or cross-account license. Fetch the [official pricing page](https://aws.amazon.com/quicksight/pricing/), retain the relevant complete pricing evidence, URL and retrieval date, and verify applicability. Reference USD monthly unit rates checked 2026-11-17 are:
 
 | Confirmed edition/plan and allowed role | Monthly unit rate | Twelve-month subscription-cost illustration |
 |---|---:|---:|

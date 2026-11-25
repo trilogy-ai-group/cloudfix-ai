@@ -22,4 +22,4 @@ Asset searches run inside parameter population, so a thrown SearchAnalyses/Searc
 
 ## Replay packet
 
-A replay packet is the evidence saved in stage 2 of `SKILL.md`, complete and unchanged, together with `assessment.json` and this projection, so the run can be reproduced without live calls. It adds no new reads. Keep it with the customer.
+A replay packet is the evidence saved in stage 2 of `guided.md`, complete and unchanged, together with `assessment.json` and this projection, so the run can be reproduced without live calls. It adds no new reads. Keep it with the customer.

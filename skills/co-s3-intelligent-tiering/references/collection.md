@@ -1,6 +1,6 @@
 # Collection: S3 configuration and CloudWatch metrics
 
-Read this in stage 2 of `SKILL.md`, in every pricing mode. It gives the exact reads, request shapes, paging, error handling and metric reduction. Save every request, page, response or error and timestamp in the evidence folder.
+Read this in stage 2 of `guided.md`, in every pricing mode. It gives the exact reads, request shapes, paging, error handling and metric reduction. Save every request, page, response or error and timestamp in the evidence folder.
 
 Use the regional S3 and CloudWatch endpoints. Record request shapes and collect every page. Supplied evidence uses the same shapes and fixed observation clock.
 

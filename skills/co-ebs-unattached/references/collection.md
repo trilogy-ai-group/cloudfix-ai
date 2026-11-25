@@ -1,6 +1,6 @@
 # Collecting evidence for unattached EBS volumes
 
-Read this at the start of stage 2 of `SKILL.md`, before the first read. It gives the evidence record, the order of the reads and each resource request. The billing requests are in `billing-cost-explorer.md`, or in `cur-recipe.md` for a supplied CUR table; the price requests are in `costing.md` and `public-price-model.md`.
+Read this at the start of stage 2 of `guided.md`, before the first read. It gives the evidence record, the order of the reads and each resource request. The billing requests are in `billing-cost-explorer.md`, or in `cur-recipe.md` for a supplied CUR table; the price requests are in `costing.md` and `public-price-model.md`.
 
 ## Evidence records
 
@@ -8,9 +8,11 @@ For each read save `{service,operation,region,profile,input,observed_at,output}`
 
 A retry adds an attempt with its own provenance; it never erases the failed attempt or the original snapshot.
 
+In a record, `service` is the AWS CLI name (`sts`, `ec2`, `cloudwatch`, `pricing`, `ce`), `operation` the API name such as `DescribeVolumes`, and `region` the region the request was sent to: `us-east-1` for Pricing and Cost Explorer. `scripts/assess.py --replay` answers a read only from a record with the same service, operation, region and input.
+
 Save the files in an `evidence/` folder beside `assessment.json`, so that a reference such as `evidence/describe-volumes.json#/0/output/Volumes/0` resolves from the folder holding `assessment.json`. Use these names:
 
-- `run-metadata.json`: the `run_metadata` object from stage 1.
+- `run-metadata.json`: `run_metadata` and `request`, in the layout stage 1 of `guided.md` gives.
 - `get-caller-identity.json`, `describe-volumes.json`, `get-metric-data.json`, `describe-snapshots.json`, `pricing.json` and, in `billing` mode, `cost-explorer.json` or, for a supplied CUR table, `cur-query.json`: each a JSON array of read records in request order, one record per request, page, retry or failure.
 - `supplied-costs.json`, in `supplied` mode: the supplied annual costs with their currency, period, source, observation time and method.
 - `calculations.json`: one object per volume ID holding the inputs, expressions and unrounded results of every calculation. Billing from Cost Explorer adds one `cost_explorer_rates` object holding each region's effective rates.
@@ -33,7 +35,7 @@ For selected IDs, request `DescribeVolumes` with `{"Filters":[{"Name":"volume-id
 
 ## CloudWatch metrics
 
-The included volumes are the ones the checks have not stopped: every not-stopped resource with available normalized state (`checks.md`).
+The included volumes are the ones `checks.md` has not stopped.
 
 For each included volume, request all three `AWS/EBS` metrics: `VolumeReadOps`, `VolumeWriteOps`, `VolumeQueueLength`, dimension exactly `[{"Name":"VolumeId","Value":"<id>"}]`, `Period:86400`, `Stat:"Sum"`, `ReturnData:true`. IDs are `readOps_<id>`, `writeOps_<id>`, `queueLength_<id>`, replacing hyphens in the volume ID with underscores. Use `ScanBy:"TimestampDescending"`, `EndTime=endOfDay(asOf)` and `StartTime=startOfDay(EndTime minus 365 days)` in UTC. Preserve all pages; split at 500 metric queries per call. A response to a request that differs from this one, or that has no result for a requested query `Id`, is not the finder's query: treat the read as not performed, so the volume is `needs_evidence`, never `no_data`.
 

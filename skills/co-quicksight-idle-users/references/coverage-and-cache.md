@@ -1,6 +1,6 @@
 # Activity coverage, cache/resume replay and the UserNotActive result
 
-Read this at stage 3 of `SKILL.md` for check 5, before deciding `UserNotActive`. Read all of it: a fresh standalone run aggregates with the same rules. Rules 1–3 act on cached entries, so they matter only when reproducing supplied native cache/resume evidence; a fresh run has no cached entries and never samples.
+Read this at stage 3 of `guided.md` for check 5, before deciding `UserNotActive`. Read all of it: a fresh standalone run aggregates with the same rules. Rules 1–3 act on cached entries, so they matter only when reproducing supplied native cache/resume evidence; a fresh run has no cached entries and never samples.
 
 Fresh mode records each user's due-region walk and matched event or completed absence, then aggregates using the same rules below; it does not access or create CloudFix caches. Persist evidence locally for handoff. A later observation or retry keeps the original attempts and must account for unread time rather than treating an earlier complete window as current coverage.
 
