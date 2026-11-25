@@ -1,6 +1,6 @@
 # Existing CUR recipe (`billing` mode with a supplied CUR table)
 
-Read this in stage 2 of `SKILL.md` only when the customer supplied a CUR table for a `billing` request (`economicsMode:"cur"`), or when a claim of native discovery coverage has to be checked. Without a supplied CUR table, billed costs come from Cost Explorer as `billing-cost-explorer.md` describes; never ask the customer to enable a CUR. It produces the `annualCost` that `costing.md` consumes.
+Read this in stage 2 of `guided.md` only when the customer supplied a CUR table for a `billing` request (`economicsMode:"cur"`), or when a claim of native discovery coverage has to be checked. Without a supplied CUR table, billed costs come from Cost Explorer as `billing-cost-explorer.md` describes; never ask the customer to enable a CUR. It produces the `annualCost` that `costing.md` consumes.
 
 Use the customer's known CUR table/view and matching schema; do not guess a database, payer or table. Record exact query, table/schema revision, query ID, UTC bounds, selected account/region/IDs, all result pages and returned cost values. For a historical replay, substitute its recorded evaluation time consistently for `NOW()` and `CURRENT_DATE`. For a live query freeze one evaluation instant and derive both from it. Do not widen scope.
 

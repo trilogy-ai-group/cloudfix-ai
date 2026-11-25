@@ -1,6 +1,6 @@
 # Collection and normalization rules
 
-Read this in stage 2 of `SKILL.md`, before interpreting the first `GetDistributionConfig`, `GetCachePolicy` or `ListTagsForResource` response. `SKILL.md` names the reads and their parameters; this file says what a usable response must contain and how it is normalized. "Native" and "the source" mean the CloudFix finder whose rules this skill reproduces.
+Read this in stage 2 of `guided.md`, before interpreting the first `GetDistributionConfig`, `GetCachePolicy` or `ListTagsForResource` response. `SKILL.md` names the reads and their parameters; this file says what a usable response must contain and how it is normalized.
 
 ## Distribution configuration
 

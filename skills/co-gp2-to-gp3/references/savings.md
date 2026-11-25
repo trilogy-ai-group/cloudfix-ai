@@ -1,6 +1,6 @@
 # Savings arithmetic and report fields
 
-Read this at stage 4 of `SKILL.md`, before calculating any saving. It uses the public prices `gp2Public` and `gp3Public` from `pricing.md` and holds the finder's savings formula, percentage strings and report fields.
+Read this at stage 4 of `guided.md`, before calculating any saving. It uses the public prices `gp2Public` and `gp3Public` from `pricing.md` and holds the finder's savings formula, percentage strings and report fields.
 
 The actual source savings calculation is:
 

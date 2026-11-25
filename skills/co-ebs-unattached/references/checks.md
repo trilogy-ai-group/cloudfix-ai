@@ -1,6 +1,6 @@
 # Checks for unattached EBS volumes
 
-Read this at the start of stage 3 of `SKILL.md`. It is the finder's own rule text: normalization, the eight ordered checks, the CloudWatch interpretation, finalization and the exception contract. Apply it as written.
+Read this in stage 2 of `guided.md`, before the CloudWatch read, and apply it in stage 3. It is the finder's own rule text: normalization, the eight ordered checks, the CloudWatch interpretation, finalization and the exception contract. Apply it as written.
 
 Sentences about projections, native report data, fixer parameters and native-shaped rows say what the finder itself records. They fix the control flow (`approved`, `stopProcessing`) and the facts to keep. Save those facts in `assessment.json` as the last section describes; produce the native shape itself only when the user explicitly asks for it (`native-projection.md`).
 
@@ -26,8 +26,6 @@ Initialize each projection with `approved` undecided, `stopProcessing:false`, `a
 For invalid dates/nonnumeric values retain the original evidence and data-quality issue; do not coerce them to an invented valid date/cost. Native invalid CreateTime yields NaN age and fails its comparison. Nonfinite savings reason is `annual-savings-not-finite`; the maximum check also reports `annual-cost-not-finite` when applicable. These reason fields do not add a new finite-number guard to native comparison semantics; standalone output must not present nonfinite cost/savings as a valid estimate.
 
 After step 5, native report data gets `volumeType` and `volumeState`. Non-fail-fast age/finalization failures still continue to metrics. The metrics call includes every not-stopped resource with available normalized state.
-
-Rules 7 and 8 depend on savings and are completed in stage 4 (`costing.md`).
 
 ## Exact CloudWatch interpretation
 
@@ -60,6 +58,6 @@ Each finding's `checks` holds all eight rules, in the order above, under the nam
 - `fail` when the rule was evaluated on observed evidence and failed. Give the `reason` in plain words with the observed values.
 - `not_evaluated`, always with a `reason`, in every other case: a rule omitted after a fail-fast stop; rule 1 when CloudFix recommendation history is not available; rules 7 and 8 without a usable cost, or in `technical_only` mode; rule 6 when the metrics query was not performed or is incomplete.
 
-Two native outcomes are read faults, not properties of the volume, and are therefore `not_evaluated` rather than `fail`: rule 6 with `detectionMethod:"error"`, and the rule whose callback threw a per-item exception. Keep `detectionMethod:"error"` in the rule's `value`, say in the `reason` which read failed and that the finder itself records a failed row, and add the `issues` entry the guide describes. A `DescribeVolumes` batch denial leaves all eight rules `not_evaluated` for every volume of that batch. Never infer that an unobserved check passed.
+Two native outcomes are read faults, not properties of the volume, and are therefore `not_evaluated` rather than `fail`: rule 6 with `detectionMethod:"error"`, and the rule whose callback threw a per-item exception. Keep `detectionMethod:"error"` in the rule's `value`, say in the `reason` which read failed and that the finder itself records a failed row, and add the `issues` entry the guide describes. A `DescribeVolumes` batch denial leaves all eight rules `not_evaluated` for every volume of that batch.
 
 Record for missing framework history `details.framework_context_complete:false`. A demonstrated technical rejection stays visible even when cost is unknown.

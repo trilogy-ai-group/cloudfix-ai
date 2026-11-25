@@ -1,6 +1,6 @@
 # Billing mode: native CUR discovery and annual cost
 
-Read this at stage 2 of `SKILL.md` only when the customer supplies a CUR table for a billed-cost request (`scope.pricing_mode:"billing"`, `costs.basis:"resource_billed"`) or asks for native CUR discovery. Otherwise skip it: a billed-cost request without a supplied CUR table uses `billing-cost-explorer.md`, and a customer is never asked to create a CUR.
+Read this at stage 2 of `guided.md` only when the customer supplies a CUR table for a billed-cost request (`scope.pricing_mode:"billing"`, `costs.basis:"resource_billed"`) or asks for native CUR discovery. Otherwise skip it: a billed-cost request without a supplied CUR table uses `billing-cost-explorer.md`, and a customer is never asked to create a CUR.
 
 For CUR, use the customer's known table and matching schema; never guess payer, database or table. Record the query, schema/table identity, query ID, scope predicates, all pages and UTC bounds. Substitute recorded `asOf` for the current date on replay and derive live bounds from the frozen evaluation date. Add authorized account/resource predicates. Native groups by **billing product_region** and only afterwards extracts the user's region from its ARN; do not filter only by product_region when that would discard the selected ARN's billed rows.
 
