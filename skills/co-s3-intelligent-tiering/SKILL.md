@@ -24,7 +24,7 @@ python3 <skill-dir>/scripts/assess.py --account <12-digit account> --region <reg
   --pricing-mode billing --out <new directory>
 ```
 
-Options: `--profile <aws profile>`, `--billing-profile <profile>` for payer access to Cost Explorer, `--bucket <name>` (repeatable), `--pricing-mode public_prices`, `--pricing-mode supplied --costs <file.json>` (native economic rows as `references/economics-inputs.md` describes), `--pricing-mode technical_only` (no economics), `--allow-public-fallback` only when the user asked for "billed costs if possible, otherwise public prices", `--workers <n>` parallel reads (default 16). `--help` lists all.
+Options: `--profile <aws profile>`, `--billing-profile <profile>` for payer access to Cost Explorer, `--bucket <name>` (repeatable), `--pricing-mode public_prices`, `--pricing-mode supplied --costs <file.json>` (native economic rows as `references/economics-inputs.md` describes), `--pricing-mode technical_only` (no economics), `--workers <n>` parallel reads (default 16). `--help` lists all.
 
 Do not rewrite the collection, checks or arithmetic yourself. To rerun on saved evidence without AWS calls: `assess.py --replay <run>/evidence --out <new directory>`.
 
@@ -34,7 +34,7 @@ The output directory holds `assessment.json` (`references/assessment-v1.schema.j
 
 Exit codes: **0** complete, including rejected buckets and "No buckets found"; **2** partial, some buckets need evidence or a read failed for them (`issues` names the exact next read); **1** failed, identity or the listing was denied or failed, or an input was invalid. Never turn a denied read into an empty listing and never present a rejected bucket as saving $0.
 
-Give the user the report as printed. Numbers come from `assessment.json` only; do not recompute or round them. Every saving is a model estimate: the future tier mix is assumed, not measured, and savings are after the monitoring or small-object bound. Billed costs are an account-and-region effective rate applied to each bucket's 7-day mean size, not the bucket's bill; a Cost Explorer failure leaves the affected buckets unpriced and never silently becomes public prices.
+Give the user the report as printed. Numbers come from `assessment.json` only; do not recompute or round them. Every saving is a model estimate: the future tier mix is assumed, not measured, and savings are after the monitoring or small-object bound. Billed costs are an account-and-region effective rate applied to each bucket's 7-day mean size, not the bucket's bill; a Cost Explorer failure leaves the affected buckets unpriced. If that read is denied or fails, rerun at once with `--pricing-mode public_prices` in a new directory and label the figures list-price estimates.
 
 ## 4. Hand off
 

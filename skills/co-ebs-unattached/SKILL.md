@@ -24,7 +24,7 @@ python3 <skill-dir>/scripts/assess.py --account <12-digit account> --region <reg
   --pricing-mode billing --out <new directory>
 ```
 
-Options: `--profile <aws profile>`, `--billing-profile <profile>` when Cost Explorer needs payer access, `--volume-id <id>` (repeatable) for named volumes, `--pricing-mode public_prices`, `--pricing-mode supplied --costs <file.json>` (`{"currency":"USD","source","period","observed_at","method","resources":[{"resourceId","annualCost"}]}`), `--allow-public-fallback` only when the user asked for "billed costs if possible, otherwise public prices", `--volume-age-threshold <days>` and `--minimal-savings <amount>` only when the user supplies them. `--help` lists everything.
+Options: `--profile <aws profile>`, `--billing-profile <profile>` when Cost Explorer needs payer access, `--volume-id <id>` (repeatable) for named volumes, `--pricing-mode public_prices`, `--pricing-mode supplied --costs <file.json>` (`{"currency":"USD","source","period","observed_at","method","resources":[{"resourceId","annualCost"}]}`), `--volume-age-threshold <days>` and `--minimal-savings <amount>` only when the user supplies them. `--help` lists everything.
 
 Do not rewrite the collection, checks or arithmetic yourself. To rerun on saved evidence without AWS calls: `assess.py --replay <run>/evidence --out <new directory>`.
 
@@ -34,7 +34,7 @@ The output directory holds `assessment.json` (assessment v1: `references/assessm
 
 Exit codes: **0** complete, including rejected volumes and "No available volumes found"; **2** partial, some volumes need evidence or a read failed for them (`issues` names the exact next read); **1** failed, identity or the inventory was denied or failed, or a setting was invalid. Report the exit code and `issues` as they are. Never turn a denied read into an empty inventory and never present a rejected volume as saving $0.
 
-Give the user the report as printed. Numbers come from `assessment.json` only; do not recompute or round them. The after cost is a model: an archived snapshot billed for the full volume size for twelve months. Billed costs use an account-and-region effective rate; a Cost Explorer failure leaves the affected volumes unpriced and never silently becomes public prices. Nothing is executed; these are estimates, not realized savings.
+Give the user the report as printed. Numbers come from `assessment.json` only; do not recompute or round them. The after cost is a model: an archived snapshot billed for the full volume size for twelve months. Billed costs use an account-and-region effective rate; a Cost Explorer failure leaves the affected volumes unpriced. If that read is denied or fails, rerun at once with `--pricing-mode public_prices` in a new directory and label the figures list-price estimates. Nothing is executed; these are estimates, not realized savings.
 
 ## 4. Hand off
 
