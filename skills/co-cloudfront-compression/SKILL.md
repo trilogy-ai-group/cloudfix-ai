@@ -11,7 +11,7 @@ Run the bundled script. It collects the evidence, applies the finder's four chec
 
 ## 1. Scope and access
 
-Ask no scope questions: state the defaults and run; what the user names wins. Defaults: caller's account, every distribution in it, download traffic observed. CloudFront is global; its API and metrics are read in `us-east-1`. This finder estimates no savings: `scope.pricing_mode` is always `technical_only`, whatever prices were asked for. Public prices are not supported and never substituted.
+State the defaults (account) and confirm them before running. Defaults: caller's account, every distribution in it, download traffic observed. CloudFront is global; its API and metrics are read in `us-east-1`. This finder estimates no savings: `scope.pricing_mode` is always `technical_only`, whatever prices were asked for. Public prices are not supported and never substituted.
 
 State the reads before running: `sts:GetCallerIdentity`, `cloudfront:ListDistributions` (inventory), `cloudfront:GetDistributionConfig`, `cloudfront:GetCachePolicy`, `cloudfront:ListTagsForResource`, and the optional `cloudwatch:GetMetricData` for `BytesDownloaded` (about $0.01 per 1,000 metrics). No Cost Explorer or Pricing call is made. The script refuses any AWS call outside these reads: it never updates a distribution/cache policy, creates a policy, invalidates a cache or writes tags. Do not create permissions.
 

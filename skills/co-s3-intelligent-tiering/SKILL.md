@@ -11,7 +11,7 @@ Run the bundled script. It collects the evidence, applies the finder's twelve ch
 
 ## 1. Scope and access
 
-Ask no scope questions: state the defaults and run; what the user names wins. Defaults: caller's account, profile's region (one per run), every bucket, `billing` prices (or `public_prices`, `supplied`, `technical_only`). The finder's settings are fixed: 50 USD minimum yearly saving, 31-day expiration and archive boundary, 128 KiB minimum object size, dates in UTC.
+State the defaults (account, region, pricing mode) and confirm them before running. Defaults: caller's account, profile's region (one per run), every bucket, `billing` prices (or `public_prices`, `supplied`, `technical_only`). The finder's settings are fixed: 50 USD minimum yearly saving, 31-day expiration and archive boundary, 128 KiB minimum object size, dates in UTC.
 
 State the reads before running: `sts:GetCallerIdentity`, `s3:ListAllMyBuckets`, `s3:GetBucketTagging`, `s3:GetLifecycleConfiguration`, `s3:GetIntelligentTieringConfiguration`, `cloudwatch:GetMetricData`; in `billing` mode also `ce:GetDimensionValues` and `ce:GetCostAndUsage`, about $0.02 per region; in `public_prices` mode one HTTPS read of the public AWS price list (needs `curl`). The script refuses any AWS call outside these reads, makes no write call. Do not create permissions, enable billing settings or a CUR.
 

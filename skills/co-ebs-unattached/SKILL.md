@@ -11,7 +11,7 @@ Run the bundled script. It collects the evidence, applies the finder's eight che
 
 ## 1. Scope and access
 
-Ask no scope questions: state the defaults and run; what the user names wins. Defaults: caller's account, profile's region (one per run), every `available` volume there, `billing` prices (or `public_prices`, `supplied`), a volume counts as unattached after 7 days without attachment metrics, minimum saving 0, creation age at least 30 days, dates in UTC.
+State the defaults (account, region, pricing mode) and confirm them before running. Defaults: caller's account, profile's region (one per run), every `available` volume there, `billing` prices (or `public_prices`, `supplied`), a volume counts as unattached after 7 days without attachment metrics, minimum saving 0, creation age at least 30 days, dates in UTC.
 
 State the reads before running: `sts:GetCallerIdentity`, `ec2:DescribeVolumes`, `ec2:DescribeSnapshots`, `cloudwatch:GetMetricData`, `pricing:GetProducts` in `us-east-1`; in `billing` mode also `ce:GetDimensionValues` and `ce:GetCostAndUsage`, about $0.02 per region. The script refuses any AWS call outside these reads, makes no write call and needs no CloudFix connection. Do not create permissions, enable billing settings or a CUR.
 

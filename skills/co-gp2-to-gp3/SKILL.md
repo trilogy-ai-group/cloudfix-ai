@@ -11,7 +11,7 @@ Run the bundled script. It collects the evidence, applies the finder's checks in
 
 ## 1. Scope and access
 
-Ask no scope questions: state the defaults and run; what the user names wins. Defaults: caller's account, profile's region, every gp2 volume there, `billing` prices (or `public_prices`, `supplied`), volumes at least 7 days old, minimum saving 0, dates in UTC.
+State the defaults (account, region, pricing mode) and confirm them before running. Defaults: caller's account, profile's region, every gp2 volume there, `billing` prices (or `public_prices`, `supplied`), volumes at least 7 days old, minimum saving 0, dates in UTC.
 
 State the reads before running: `sts:GetCallerIdentity`, `pricing:GetProducts` in `us-east-1`, `ec2:DescribeVolumes`, `ec2:DescribeInstances` for attached instances; in `billing` mode also `ce:GetDimensionValues` and `ce:GetCostAndUsage`, about $0.02 for two Cost Explorer requests. The script refuses any AWS call outside these reads, makes no write call and needs no CloudFix connection. Do not create permissions or enable billing settings.
 

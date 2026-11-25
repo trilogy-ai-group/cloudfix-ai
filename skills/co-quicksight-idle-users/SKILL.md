@@ -11,13 +11,13 @@ Run the bundled script. It lists the default namespace's users, reads their Clou
 
 ## 1. Scope and access
 
-Ask no scope questions: state the defaults and run; what the user names wins. Defaults: caller's account, profile's region, every user, pricing mode `billing` from Cost Explorer, the default (or `supplied`, `technical_only`), a 30-day idle window (15 to 90). Public prices and a CUR table stay on the guided path. A failed billing read is never replaced by public prices.
+State the defaults (account, region, pricing mode) and confirm them before running. Defaults: caller's account, profile's region, every user, pricing mode `billing` from Cost Explorer, the default (or `supplied`, `technical_only`), a 30-day idle window (15 to 90). Public prices and a CUR table stay on the guided path. A failed billing read is never replaced by public prices.
 
-State the reads first: `sts:GetCallerIdentity`, `quicksight:ListUsers`, `ec2:DescribeRegions`, `cloudtrail:LookupEvents` in every region, and for users that pass the activity checks `quicksight:ListTagsForResource`, `SearchAnalyses`, `SearchDashboards`, `SearchDataSets`, `SearchDataSources`. `billing` adds `ce:GetDimensionValues` and `ce:GetCostAndUsage` in `us-east-1`: $0.01 per request, about $0.03 per run. The script refuses any AWS call outside these reads, makes no write call and creates no permission.
+State the reads: `sts:GetCallerIdentity`, `quicksight:ListUsers`, `ec2:DescribeRegions`, `cloudtrail:LookupEvents` in every region, and for users that pass the activity checks `quicksight:ListTagsForResource`, `SearchAnalyses`, `SearchDashboards`, `SearchDataSets`, `SearchDataSources`. `billing` adds `ce:GetDimensionValues` and `ce:GetCostAndUsage` in `us-east-1`: $0.01 per request, about $0.03 per run. The script refuses any AWS call outside these reads, makes no write call and creates no permission.
 
 `quicksight:ListUsers` is often denied to read-only roles. A denied list ends the run as `failed` with that read as the exact next read; it is never an empty account. `ResourceNotFoundException` there means no subscription in that region, not a missing permission.
 
-Requirements: Python 3.9+ and AWS CLI v2 with the customer's profile or credential chain. **If the user does not allow running code, or `python3` or `aws` is not available, follow `references/guided.md` instead**; the same assessment with read tools. The script implements `references/collection.md`, `references/validation.md`, `references/coverage-and-cache.md`, `references/receiver-and-assets.md`, `references/savings.md` and `references/billing-cost-explorer.md`.
+Requirements: Python 3.9+ and AWS CLI v2 with the customer's profile or credentials. **If the user does not allow running code, or `python3` or `aws` is not available, follow `references/guided.md` instead**; the same assessment with read tools. The script implements `references/collection.md`, `references/validation.md`, `references/coverage-and-cache.md`, `references/receiver-and-assets.md`, `references/savings.md` and `references/billing-cost-explorer.md`.
 
 ## 2. Run
 
